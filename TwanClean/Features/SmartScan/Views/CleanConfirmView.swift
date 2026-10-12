@@ -21,17 +21,17 @@ struct CleanConfirmView: View {
             if !deleted.isEmpty {
                 summaryRow(icon: "xmark.bin.fill", tint: Tint.red,
                            title: String(localized: "Delete permanently: \(deleted.reduce(0) { $0 + $1.bytes }.formattedBytes)"),
-                           detail: String(localized: "\(deleted.count) caches, logs and temporary items. Apps recreate them when needed."))
+                           detail: String(localized: "\(deleted.count) caches and logs. Apps recreate them."))
             }
             if !trashed.isEmpty {
                 summaryRow(icon: "trash.fill", tint: Tint.teal,
                            title: String(localized: "Move to Trash: \(trashed.reduce(0) { $0 + $1.bytes }.formattedBytes)"),
-                           detail: String(localized: "\(trashed.count) items you can still restore from the Trash. Space is freed when you empty it."))
+                           detail: String(localized: "\(trashed.count) items. Restorable until you empty the Trash."))
             }
             if needPassword > 0 {
                 summaryRow(icon: "lock.fill", tint: Tint.orange,
                            title: String(localized: "\(needPassword) items need your password"),
-                           detail: String(localized: "Twan Clean will ask for it after removing everything else."))
+                           detail: String(localized: "Asked for after everything else is removed."))
             }
 
             HStack {

@@ -45,13 +45,8 @@ struct DiskSummaryCard: View {
                         LegendDot(color: Color.primary.opacity(0.2), label: "Free", value: disk.availableBytes.formattedBytes)
                         if disk.purgeableBytes > 0 {
                             LegendDot(color: Tint.green, label: "Purgeable", value: disk.purgeableBytes.formattedBytes)
+                            InfoButton("Space macOS frees by itself when it needs room, such as iCloud copies and snapshots. No app can clean it.")
                         }
-                    }
-                    if disk.purgeableBytes > 0 {
-                        Text("macOS can also free \(disk.purgeableBytes.formattedBytes) of purgeable space by itself when it needs room.")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                            .fixedSize(horizontal: false, vertical: true)
                     }
                 }
             }

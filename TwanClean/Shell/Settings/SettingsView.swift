@@ -46,7 +46,7 @@ private struct GeneralSettingsTab: View {
                 }
                 if languageChanged {
                     HStack {
-                        Text("The new language applies after Twan Clean restarts.")
+                        Text("Applies after a restart.")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                         Spacer()

@@ -46,10 +46,14 @@ struct CategoryDetailView: View {
                 IconTile(systemName: category.systemImage, tint: category.tint, size: 52, corner: 14, glow: true)
                 VStack(alignment: .leading, spacing: 4) {
                     Text(category.title).font(.system(size: 20, weight: .bold))
-                    Text(category.summary)
-                        .font(.system(size: 12.5))
-                        .foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
+                    HStack(spacing: 6) {
+                        Text(category.summary)
+                            .font(.system(size: 12.5))
+                            .foregroundStyle(.secondary)
+                        if let note = category.note {
+                            InfoButton(resource: note)
+                        }
+                    }
                 }
                 Spacer()
                 if let result {
@@ -104,8 +108,10 @@ struct CategoryDetailView: View {
             FullDiskAccessBanner(unreadableCount: result.unreadableLocations.count)
         }
         if let reclaimable = result.dockerReclaimableBytes, reclaimable > 0 {
-            Label("Docker reports \(reclaimable.formattedBytes) of unused images, containers and build cache. Free it with “docker system prune” so Docker stays consistent.",
-                  systemImage: "info.circle")
+            HStack(spacing: 6) {
+                Label("Docker can free \(reclaimable.formattedBytes) more", systemImage: "shippingbox")
+                InfoButton("Unused images, containers and build cache. Free them with “docker system prune” in Terminal, so Docker stays consistent.")
+            }
                 .font(.callout)
                 .padding(12)
                 .frame(maxWidth: .infinity, alignment: .leading)

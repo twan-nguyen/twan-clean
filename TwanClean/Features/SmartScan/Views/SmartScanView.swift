@@ -54,17 +54,18 @@ struct SmartScanView: View {
             DiskSummaryCard(disk: disk) { model.scan() }
         } else {
             ToolIntroCard(systemImage: "sparkles", tint: Tint.teal,
-                          title: "Find junk in \(CleanupCategoryID.allCases.count) places at once",
-                          message: "Nothing is removed until you review the results and choose what to clean.") {
+                          title: "Find junk in \(CleanupCategoryID.allCases.count) places",
+                          message: "You review everything before it is removed.") {
                 Button { model.scan() } label: { Label("Smart Scan", systemImage: "sparkles") }
                     .buttonStyle(GlowButtonStyle())
                     .keyboardShortcut(.defaultAction)
             }
         }
-        SectionHeader("What Smart Scan checks")
-        Text("Nothing is removed until you review the results and choose what to clean.")
-            .font(.callout)
-            .foregroundStyle(.secondary)
+        HStack(spacing: 6) {
+            SectionHeader("What Smart Scan checks")
+            InfoButton("Nothing is removed until you review the results and choose what to clean.")
+                .padding(.top, 4)
+        }
         LazyVGrid(columns: [GridItem(.adaptive(minimum: 250), spacing: 12)], spacing: 12) {
             ForEach(CleanupCategoryID.allCases) { category in
                 Button {
@@ -79,8 +80,7 @@ struct SmartScanView: View {
                                 Text(category.summary)
                                     .font(.system(size: 11.5))
                                     .foregroundStyle(.secondary)
-                                    .lineLimit(2)
-                                    .fixedSize(horizontal: false, vertical: true)
+                                    .lineLimit(1)
                             }
                             Spacer(minLength: 0)
                         }

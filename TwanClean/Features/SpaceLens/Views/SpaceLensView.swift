@@ -25,7 +25,7 @@ struct SpaceLensView: View {
                 Task { await model.trashSelection() }
             }
         } message: {
-            Text("You can restore them from the Trash. The space is freed when you empty it.")
+            Text("Restorable until you empty the Trash.")
         }
         .sheet(item: $model.outcome) { outcome in
             CleanupOutcomeView(outcome: outcome) {
@@ -38,7 +38,7 @@ struct SpaceLensView: View {
         ScrollView {
             ToolIntroCard(systemImage: "circle.hexagongrid.fill", tint: Tint.cyan,
                           title: "See what takes up space",
-                          message: "Space Lens measures every folder and shows it as bubbles sized by the space it really uses.") {
+                          message: "Every folder as a bubble sized by the space it uses.") {
                 Button { model.scanHome() } label: { Label("Scan Home Folder", systemImage: "house.fill") }
                     .buttonStyle(GlowButtonStyle(tint: Tint.cyan, gradient: TintGradient.of(Tint.cyan)))
                     .keyboardShortcut(.defaultAction)

@@ -17,6 +17,16 @@
         }
       }
     },
+    "%@ goes to the Trash. Restorable until you empty it." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ sẽ vào Thùng rác. Khôi phục được cho tới khi dọn Thùng rác."
+          }
+        }
+      }
+    },
     "%@ is running" : {
       "localizations" : {
         "vi" : {
@@ -53,12 +63,12 @@
         }
       }
     },
-    "%lld caches, logs and temporary items. Apps recreate them when needed." : {
+    "%lld caches and logs. Apps recreate them." : {
       "localizations" : {
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%lld mục cache, log và tệp tạm. Ứng dụng sẽ tự tạo lại khi cần."
+            "value" : "%lld mục cache và log. Ứng dụng sẽ tự tạo lại."
           }
         }
       }
@@ -73,16 +83,6 @@
         }
       }
     },
-    "%lld items could not be removed without more access" : {
-      "localizations" : {
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld mục cần thêm quyền mới xoá được"
-          }
-        }
-      }
-    },
     "%lld items failed" : {
       "localizations" : {
         "vi" : {
@@ -93,12 +93,22 @@
         }
       }
     },
-    "%lld items from apps that are no longer installed" : {
+    "%lld items from removed apps" : {
       "localizations" : {
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%lld mục của các ứng dụng không còn được cài"
+            "value" : "%lld mục của app đã gỡ"
+          }
+        }
+      }
+    },
+    "%lld items need more access" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld mục cần thêm quyền"
           }
         }
       }
@@ -133,16 +143,6 @@
         }
       }
     },
-    "%lld items you can still restore from the Trash. Space is freed when you empty it." : {
-      "localizations" : {
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld mục vẫn khôi phục được từ Thùng rác. Dung lượng được giải phóng khi bạn dọn Thùng rác."
-          }
-        }
-      }
-    },
     "%lld items · %lld selected" : {
       "localizations" : {
         "en" : {
@@ -155,6 +155,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%lld mục · đã chọn %lld"
+          }
+        }
+      }
+    },
+    "%lld items. Restorable until you empty the Trash." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld mục. Khôi phục được cho tới khi dọn Thùng rác."
+          }
+        }
+      }
+    },
+    "%lld locations skipped" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bỏ qua %lld vị trí"
           }
         }
       }
@@ -205,12 +225,12 @@
         }
       }
     },
-    "2. Turn on Twan Clean. If it is not listed, add it with the + button from the Applications folder." : {
+    "2. Turn on Twan Clean." : {
       "localizations" : {
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "2. Bật Twan Clean. Nếu không thấy trong danh sách, hãy thêm bằng nút + từ thư mục Applications."
+            "value" : "2. Bật Twan Clean."
           }
         }
       }
@@ -235,12 +255,12 @@
         }
       }
     },
-    "Access is on. Restart Twan Clean to use it." : {
+    "Access is on. Restart to use it." : {
       "localizations" : {
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Đã bật quyền. Hãy khởi động lại Twan Clean để dùng."
+            "value" : "Đã bật quyền. Mở lại app để dùng."
           }
         }
       }
@@ -285,22 +305,12 @@
         }
       }
     },
-    "Also files named after the developer. May include files of the developer's other apps, which are never selected for you." : {
+    "Allow Twan Clean in Privacy & Security › App Management." : {
       "localizations" : {
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Thêm cả tệp đặt theo tên nhà phát triển. Có thể gồm tệp của các app khác cùng nhà phát triển; những tệp này không bao giờ được chọn sẵn."
-          }
-        }
-      }
-    },
-    "Also files whose names contain the app's name or identifier. Recommended." : {
-      "localizations" : {
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Thêm cả tệp có tên chứa tên hoặc mã định danh của app. Nên dùng."
+            "value" : "Cho phép Twan Clean trong Quyền riêng tư & Bảo mật › Quản lý ứng dụng."
           }
         }
       }
@@ -365,22 +375,42 @@
         }
       }
     },
-    "Apps, documents and leftovers can be restored. Only caches and logs that apps rebuild are deleted outright." : {
+    "Applies after a restart." : {
       "localizations" : {
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ứng dụng, tài liệu và tệp sót đều khôi phục được. Chỉ cache và log do ứng dụng tự tạo lại mới bị xoá hẳn."
+            "value" : "Có hiệu lực sau khi mở lại."
           }
         }
       }
     },
-    "Attachments Mail downloaded to show you; the originals stay on the mail server." : {
+    "Apps recreate these, so they are deleted rather than moved to the Trash." : {
       "localizations" : {
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tệp đính kèm Mail tải về để hiển thị; bản gốc vẫn nằm trên máy chủ thư."
+            "value" : "Ứng dụng tự tạo lại các mục này nên chúng bị xoá hẳn thay vì vào Thùng rác."
+          }
+        }
+      }
+    },
+    "Asked for after everything else is removed." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sẽ hỏi sau khi xoá xong các mục khác."
+          }
+        }
+      }
+    },
+    "Attachments Mail downloaded." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tệp đính kèm Mail đã tải về."
           }
         }
       }
@@ -405,22 +435,22 @@
         }
       }
     },
-    "Big files, and old files you have not touched in a long time. Nothing here is selected for you, and removed files go to the Trash." : {
+    "Big files and files untouched for long." : {
       "localizations" : {
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tệp lớn và tệp cũ lâu không dùng. Không mục nào được chọn sẵn, và tệp bị xoá sẽ vào Thùng rác."
+            "value" : "Tệp lớn và tệp lâu không dùng."
           }
         }
       }
     },
-    "Build products, simulator caches and archives from Xcode." : {
+    "Build products, simulators, archives." : {
       "localizations" : {
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sản phẩm build, cache simulator và archive của Xcode."
+            "value" : "Bản build, simulator, archive."
           }
         }
       }
@@ -435,22 +465,32 @@
         }
       }
     },
-    "Cached data apps rebuild when they need it." : {
-      "localizations" : {
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dữ liệu cache mà ứng dụng tự tạo lại khi cần."
-          }
-        }
-      }
-    },
     "Caches" : {
       "localizations" : {
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Cache"
+          }
+        }
+      }
+    },
+    "Caches apps rebuild." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cache ứng dụng tự tạo lại."
+          }
+        }
+      }
+    },
+    "Caches, logs and saved states of apps you removed." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cache, log và trạng thái lưu của app đã gỡ."
           }
         }
       }
@@ -475,6 +515,16 @@
         }
       }
     },
+    "Chat history is never selected for you." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lịch sử trò chuyện không bao giờ được chọn sẵn."
+          }
+        }
+      }
+    },
     "Choose Folder…" : {
       "localizations" : {
         "vi" : {
@@ -485,12 +535,12 @@
         }
       }
     },
-    "Choose an app to see everything it installed" : {
+    "Choose an app" : {
       "localizations" : {
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Chọn một app để xem mọi thứ nó đã cài"
+            "value" : "Chọn một ứng dụng"
           }
         }
       }
@@ -595,16 +645,6 @@
         }
       }
     },
-    "Comparing Library folders with your installed apps…" : {
-      "localizations" : {
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Đang so các thư mục Library với các app đang cài…"
-          }
-        }
-      }
-    },
     "Containers" : {
       "localizations" : {
         "vi" : {
@@ -655,6 +695,16 @@
         }
       }
     },
+    "Deep: also files named after the developer. Files that may belong to the developer's other apps are never selected for you." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sâu: thêm cả tệp đặt theo tên nhà phát triển. Tệp có thể thuộc app khác của họ không bao giờ được chọn sẵn."
+          }
+        }
+      }
+    },
     "Delete permanently: %@" : {
       "localizations" : {
         "vi" : {
@@ -695,12 +745,12 @@
         }
       }
     },
-    "Docker reports %@ of unused images, containers and build cache. Free it with “docker system prune” so Docker stays consistent." : {
+    "Docker can free %@ more" : {
       "localizations" : {
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Docker báo có %@ image, container và build cache không dùng. Hãy giải phóng bằng “docker system prune” để Docker không bị lỗi."
+            "value" : "Docker có thể giải phóng thêm %@"
           }
         }
       }
@@ -715,12 +765,12 @@
         }
       }
     },
-    "Downloads Homebrew keeps after installing packages." : {
+    "Downloads kept after installs." : {
       "localizations" : {
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Các tệp tải về Homebrew giữ lại sau khi cài gói."
+            "value" : "Tệp tải về giữ lại sau khi cài."
           }
         }
       }
@@ -745,6 +795,16 @@
         }
       }
     },
+    "Enhanced (recommended): also files whose names contain the app's name or identifier." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nâng cao (nên dùng): thêm cả tệp có tên chứa tên hoặc mã định danh của app."
+          }
+        }
+      }
+    },
     "Every day" : {
       "localizations" : {
         "vi" : {
@@ -755,22 +815,22 @@
         }
       }
     },
+    "Every folder as a bubble sized by the space it uses." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mỗi thư mục là một bong bóng, to nhỏ theo dung lượng."
+          }
+        }
+      }
+    },
     "Every month" : {
       "localizations" : {
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hằng tháng"
-          }
-        }
-      }
-    },
-    "Every scan only lists what it found. You choose what goes." : {
-      "localizations" : {
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mỗi lần quét chỉ liệt kê những gì tìm thấy. Bạn quyết định xoá gì."
           }
         }
       }
@@ -795,12 +855,12 @@
         }
       }
     },
-    "Find junk in %lld places at once" : {
+    "Find junk in %lld places" : {
       "localizations" : {
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tìm rác ở %lld nơi cùng lúc"
+            "value" : "Tìm rác ở %lld nơi"
           }
         }
       }
@@ -971,6 +1031,16 @@
         }
       }
     },
+    "Get a note when a scheduled scan finds something. Optional." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nhận thông báo khi lượt quét theo lịch tìm thấy rác. Không bắt buộc."
+          }
+        }
+      }
+    },
     "Give Twan Clean Full Disk Access" : {
       "localizations" : {
         "vi" : {
@@ -981,12 +1051,22 @@
         }
       }
     },
-    "Give Twan Clean Full Disk Access first; many of these items only need that. Then clean again." : {
+    "Grant Access" : {
       "localizations" : {
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hãy cấp quyền truy cập toàn ổ đĩa cho Twan Clean trước; nhiều mục chỉ cần quyền này. Sau đó dọn lại."
+            "value" : "Cấp quyền"
+          }
+        }
+      }
+    },
+    "Grant Full Disk Access first, then clean again." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cấp quyền truy cập toàn ổ đĩa trước, rồi dọn lại."
           }
         }
       }
@@ -1011,22 +1091,12 @@
         }
       }
     },
-    "If macOS blocked it, allow Twan Clean in System Settings › Privacy & Security › App Management." : {
+    "If the Mac is asleep at that time, the run starts soon after it wakes." : {
       "localizations" : {
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nếu macOS chặn, hãy cho phép Twan Clean trong Cài đặt hệ thống › Quyền riêng tư & Bảo mật › Quản lý ứng dụng."
-          }
-        }
-      }
-    },
-    "If you turn on scheduled cleaning in Settings, Twan Clean can tell you what it found or freed. This is optional." : {
-      "localizations" : {
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nếu bạn bật dọn theo lịch trong Cài đặt, Twan Clean có thể báo những gì đã tìm thấy hoặc giải phóng. Không bắt buộc."
+            "value" : "Nếu lúc đó máy đang ngủ, lượt chạy bắt đầu ngay sau khi máy thức."
           }
         }
       }
@@ -1051,12 +1121,12 @@
         }
       }
     },
-    "Items already in your Trash." : {
+    "It must quit first. Force quitting may lose unsaved changes." : {
       "localizations" : {
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Các mục đang nằm trong Thùng rác."
+            "value" : "Cần thoát app trước. Buộc thoát có thể mất thay đổi chưa lưu."
           }
         }
       }
@@ -1067,6 +1137,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Không bao giờ xoá các mục thuộc về macOS."
+          }
+        }
+      }
+    },
+    "Items in your Trash." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Các mục trong Thùng rác."
+          }
+        }
+      }
+    },
+    "Items macOS or a running app uses, or that need your password, are marked and not selected." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mục macOS hoặc app đang chạy dùng, hay cần mật khẩu, được đánh dấu và không chọn sẵn."
           }
         }
       }
@@ -1181,22 +1271,22 @@
         }
       }
     },
-    "Logs and caches from Ollama and LM Studio. Chat history is never selected for you." : {
+    "Logs and temporary files." : {
       "localizations" : {
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Log và cache của Ollama và LM Studio. Lịch sử trò chuyện không bao giờ được chọn sẵn."
+            "value" : "Log và tệp tạm."
           }
         }
       }
     },
-    "Logs and temporary files left by macOS and apps." : {
+    "Looking for leftovers…" : {
       "localizations" : {
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Log và tệp tạm do macOS và ứng dụng để lại."
+            "value" : "Đang tìm tệp sót…"
           }
         }
       }
@@ -1281,6 +1371,16 @@
         }
       }
     },
+    "More information" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thêm thông tin"
+          }
+        }
+      }
+    },
     "Move %lld Items to Trash" : {
       "localizations" : {
         "vi" : {
@@ -1341,6 +1441,16 @@
         }
       }
     },
+    "Needed to scan Mail, Desktop, Documents and other protected folders." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cần để quét Mail, Desktop, Documents và các thư mục được bảo vệ."
+          }
+        }
+      }
+    },
     "Needs password" : {
       "localizations" : {
         "vi" : {
@@ -1381,12 +1491,12 @@
         }
       }
     },
-    "No account, no tracking, nothing sent anywhere." : {
+    "No account, no tracking." : {
       "localizations" : {
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Không tài khoản, không theo dõi, không gửi gì ra ngoài."
+            "value" : "Không tài khoản, không theo dõi."
           }
         }
       }
@@ -1421,12 +1531,32 @@
         }
       }
     },
+    "Not in the list? Add it with the + button from the Applications folder." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Không thấy trong danh sách? Thêm bằng nút + từ thư mục Applications."
+          }
+        }
+      }
+    },
     "Not scanned yet" : {
       "localizations" : {
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Chưa quét"
+          }
+        }
+      }
+    },
+    "Nothing here is selected for you, and removed files go to the Trash. Set the size and age in Settings." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Không mục nào được chọn sẵn, và tệp bị xoá sẽ vào Thùng rác. Chỉnh kích thước và độ cũ trong Cài đặt."
           }
         }
       }
@@ -1471,12 +1601,12 @@
         }
       }
     },
-    "Notifications are off, so results only show here and in the menu bar." : {
+    "Notifications are off. Results show here and in the menu bar." : {
       "localizations" : {
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Thông báo đang tắt, nên kết quả chỉ hiện ở đây và trên menu bar."
+            "value" : "Thông báo đang tắt. Kết quả hiện ở đây và trên menu bar."
           }
         }
       }
@@ -1501,22 +1631,42 @@
         }
       }
     },
-    "Only caches, logs and other data apps recreate are cleaned. Anything that needs your password, belongs to a running app or is your own file is left for you to review." : {
+    "Ollama and LM Studio caches." : {
       "localizations" : {
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Chỉ dọn cache, log và dữ liệu mà ứng dụng tự tạo lại. Mục cần mật khẩu, thuộc app đang chạy hoặc là tệp của bạn sẽ được để lại cho bạn xem."
+            "value" : "Cache của Ollama, LM Studio."
           }
         }
       }
     },
-    "Only files named exactly after the app. Finds the least, never guesses." : {
+    "Only caches and logs are cleaned." : {
       "localizations" : {
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Chỉ tệp đặt đúng theo tên app. Tìm được ít nhất nhưng không bao giờ đoán."
+            "value" : "Chỉ dọn cache và log."
+          }
+        }
+      }
+    },
+    "Only caches and logs are deleted outright." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chỉ cache và log bị xoá hẳn."
+          }
+        }
+      }
+    },
+    "Only data apps recreate is cleaned. Anything that needs your password, belongs to a running app or is your own file is left for you to review." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chỉ dọn dữ liệu mà ứng dụng tự tạo lại. Mục cần mật khẩu, thuộc app đang chạy hoặc là tệp của bạn sẽ được để lại cho bạn xem."
           }
         }
       }
@@ -1561,16 +1711,6 @@
         }
       }
     },
-    "Open Settings" : {
-      "localizations" : {
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mở Cài đặt"
-          }
-        }
-      }
-    },
     "Open System Settings" : {
       "localizations" : {
         "vi" : {
@@ -1601,6 +1741,16 @@
         }
       }
     },
+    "Or in Finder: Services › Uninstall with Twan Clean." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hoặc trong Finder: Dịch vụ › Uninstall with Twan Clean."
+          }
+        }
+      }
+    },
     "Orphaned Files" : {
       "localizations" : {
         "vi" : {
@@ -1627,16 +1777,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tổng quan"
-          }
-        }
-      }
-    },
-    "Package caches from npm, Yarn and pnpm." : {
-      "localizations" : {
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cache gói của npm, Yarn và pnpm."
           }
         }
       }
@@ -1791,6 +1931,16 @@
         }
       }
     },
+    "Restorable until you empty the Trash." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Khôi phục được cho tới khi dọn Thùng rác."
+          }
+        }
+      }
+    },
     "Review first" : {
       "localizations" : {
         "vi" : {
@@ -1811,12 +1961,12 @@
         }
       }
     },
-    "Runs in the background even when Twan Clean is closed. If the Mac is asleep at that time, it runs soon after it wakes." : {
+    "Runs even when Twan Clean is closed." : {
       "localizations" : {
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Chạy nền kể cả khi Twan Clean đã đóng. Nếu lúc đó máy đang ngủ, lượt chạy sẽ diễn ra ngay sau khi máy thức dậy."
+            "value" : "Vẫn chạy khi Twan Clean đã đóng."
           }
         }
       }
@@ -1937,6 +2087,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Đang quét máy Mac"
+          }
+        }
+      }
+    },
+    "Scans only list. You choose what goes." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quét chỉ liệt kê. Bạn quyết định xoá gì."
           }
         }
       }
@@ -2111,16 +2271,6 @@
         }
       }
     },
-    "Some locations could not be read" : {
-      "localizations" : {
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Một số vị trí không đọc được"
-          }
-        }
-      }
-    },
     "Sort" : {
       "localizations" : {
         "vi" : {
@@ -2141,12 +2291,12 @@
         }
       }
     },
-    "Space Lens measures every folder and shows it as bubbles sized by the space it really uses." : {
+    "Space macOS frees by itself when it needs room, such as iCloud copies and snapshots. No app can clean it." : {
       "localizations" : {
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Space Lens đo mọi thư mục và hiển thị thành các bong bóng có kích thước theo dung lượng thật."
+            "value" : "Dung lượng macOS tự giải phóng khi cần chỗ, như bản sao iCloud và snapshot. Không app nào dọn được phần này."
           }
         }
       }
@@ -2171,12 +2321,12 @@
         }
       }
     },
-    "Still running: %@. Quit them, or uninstall again and choose Force Quit and Uninstall." : {
+    "Still running: %@. Try Force Quit and Uninstall." : {
       "localizations" : {
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Vẫn đang chạy: %@. Hãy thoát chúng, hoặc gỡ lại và chọn “Buộc thoát và gỡ”."
+            "value" : "Vẫn đang chạy: %@. Hãy thử “Buộc thoát và gỡ”."
           }
         }
       }
@@ -2207,6 +2357,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nghiêm ngặt"
+          }
+        }
+      }
+    },
+    "Strict: only files named exactly after the app. Finds the least, never guesses." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nghiêm ngặt: chỉ tệp đặt đúng theo tên app. Tìm được ít nhất nhưng không đoán."
           }
         }
       }
@@ -2321,32 +2481,22 @@
         }
       }
     },
-    "The new language applies after Twan Clean restarts." : {
+    "The originals stay on the mail server, so Mail can download them again." : {
       "localizations" : {
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ngôn ngữ mới có hiệu lực sau khi Twan Clean khởi động lại."
+            "value" : "Bản gốc vẫn ở máy chủ thư, Mail có thể tải lại."
           }
         }
       }
     },
-    "The selected items, %@ in total, go to the Trash, where you can still restore them." : {
+    "They belong to macOS or another user." : {
       "localizations" : {
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Các mục đã chọn, tổng cộng %@, sẽ vào Thùng rác và vẫn khôi phục được."
-          }
-        }
-      }
-    },
-    "They belong to macOS or another user. Twan Clean can remove them with your administrator password." : {
-      "localizations" : {
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Chúng thuộc về macOS hoặc người dùng khác. Twan Clean có thể xoá bằng mật khẩu quản trị của bạn."
+            "value" : "Chúng thuộc về macOS hoặc người dùng khác."
           }
         }
       }
@@ -2367,16 +2517,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Vị trí này được bảo vệ và không bao giờ bị xoá."
-          }
-        }
-      }
-    },
-    "Tip: in Finder, Control-click an app and choose Services › Uninstall with Twan Clean." : {
-      "localizations" : {
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mẹo: trong Finder, Control-click vào một app rồi chọn Dịch vụ › Uninstall with Twan Clean."
           }
         }
       }
@@ -2421,32 +2561,12 @@
         }
       }
     },
-    "Twan Clean compares caches, logs and saved states with the apps installed now. Nothing is selected for you, and removed files go to the Trash." : {
+    "Twan Clean compares Library folders with the apps installed now. Nothing is selected for you, and removed files go to the Trash." : {
       "localizations" : {
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Twan Clean so cache, log và trạng thái đã lưu với các app đang cài. Không mục nào được chọn sẵn, và tệp bị xoá sẽ vào Thùng rác."
-          }
-        }
-      }
-    },
-    "Twan Clean could not read %lld locations. Give it Full Disk Access to see everything, then scan again." : {
-      "localizations" : {
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Twan Clean không đọc được %lld vị trí. Hãy cấp quyền truy cập toàn ổ đĩa để thấy đầy đủ, rồi quét lại."
-          }
-        }
-      }
-    },
-    "Twan Clean needs to quit it first. Unsaved changes in the app may be lost if you force it to quit." : {
-      "localizations" : {
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Twan Clean cần thoát app trước. Nếu buộc thoát, các thay đổi chưa lưu trong app có thể bị mất."
+            "value" : "Twan Clean so các thư mục Library với app đang cài. Không mục nào được chọn sẵn, và tệp bị xoá sẽ vào Thùng rác."
           }
         }
       }
@@ -2467,16 +2587,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Twan Clean cần mật khẩu của bạn để dừng các dịch vụ chạy nền của ứng dụng."
-          }
-        }
-      }
-    },
-    "Twan Clean will ask for it after removing everything else." : {
-      "localizations" : {
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Twan Clean sẽ hỏi mật khẩu sau khi đã xoá xong các mục còn lại."
           }
         }
       }
@@ -2507,6 +2617,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Gỡ cài đặt…"
+          }
+        }
+      }
+    },
+    "Unused images, containers and build cache. Free them with “docker system prune” in Terminal, so Docker stays consistent." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Image, container và build cache không dùng. Giải phóng bằng “docker system prune” trong Terminal để Docker không bị lỗi."
           }
         }
       }
@@ -2591,6 +2711,26 @@
         }
       }
     },
+    "Without Full Disk Access, Twan Clean skips protected folders instead of asking for each one. Grant access, then scan again." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Khi chưa có quyền truy cập toàn ổ đĩa, Twan Clean bỏ qua các thư mục được bảo vệ thay vì hỏi từng cái. Cấp quyền rồi quét lại."
+          }
+        }
+      }
+    },
+    "Without it, Twan Clean skips those folders and shows them as locked, so it never interrupts you with permission prompts." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Khi chưa có quyền, Twan Clean bỏ qua các thư mục đó và hiện là bị khoá, nên không làm phiền bạn bằng hộp thoại hỏi quyền."
+          }
+        }
+      }
+    },
     "Xcode Junk" : {
       "localizations" : {
         "vi" : {
@@ -2601,12 +2741,12 @@
         }
       }
     },
-    "You can restore them from the Trash. The space is freed when you empty it." : {
+    "You review everything before it is removed." : {
       "localizations" : {
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bạn có thể khôi phục chúng từ Thùng rác. Dung lượng được giải phóng khi bạn dọn Thùng rác."
+            "value" : "Bạn xem lại mọi thứ trước khi xoá."
           }
         }
       }
@@ -2661,16 +2801,6 @@
         }
       }
     },
-    "macOS can also free %@ of purgeable space by itself when it needs room." : {
-      "localizations" : {
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "macOS còn có thể tự giải phóng %@ dung lượng có thể xoá khi cần chỗ."
-          }
-        }
-      }
-    },
     "macOS needs your approval in Login Items." : {
       "localizations" : {
         "vi" : {
@@ -2681,12 +2811,12 @@
         }
       }
     },
-    "macOS protects folders such as Mail, Desktop, Documents and other apps' data. Without this access, Twan Clean skips them and shows them as locked, so it never interrupts you with permission prompts." : {
+    "npm, Yarn and pnpm caches." : {
       "localizations" : {
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "macOS bảo vệ các thư mục như Mail, Desktop, Documents và dữ liệu của app khác. Khi chưa có quyền này, Twan Clean bỏ qua chúng và hiện là bị khoá, nên không bao giờ làm phiền bạn bằng các hộp thoại hỏi quyền."
+            "value" : "Cache của npm, Yarn và pnpm."
           }
         }
       }

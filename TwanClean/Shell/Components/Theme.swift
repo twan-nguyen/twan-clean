@@ -169,6 +169,42 @@ struct StatusChip: View {
     }
 }
 
+/// A small ⓘ beside a short label, for the details that would crowd the
+/// screen. Hovering shows them as a tooltip; clicking opens them.
+struct InfoButton: View {
+    private let text: Text
+    @State private var showing = false
+
+    init(_ key: LocalizedStringKey) {
+        text = Text(key)
+    }
+
+    init(resource: LocalizedStringResource) {
+        text = Text(resource)
+    }
+
+    var body: some View {
+        Button {
+            showing.toggle()
+        } label: {
+            Image(systemName: "info.circle")
+                .font(.system(size: 12, weight: .medium))
+                .foregroundStyle(.secondary)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .help(text)
+        .accessibilityLabel(Text("More information"))
+        .popover(isPresented: $showing, arrowEdge: .bottom) {
+            text
+                .font(.callout)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(width: 260, alignment: .leading)
+                .padding(14)
+        }
+    }
+}
+
 /// Bold title above a group of cards.
 struct SectionHeader: View {
     let title: LocalizedStringKey

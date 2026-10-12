@@ -66,11 +66,11 @@ struct OnboardingView: View {
             Text("Welcome to Twan Clean")
                 .font(.system(size: 28, weight: .bold))
             promise("hand.raised.fill", Tint.teal, "Nothing is removed without you",
-                    "Every scan only lists what it found. You choose what goes.")
+                    "Scans only list. You choose what goes.")
             promise("trash.fill", Tint.blue, "Your files go to the Trash",
-                    "Apps, documents and leftovers can be restored. Only caches and logs that apps rebuild are deleted outright.")
+                    "Only caches and logs are deleted outright.")
             promise("lock.shield.fill", Tint.purple, "Your data stays on this Mac",
-                    "No account, no tracking, nothing sent anywhere.")
+                    "No account, no tracking.")
         }
     }
 
@@ -79,7 +79,7 @@ struct OnboardingView: View {
             IconTile(systemName: "bell.badge.fill", tint: Tint.orange, size: 64, corner: 16, glow: true)
             Text("Hear about scheduled scans")
                 .font(.system(size: 28, weight: .bold))
-            Text("If you turn on scheduled cleaning in Settings, Twan Clean can tell you what it found or freed. This is optional.")
+            Text("Get a note when a scheduled scan finds something. Optional.")
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
             Button(notificationsRequested ? "Notifications Requested" : "Allow Notifications") {
@@ -114,9 +114,12 @@ struct PermissionStepView: View {
             IconTile(systemName: "lock.shield.fill", tint: Tint.teal, size: 64, corner: 16, glow: true)
             Text("Give Twan Clean Full Disk Access")
                 .font(.system(size: 28, weight: .bold))
-            Text("macOS protects folders such as Mail, Desktop, Documents and other apps' data. Without this access, Twan Clean skips them and shows them as locked, so it never interrupts you with permission prompts.")
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
+            HStack(spacing: 6) {
+                Text("Needed to scan Mail, Desktop, Documents and other protected folders.")
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                InfoButton("Without it, Twan Clean skips those folders and shows them as locked, so it never interrupts you with permission prompts.")
+            }
 
             switch permissions.state {
             case .granted:
@@ -124,7 +127,7 @@ struct PermissionStepView: View {
                     .foregroundStyle(Tint.green)
                     .font(.headline)
             case .needsRelaunch:
-                Label("Access is on. Restart Twan Clean to use it.", systemImage: "arrow.clockwise.circle.fill")
+                Label("Access is on. Restart to use it.", systemImage: "arrow.clockwise.circle.fill")
                     .foregroundStyle(Tint.orange)
                     .font(.headline)
                 Button("Restart Twan Clean") { AppRelaunch.relaunch() }
@@ -132,7 +135,10 @@ struct PermissionStepView: View {
             case .notGranted:
                 VStack(alignment: .leading, spacing: 8) {
                     Text("1. Open Privacy & Security › Full Disk Access.")
-                    Text("2. Turn on Twan Clean. If it is not listed, add it with the + button from the Applications folder.")
+                    HStack(spacing: 6) {
+                        Text("2. Turn on Twan Clean.")
+                        InfoButton("Not in the list? Add it with the + button from the Applications folder.")
+                    }
                 }
                 .font(.callout)
                 Button("Open System Settings") {

@@ -215,7 +215,7 @@ final class UninstallerViewModel: ObservableObject {
             var outcome = CleanupOutcome(RemovalReport())
             let names = ListFormatter.localizedString(byJoining: stillRunning.sorted())
             outcome.failures.append(.init(name: app.name, message: String(
-                localized: "Still running: \(names). Quit them, or uninstall again and choose Force Quit and Uninstall.")))
+                localized: "Still running: \(names). Try Force Quit and Uninstall.")))
             self.outcome = outcome
             return
         }

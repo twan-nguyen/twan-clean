@@ -22,9 +22,12 @@ struct ScheduleSettingsTab: View {
                         .foregroundStyle(.red)
                 }
             } footer: {
-                Text("Runs in the background even when Twan Clean is closed. If the Mac is asleep at that time, it runs soon after it wakes.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                HStack(spacing: 6) {
+                    Text("Runs even when Twan Clean is closed.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    InfoButton("If the Mac is asleep at that time, the run starts soon after it wakes.")
+                }
             }
 
             Section("When") {
@@ -50,9 +53,12 @@ struct ScheduleSettingsTab: View {
                             in: 0...10_000, step: 50) {
                         LabeledContent("Only when at least", value: Int64(settings.minimumBytesToClean).formattedBytes)
                     }
-                    Text("Only caches, logs and other data apps recreate are cleaned. Anything that needs your password, belongs to a running app or is your own file is left for you to review.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                    HStack(spacing: 6) {
+                        Text("Only caches and logs are cleaned.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        InfoButton("Only data apps recreate is cleaned. Anything that needs your password, belongs to a running app or is your own file is left for you to review.")
+                    }
                 }
                 ForEach(ScheduleSettings.schedulableCategories) { category in
                     Toggle(isOn: Binding(
@@ -107,7 +113,7 @@ struct ScheduleSettingsTab: View {
             }
         }
         if !notificationsAllowed {
-            Label("Notifications are off, so results only show here and in the menu bar.", systemImage: "bell.slash")
+            Label("Notifications are off. Results show here and in the menu bar.", systemImage: "bell.slash")
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }

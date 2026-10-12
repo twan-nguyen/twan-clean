@@ -13,7 +13,7 @@ struct OrphansView: View {
             case .scanning:
                 ScrollView {
                     WorkingCard(tint: Tint.pink, systemImage: "questionmark.folder.fill",
-                                title: "Comparing Library folders with your installed apps…") {
+                                title: "Looking for leftovers…") {
                         EmptyView()
                     }
                     .padding(.horizontal, 28)
@@ -36,7 +36,7 @@ struct OrphansView: View {
                 Task { await model.trashSelection() }
             }
         } message: {
-            Text("You can restore them from the Trash. The space is freed when you empty it.")
+            Text("Restorable until you empty the Trash.")
         }
         .sheet(item: $model.outcome) { outcome in
             CleanupOutcomeView(outcome: outcome) {
@@ -52,10 +52,11 @@ struct OrphansView: View {
         ScrollView {
             ToolIntroCard(systemImage: "questionmark.folder.fill", tint: Tint.pink,
                           title: "Find files left by deleted apps",
-                          message: "Twan Clean compares caches, logs and saved states with the apps installed now. Nothing is selected for you, and removed files go to the Trash.") {
+                          message: "Caches, logs and saved states of apps you removed.") {
                 Button { model.scan() } label: { Label("Scan", systemImage: "magnifyingglass") }
                     .buttonStyle(GlowButtonStyle(tint: Tint.pink, gradient: TintGradient.of(Tint.pink)))
                     .keyboardShortcut(.defaultAction)
+                InfoButton("Twan Clean compares Library folders with the apps installed now. Nothing is selected for you, and removed files go to the Trash.")
                 if !model.ignored.isEmpty {
                     Button { showingIgnored = true } label: {
                         Label("Ignored (\(model.ignored.count))", systemImage: "eye.slash")
@@ -99,7 +100,7 @@ struct OrphansView: View {
                         Text(model.items.reduce(0) { $0 + $1.bytes }.formattedBytes)
                             .font(.system(size: 24, weight: .semibold))
                             .monospacedDigit()
-                        Text("\(model.items.count) items from apps that are no longer installed")
+                        Text("\(model.items.count) items from removed apps")
                             .font(.system(size: 12))
                             .foregroundStyle(.secondary)
                     }

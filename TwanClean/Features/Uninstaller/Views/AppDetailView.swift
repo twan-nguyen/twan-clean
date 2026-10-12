@@ -42,7 +42,7 @@ struct AppDetailView: View {
         .confirmationDialog(Text("Uninstall \(app.name)?"), isPresented: $confirming) {
             Button("Move \(model.selectedItems.count) Items to Trash", role: .destructive) { start() }
         } message: {
-            Text("The selected items, \(model.selectedBytes.formattedBytes) in total, go to the Trash, where you can still restore them.")
+            Text("\(model.selectedBytes.formattedBytes) goes to the Trash. Restorable until you empty it.")
         }
         .alert(Text("\(app.name) is running"), isPresented: $askingToQuit) {
             Button("Quit and Uninstall") { Task { await model.uninstall(confirmedItems, of: app) } }
@@ -51,7 +51,7 @@ struct AppDetailView: View {
             }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("Twan Clean needs to quit it first. Unsaved changes in the app may be lost if you force it to quit.")
+            Text("It must quit first. Force quitting may lose unsaved changes.")
         }
     }
 
@@ -93,10 +93,8 @@ struct AppDetailView: View {
                     .labelsHidden()
                     .disabled(model.phase == .uninstalling)
                     .frame(width: 260)
-                    Text(model.sensitivity.summary)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
+                    InfoButton(resource: model.sensitivity.summary)
+                    Spacer()
                 }
             }
         }

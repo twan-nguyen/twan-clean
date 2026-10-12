@@ -30,18 +30,40 @@ enum CleanupCategoryID: String, CaseIterable, Identifiable, Codable, Sendable {
         }
     }
 
+    /// One short line under the title.
     var summary: LocalizedStringResource {
         switch self {
-        case .systemJunk: "Logs and temporary files left by macOS and apps."
-        case .userCache: "Cached data apps rebuild when they need it."
-        case .aiApps: "Logs and caches from Ollama and LM Studio. Chat history is never selected for you."
-        case .mail: "Attachments Mail downloaded to show you; the originals stay on the mail server."
-        case .trash: "Items already in your Trash."
-        case .largeOld: "Big files, and old files you have not touched in a long time. Nothing here is selected for you, and removed files go to the Trash."
-        case .xcode: "Build products, simulator caches and archives from Xcode."
-        case .brew: "Downloads Homebrew keeps after installing packages."
-        case .node: "Package caches from npm, Yarn and pnpm."
+        case .systemJunk: "Logs and temporary files."
+        case .userCache: "Caches apps rebuild."
+        case .aiApps: "Ollama and LM Studio caches."
+        case .mail: "Attachments Mail downloaded."
+        case .trash: "Items in your Trash."
+        case .largeOld: "Big files and files untouched for long."
+        case .xcode: "Build products, simulators, archives."
+        case .brew: "Downloads kept after installs."
+        case .node: "npm, Yarn and pnpm caches."
         case .docker: "Docker Desktop logs and caches."
+        }
+    }
+
+    /// What is worth knowing before cleaning, shown behind an ⓘ.
+    var note: LocalizedStringResource? {
+        switch self {
+        case .aiApps, .mail, .largeOld, .userCache, .systemJunk: noteText
+        default: nil
+        }
+    }
+
+    // Kept non-optional: string extraction misses literals returned as an
+    // optional.
+    private var noteText: LocalizedStringResource {
+        switch self {
+        case .aiApps: "Chat history is never selected for you."
+        case .mail: "The originals stay on the mail server, so Mail can download them again."
+        case .largeOld: "Nothing here is selected for you, and removed files go to the Trash. Set the size and age in Settings."
+        case .userCache: "Apps recreate these, so they are deleted rather than moved to the Trash."
+        case .systemJunk: "Items macOS or a running app uses, or that need your password, are marked and not selected."
+        default: summary
         }
     }
 

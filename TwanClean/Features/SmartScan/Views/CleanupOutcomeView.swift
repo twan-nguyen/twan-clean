@@ -24,10 +24,10 @@ struct CleanupOutcomeView: View {
 
             if !outcome.needsAdministrator.isEmpty {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("\(outcome.needsAdministrator.count) items could not be removed without more access")
+                    Text("\(outcome.needsAdministrator.count) items need more access")
                         .font(.headline)
                     if hasFullDiskAccess {
-                        Text("They belong to macOS or another user. Twan Clean can remove them with your administrator password.")
+                        Text("They belong to macOS or another user.")
                             .foregroundStyle(.secondary)
                         Button("Remove with Password…") {
                             dismiss()
@@ -35,7 +35,7 @@ struct CleanupOutcomeView: View {
                         }
                         .buttonStyle(PillButtonStyle())
                     } else {
-                        Text("Give Twan Clean Full Disk Access first; many of these items only need that. Then clean again.")
+                        Text("Grant Full Disk Access first, then clean again.")
                             .foregroundStyle(.secondary)
                         Button("Open Full Disk Access Settings") {
                             FullDiskAccess.openSystemSettings()

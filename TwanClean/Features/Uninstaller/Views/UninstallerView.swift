@@ -14,8 +14,8 @@ struct UninstallerView: View {
                         .id(app.id)
                 } else {
                     EmptyStateCard(systemImage: "square.grid.2x2.fill", tint: Tint.purple,
-                                   title: "Choose an app to see everything it installed",
-                                   message: "Tip: in Finder, Control-click an app and choose Services › Uninstall with Twan Clean.")
+                                   title: "Choose an app",
+                                   message: "Or in Finder: Services › Uninstall with Twan Clean.")
                 }
             }
             .frame(minWidth: 400)
