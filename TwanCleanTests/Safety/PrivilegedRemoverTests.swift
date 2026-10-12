@@ -99,6 +99,46 @@ final class PrivilegedRemoverTests: XCTestCase {
         XCTAssertTrue(tree.exists(file))
     }
 
+    func testItemScriptsNeverContainASingleQuote() throws {
+        for action in [PrivilegedRemover.RootAction.remove, .stopSystemDaemon()] {
+            XCTAssertFalse(try PrivilegedRemover.itemScript(action).contains("'"))
+        }
+        XCTAssertThrowsError(try PrivilegedRemover.itemScript(.stopSystemDaemon(daemonFolder: "/x'; reboot", launchctl: "/bin/launchctl")))
+    }
+
+    func testStopCommandStopsOnlyUnchangedPlistsDirectlyInTheDaemonFolder() async throws {
+        let daemons = try tree.makeDirectory("LaunchDaemons")
+        let log = tree.root.appendingPathComponent("launchctl.log")
+        let launchctl = try tree.makeFile("bin/launchctl")
+        try "#!/bin/sh\necho \"$@\" >> \(log.path)\n".write(to: launchctl, atomically: true, encoding: .utf8)
+        try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: launchctl.path)
+        let daemon = try tree.makeFile("LaunchDaemons/com.vendor.helper.plist")
+        let nested = try tree.makeFile("LaunchDaemons/old/com.vendor.helper.plist")
+        let replaced = try tree.makeFile("LaunchDaemons/com.vendor.replaced.plist")
+        let notAPlist = try tree.makeFile("LaunchDaemons/readme.txt")
+        let staged = try PrivilegedRemover.stage([
+            (try identity(daemon), daemon.path), (try identity(nested), nested.path),
+            (FileIdentity(device: 0, inode: 0), replaced.path), (try identity(notAPlist), notAPlist.path),
+        ])
+        let action = PrivilegedRemover.RootAction.stopSystemDaemon(daemonFolder: daemons.path, launchctl: launchctl.path)
+
+        let result = try await runShell(try PrivilegedRemover.shellCommand(stagingFile: staged.file, digest: staged.digest,
+                                                                           action: action))
+
+        XCTAssertTrue(result.succeeded, result.errorText)
+        XCTAssertEqual(try String(contentsOf: log, encoding: .utf8), "bootout system \(daemon.path)\n")
+        for file in [daemon, nested, replaced, notAPlist] {
+            XCTAssertTrue(tree.exists(file), "\(file.lastPathComponent) must be left for the Trash")
+        }
+    }
+
+    func testRecognisesSystemDaemonPlists() {
+        XCTAssertTrue(PrivilegedRemover.isSystemDaemon(URL(fileURLWithPath: "/Library/LaunchDaemons/com.vendor.helper.plist")))
+        XCTAssertFalse(PrivilegedRemover.isSystemDaemon(URL(fileURLWithPath: "/Library/LaunchDaemons/old/com.vendor.helper.plist")))
+        XCTAssertFalse(PrivilegedRemover.isSystemDaemon(URL(fileURLWithPath: "/Library/LaunchAgents/com.vendor.agent.plist")))
+        XCTAssertFalse(PrivilegedRemover.isSystemDaemon(URL(fileURLWithPath: "/Library/LaunchDaemons/helper")))
+    }
+
     func testCommandRejectsUnusualStagingPath() {
         let odd = URL(fileURLWithPath: "/tmp/it's here/paths")
         XCTAssertThrowsError(try PrivilegedRemover.shellCommand(stagingFile: odd, digest: String(repeating: "a", count: 64)))

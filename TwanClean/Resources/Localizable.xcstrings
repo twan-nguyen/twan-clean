@@ -2171,6 +2171,16 @@
         }
       }
     },
+    "Still running: %@. Quit them, or uninstall again and choose Force Quit and Uninstall." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vẫn đang chạy: %@. Hãy thoát chúng, hoặc gỡ lại và chọn “Buộc thoát và gỡ”."
+          }
+        }
+      }
+    },
     "Stop Ignoring" : {
       "localizations" : {
         "vi" : {
@@ -2237,16 +2247,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Lệnh quản trị thất bại: %@"
-          }
-        }
-      }
-    },
-    "The app is still running. Quit it and try again." : {
-      "localizations" : {
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "App vẫn đang chạy. Hãy thoát app rồi thử lại."
           }
         }
       }
@@ -2457,6 +2457,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Twan Clean cần mật khẩu của bạn để xoá các mục đã chọn."
+          }
+        }
+      }
+    },
+    "Twan Clean needs your password to stop the app's background services." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Twan Clean cần mật khẩu của bạn để dừng các dịch vụ chạy nền của ứng dụng."
           }
         }
       }

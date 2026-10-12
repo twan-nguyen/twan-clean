@@ -15,11 +15,24 @@ import CryptoKit
 /// 3. uses `rm -x`, which never crosses into another mounted volume.
 ///
 /// Items whose purpose is the Trash are recycled through `NSWorkspace`, which
-/// asks for authorization itself; they are never deleted instead.
+/// asks for authorization itself; they are never deleted instead. A system
+/// daemon among them keeps running after its plist is gone, so the daemons are
+/// first stopped by the same kind of privileged command.
 struct PrivilegedRemover: Sendable {
     enum StagingError: Error {
         case unsafeStagingPath(String)
         case pathContainsNUL
+    }
+
+    /// What the privileged command does to each item that is unchanged.
+    enum RootAction: Sendable, Equatable {
+        case remove
+        /// Stops the system daemon that a plist directly inside `daemonFolder`
+        /// defines. The plist itself is left alone. The folder and tool are
+        /// parameters only so tests can point them elsewhere.
+        case stopSystemDaemon(daemonFolder: String = RootAction.systemDaemonFolder, launchctl: String = "/bin/launchctl")
+
+        static let systemDaemonFolder = "/Library/LaunchDaemons"
     }
 
     /// Runs an AppleScript and reports how it ended.
@@ -51,34 +64,32 @@ struct PrivilegedRemover: Sendable {
         if !deletions.isEmpty {
             await deleteAsAdministrator(deletions, into: &report)
         }
+        let daemons = recycling.filter { Self.isSystemDaemon($0.url) }
+        if !daemons.isEmpty {
+            // Best effort: if the user cancels, the plists still go to the
+            // Trash and the daemons stop at the next restart.
+            _ = await runAsAdministrator(daemons.map { ($0.request.identity, $0.url.path) },
+                                         action: .stopSystemDaemon(),
+                                         prompt: String(localized: "Twan Clean needs your password to stop the app's background services."))
+        }
         if !recycling.isEmpty {
             await recycleAsAdministrator(recycling, into: &report)
         }
         return report
     }
 
+    /// A launchd plist directly inside the system daemon folder.
+    static func isSystemDaemon(_ url: URL) -> Bool {
+        url.pathExtension == "plist"
+            && PathPolicy.isSame(url.deletingLastPathComponent().path, RootAction.systemDaemonFolder)
+    }
+
     // MARK: - Delete
 
     private func deleteAsAdministrator(_ items: [(request: RemovalRequest, url: URL)],
                                        into report: inout RemovalReport) async {
-        var failure: Error?
-        var stagingFolder: URL?
-        do {
-            let staged = try Self.stage(items.map { ($0.request.identity, $0.url.path) })
-            stagingFolder = staged.file.deletingLastPathComponent()
-            let command = try Self.shellCommand(stagingFile: staged.file, digest: staged.digest)
-            let script = Self.appleScript(shellCommand: command, prompt: prompt)
-            if let result = await runScript(script) {
-                if !result.succeeded { failure = AdministratorError(output: result.errorText) }
-            } else {
-                failure = AdministratorError(output: "")
-            }
-        } catch {
-            failure = error
-        }
-        if let stagingFolder {
-            try? FileManager.default.removeItem(at: stagingFolder)
-        }
+        let failure = await runAsAdministrator(items.map { ($0.request.identity, $0.url.path) },
+                                               action: .remove, prompt: prompt)
 
         // Trust only what actually changed on disk. An app may already have
         // recreated a cache folder, which counts as removed.
@@ -90,6 +101,27 @@ struct PrivilegedRemover: Sendable {
                     ?? String(localized: "The item is still present after administrator removal.")
                 report.failed.append(.init(request: item.request, message: message))
             }
+        }
+    }
+
+    /// Stages the items and runs the privileged command on them. Returns why
+    /// it failed, or nil when it ran to the end.
+    private func runAsAdministrator(_ entries: [(identity: FileIdentity, path: String)],
+                                    action: RootAction, prompt: String) async -> Error? {
+        var stagingFolder: URL?
+        defer {
+            if let stagingFolder { try? FileManager.default.removeItem(at: stagingFolder) }
+        }
+        do {
+            let staged = try Self.stage(entries)
+            stagingFolder = staged.file.deletingLastPathComponent()
+            let command = try Self.shellCommand(stagingFile: staged.file, digest: staged.digest, action: action)
+            guard let result = await runScript(Self.appleScript(shellCommand: command, prompt: prompt)) else {
+                return AdministratorError(output: "")
+            }
+            return result.succeeded ? nil : AdministratorError(output: result.errorText)
+        } catch {
+            return error
         }
     }
 
@@ -122,28 +154,44 @@ struct PrivilegedRemover: Sendable {
         "\(identity.device):\(identity.inode)"
     }
 
+    /// Characters allowed in anything this app inserts into the root command.
+    private static let plainCharacters = CharacterSet(
+        charactersIn: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/._-")
+
+    /// The command run for each pair, as `sh -c '<script>' sh <identity> <path>`.
+    /// It goes inside single quotes, so it must never contain one.
+    static func itemScript(_ action: RootAction) throws -> String {
+        let unchanged = #"[ "$(/usr/bin/stat -f %d:%i "$2")" = "$1" ] || exit 0; "#
+        switch action {
+        case .remove:
+            return unchanged + #"/bin/rm -rfx -- "$2"; exit 0"#
+        case .stopSystemDaemon(let folder, let launchctl):
+            for value in [folder, launchctl] where value.isEmpty || !value.unicodeScalars.allSatisfy(plainCharacters.contains) {
+                throw StagingError.unsafeStagingPath(value)
+            }
+            // `*` also matches "/", so plists in subfolders are ruled out first.
+            return unchanged + #"case "$2" in "# + folder + #"/*/*) ;; "# + folder + #"/*.plist) "#
+                + launchctl + #" bootout system "$2" 2>/dev/null;; esac; exit 0"#
+        }
+    }
+
     /// The root shell command. Only the staging path and digest, both
     /// generated by this app and limited to plain characters, are inserted.
-    static func shellCommand(stagingFile: URL, digest: String) throws -> String {
+    static func shellCommand(stagingFile: URL, digest: String, action: RootAction = .remove) throws -> String {
         let path = stagingFile.path
-        let safe = CharacterSet(charactersIn: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/._-")
-        guard !path.isEmpty, path.unicodeScalars.allSatisfy(safe.contains) else {
+        guard !path.isEmpty, path.unicodeScalars.allSatisfy(plainCharacters.contains) else {
             throw StagingError.unsafeStagingPath(path)
         }
-        guard digest.count == 64, digest.unicodeScalars.allSatisfy(safe.contains) else {
+        guard digest.count == 64, digest.unicodeScalars.allSatisfy(plainCharacters.contains) else {
             throw StagingError.unsafeStagingPath(digest)
         }
-        // A system daemon keeps running after its plist is gone, so it is
-        // stopped first. The identity check has already passed by then.
-        let removeIfUnchanged = #"[ "$(/usr/bin/stat -f %d:%i "$2")" = "$1" ] || exit 0; "#
-            + #"case "$2" in /Library/LaunchDaemons/*.plist) /bin/launchctl bootout system "$2" 2>/dev/null;; esac; "#
-            + #"/bin/rm -rfx -- "$2"; exit 0"#
+        let perItem = try itemScript(action)
         return [
             "list=$(/usr/bin/mktemp) || exit 1",
             "/bin/cat '\(path)' > \"$list\" || { /bin/rm -f \"$list\"; exit 1; }",
             "if [ \"$(/usr/bin/shasum -a 256 < \"$list\" | /usr/bin/cut -d ' ' -f 1)\" != '\(digest)' ];"
                 + " then /bin/rm -f \"$list\"; echo 'The list of items changed.' >&2; exit 3; fi",
-            "/usr/bin/xargs -0 -n 2 /bin/sh -c '\(removeIfUnchanged)' sh < \"$list\"",
+            "/usr/bin/xargs -0 -n 2 /bin/sh -c '\(perItem)' sh < \"$list\"",
             "status=$?",
             "/bin/rm -f \"$list\"",
             "exit $status",

@@ -159,19 +159,49 @@ final class UninstallerViewModel: ObservableObject {
         !runningProcesses(of: app).isEmpty
     }
 
-    /// The app and the helpers it starts from inside its bundle, such as
-    /// login items and menu bar agents, which keep running after the app
-    /// itself quits.
-    private func runningProcesses(of app: InstalledApp) -> [NSRunningApplication] {
-        NSWorkspace.shared.runningApplications.filter { process in
-            if process.bundleIdentifier == app.bundleIdentifier { return true }
-            guard let url = process.bundleURL ?? process.executableURL else { return false }
-            return PathPolicy.isInside(url.path, app.url.path)
-        }
+    private struct RunningProcess {
+        let pid: pid_t
+        let name: String
+        /// Set for processes that are apps, which are asked to quit politely.
+        let application: NSRunningApplication?
+
+        var isTerminated: Bool { application?.isTerminated ?? !ProcessList.isRunning(pid) }
     }
 
-    /// Quits the app if it is running, unloads its launch agents and moves
-    /// `items`, the selection the user confirmed, to the Trash. The list is
+    /// Whether a process is part of `app`: the app itself, wherever it runs
+    /// from, or a helper started from inside its bundle, such as a login item,
+    /// a menu bar agent or a plain executable, which keeps running after the
+    /// app quits.
+    nonisolated static func belongs(bundleIdentifier: String?, path: String?, to appIdentifier: String, at appPath: String) -> Bool {
+        if let bundleIdentifier, bundleIdentifier == appIdentifier { return true }
+        guard let path else { return false }
+        return PathPolicy.isSame(path, appPath) || PathPolicy.isInside(path, appPath)
+    }
+
+    private func runningProcesses(of app: InstalledApp) -> [RunningProcess] {
+        let ownPID = getpid()
+        var found: [pid_t: RunningProcess] = [:]
+        for process in NSWorkspace.shared.runningApplications where process.processIdentifier != ownPID {
+            let path = (process.bundleURL ?? process.executableURL)?.path
+            if Self.belongs(bundleIdentifier: process.bundleIdentifier, path: path,
+                            to: app.bundleIdentifier, at: app.url.path) {
+                found[process.processIdentifier] = RunningProcess(
+                    pid: process.processIdentifier, name: process.localizedName ?? app.name, application: process)
+            }
+        }
+        // Only processes this user may stop: a root helper inside the bundle
+        // would otherwise block the uninstall for good.
+        for (pid, path) in ProcessList.executablePaths()
+        where pid != ownPID && found[pid] == nil && ProcessList.canSignal(pid)
+            && Self.belongs(bundleIdentifier: nil, path: path, to: app.bundleIdentifier, at: app.url.path) {
+            found[pid] = RunningProcess(pid: pid, name: (path as NSString).lastPathComponent, application: nil)
+        }
+        return Array(found.values)
+    }
+
+    /// Unloads the app's launch agents, quits the app and its helpers, and
+    /// moves `items`, the selection the user confirmed, to the Trash. Agents
+    /// go first: launchd would otherwise start a quit helper again. The list is
     /// locked meanwhile, so waiting for the app to quit cannot change what is
     /// removed.
     func uninstall(_ items: [LeftoverItem], of app: InstalledApp, forceQuit: Bool = false) async {
@@ -179,13 +209,16 @@ final class UninstallerViewModel: ObservableObject {
         phase = .uninstalling
         defer { phase = .idle }
 
-        if !(await quit(app, force: forceQuit)) {
+        await unloadLaunchAgents(in: items)
+        let stillRunning = await quit(app, force: forceQuit)
+        guard stillRunning.isEmpty else {
             var outcome = CleanupOutcome(RemovalReport())
-            outcome.failures.append(.init(name: app.name, message: String(localized: "The app is still running. Quit it and try again.")))
+            let names = ListFormatter.localizedString(byJoining: stillRunning.sorted())
+            outcome.failures.append(.init(name: app.name, message: String(
+                localized: "Still running: \(names). Quit them, or uninstall again and choose Force Quit and Uninstall.")))
             self.outcome = outcome
             return
         }
-        await unloadLaunchAgents(in: items)
         let report = await removal.remove(items.map(\.removalRequest))
         finish(report, into: CleanupOutcome(report))
     }
@@ -214,28 +247,35 @@ final class UninstallerViewModel: ObservableObject {
         self.outcome = outcome
     }
 
-    private func quit(_ app: InstalledApp, force: Bool) async -> Bool {
+    /// Asks the app and its helpers to quit, or forces them, and returns the
+    /// names of those still running after a few seconds.
+    private func quit(_ app: InstalledApp, force: Bool) async -> [String] {
         let running = runningProcesses(of: app)
-        guard !running.isEmpty else { return true }
-        for app in running {
-            if force { app.forceTerminate() } else { app.terminate() }
+        for process in running {
+            if let application = process.application {
+                if force { application.forceTerminate() } else { application.terminate() }
+            } else {
+                kill(process.pid, force ? SIGKILL : SIGTERM)
+            }
         }
         for _ in 0..<20 {
-            if running.allSatisfy(\.isTerminated) { return true }
+            if running.allSatisfy(\.isTerminated) { break }
             try? await Task.sleep(nanoseconds: 250_000_000)
         }
-        return running.allSatisfy(\.isTerminated)
+        return running.filter { !$0.isTerminated }.map(\.name)
     }
 
     /// Stops the launch agents being removed, so nothing keeps running from
     /// the Trash. Agents in the user's and the shared Library run in the
     /// user's session and can be stopped without a password; system daemons
-    /// are stopped by the password-protected removal itself.
+    /// are stopped by `PrivilegedRemover` before their plists are trashed.
     private func unloadLaunchAgents(in items: [LeftoverItem]) async {
         let folders = ["\(removal.policy.rules.home)/Library/LaunchAgents", "/Library/LaunchAgents"]
         for item in items where item.url.pathExtension == "plist"
             && folders.contains(where: { PathPolicy.isInside(item.url.path, $0) })
-            && removal.policy.evaluate(item.url, purpose: item.purpose) == .allowed(item.url) {
+            && removal.policy.evaluate(item.url, purpose: item.purpose) == .allowed(item.url)
+            // Still the file the scan found, not one swapped in since.
+            && FileIdentity.lookup(item.url) == .found(item.identity) {
             _ = await ProcessRunner.run(URL(fileURLWithPath: "/bin/launchctl"),
                                         ["bootout", "gui/\(getuid())", item.url.path], timeout: 10)
         }
