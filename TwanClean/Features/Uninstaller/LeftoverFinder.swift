@@ -145,7 +145,7 @@ struct LeftoverFinder: Sendable {
         // developer.
         let preselect: Bool = switch match {
         case nil: true
-        case .some(let match) where shared: false
+        case .some where shared: false
         case .some(let match) where needsAdministrator: match.isExact
         case .some(let match): match.tier != .developerName && match.tier != .teamIdentifier
         }
