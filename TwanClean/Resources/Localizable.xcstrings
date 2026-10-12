@@ -1,6 +1,16 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "Administrator authorization was cancelled." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đã huỷ cấp quyền quản trị."
+          }
+        }
+      }
+    },
     "App Uninstaller" : {
       "localizations" : {
         "vi" : {
@@ -67,6 +77,36 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Space Lens"
+          }
+        }
+      }
+    },
+    "The administrator command failed: %@" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lệnh quản trị thất bại: %@"
+          }
+        }
+      }
+    },
+    "The item could not be moved to the Trash." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Không thể chuyển mục này vào Thùng rác."
+          }
+        }
+      }
+    },
+    "The item is still present after administrator removal." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mục này vẫn còn sau khi xoá bằng quyền quản trị."
           }
         }
       }
