@@ -2,9 +2,18 @@ import SwiftUI
 
 struct MainWindow: View {
     @EnvironmentObject private var appModel: AppModel
+    @AppStorage("onboarding.completed") private var onboardingCompleted = false
     @State private var selection: SidebarItem? = .smartScan
 
     var body: some View {
+        if onboardingCompleted {
+            content
+        } else {
+            OnboardingView { onboardingCompleted = true }
+        }
+    }
+
+    private var content: some View {
         NavigationSplitView {
             List(selection: $selection) {
                 Section("Overview") {

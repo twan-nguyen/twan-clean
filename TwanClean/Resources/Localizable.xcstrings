@@ -133,6 +133,26 @@
         }
       }
     },
+    "1. Open Privacy & Security › Full Disk Access." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "1. Mở Quyền riêng tư & Bảo mật › Truy cập toàn ổ đĩa."
+          }
+        }
+      }
+    },
+    "2. Turn on Twan Clean. If it is not listed, add it with the + button from the Applications folder." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "2. Bật Twan Clean. Nếu không thấy trong danh sách, hãy thêm bằng nút + từ thư mục Applications."
+          }
+        }
+      }
+    },
     "A scheduled scan is running. Try again in a moment." : {
       "localizations" : {
         "vi" : {
@@ -149,6 +169,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ứng dụng AI"
+          }
+        }
+      }
+    },
+    "Access is on. Restart Twan Clean to use it." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đã bật quyền. Hãy khởi động lại Twan Clean để dùng."
           }
         }
       }
@@ -179,6 +209,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Đã huỷ cấp quyền quản trị."
+          }
+        }
+      }
+    },
+    "Allow Notifications" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cho phép thông báo"
           }
         }
       }
@@ -249,6 +289,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ứng dụng"
+          }
+        }
+      }
+    },
+    "Apps, documents and leftovers can be restored. Only caches and logs that apps rebuild are deleted outright." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ứng dụng, tài liệu và tệp sót đều khôi phục được. Chỉ cache và log do ứng dụng tự tạo lại mới bị xoá hẳn."
           }
         }
       }
@@ -443,6 +493,16 @@
         }
       }
     },
+    "Continue" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tiếp tục"
+          }
+        }
+      }
+    },
     "Date" : {
       "localizations" : {
         "vi" : {
@@ -533,6 +593,16 @@
         }
       }
     },
+    "English" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "English"
+          }
+        }
+      }
+    },
     "Enhanced" : {
       "localizations" : {
         "vi" : {
@@ -559,6 +629,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hằng tháng"
+          }
+        }
+      }
+    },
+    "Every scan only lists what it found. You choose what goes." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mỗi lần quét chỉ liệt kê những gì tìm thấy. Bạn quyết định xoá gì."
           }
         }
       }
@@ -679,6 +759,46 @@
         }
       }
     },
+    "Full Disk Access is off" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chưa có quyền truy cập toàn ổ đĩa"
+          }
+        }
+      }
+    },
+    "Full Disk Access is on" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đã có quyền truy cập toàn ổ đĩa"
+          }
+        }
+      }
+    },
+    "Full Disk Access is on after a restart" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quyền truy cập toàn ổ đĩa có hiệu lực sau khi khởi động lại"
+          }
+        }
+      }
+    },
+    "Full Disk Access is on." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đã có quyền truy cập toàn ổ đĩa."
+          }
+        }
+      }
+    },
     "General" : {
       "localizations" : {
         "vi" : {
@@ -689,12 +809,32 @@
         }
       }
     },
+    "Give Twan Clean Full Disk Access" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cấp quyền truy cập toàn ổ đĩa cho Twan Clean"
+          }
+        }
+      }
+    },
     "Give Twan Clean Full Disk Access first; many of these items only need that. Then clean again." : {
       "localizations" : {
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Hãy cấp quyền truy cập toàn ổ đĩa cho Twan Clean trước; nhiều mục chỉ cần quyền này. Sau đó dọn lại."
+          }
+        }
+      }
+    },
+    "Hear about scheduled scans" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nhận tin về các lần quét theo lịch"
           }
         }
       }
@@ -715,6 +855,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nếu macOS chặn, hãy cho phép Twan Clean trong Cài đặt hệ thống › Quyền riêng tư & Bảo mật › Quản lý ứng dụng."
+          }
+        }
+      }
+    },
+    "If you turn on scheduled cleaning in Settings, Twan Clean can tell you what it found or freed. This is optional." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nếu bạn bật dọn theo lịch trong Cài đặt, Twan Clean có thể báo những gì đã tìm thấy hoặc giải phóng. Không bắt buộc."
           }
         }
       }
@@ -759,6 +909,16 @@
         }
       }
     },
+    "Language" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ngôn ngữ"
+          }
+        }
+      }
+    },
     "Large & Old Files" : {
       "localizations" : {
         "vi" : {
@@ -795,6 +955,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Lần quét theo lịch gần nhất"
+          }
+        }
+      }
+    },
+    "Later" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Để sau"
           }
         }
       }
@@ -979,6 +1149,16 @@
         }
       }
     },
+    "No account, no tracking, nothing sent anywhere." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Không tài khoản, không theo dõi, không gửi gì ra ngoài."
+          }
+        }
+      }
+    },
     "No folders skipped." : {
       "localizations" : {
         "vi" : {
@@ -1029,12 +1209,32 @@
         }
       }
     },
+    "Nothing is removed without you" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Không xoá gì nếu bạn chưa đồng ý"
+          }
+        }
+      }
+    },
     "Nothing to clean here" : {
       "localizations" : {
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Không có gì để dọn"
+          }
+        }
+      }
+    },
+    "Notifications Requested" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đã xin quyền thông báo"
           }
         }
       }
@@ -1135,6 +1335,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Mở Cài đặt"
+          }
+        }
+      }
+    },
+    "Open System Settings" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mở Cài đặt hệ thống"
           }
         }
       }
@@ -1279,6 +1489,26 @@
         }
       }
     },
+    "Restart Now" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Khởi động lại ngay"
+          }
+        }
+      }
+    },
+    "Restart Twan Clean" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Khởi động lại Twan Clean"
+          }
+        }
+      }
+    },
     "Run automatically" : {
       "localizations" : {
         "vi" : {
@@ -1295,6 +1525,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Chạy nền kể cả khi Twan Clean đã đóng. Nếu lúc đó máy đang ngủ, lượt chạy sẽ diễn ra ngay sau khi máy thức dậy."
+          }
+        }
+      }
+    },
+    "Same as macOS" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Theo macOS"
           }
         }
       }
@@ -1595,6 +1835,16 @@
         }
       }
     },
+    "Start Using Twan Clean" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bắt đầu dùng Twan Clean"
+          }
+        }
+      }
+    },
     "Startup Disk" : {
       "localizations" : {
         "vi" : {
@@ -1745,6 +1995,16 @@
         }
       }
     },
+    "The new language applies after Twan Clean restarts." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ngôn ngữ mới có hiệu lực sau khi Twan Clean khởi động lại."
+          }
+        }
+      }
+    },
     "The selected items, %@ in total, go to the Trash, where you can still restore them." : {
       "localizations" : {
         "vi" : {
@@ -1791,6 +2051,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Mẹo: trong Finder, Control-click vào một app rồi chọn Dịch vụ › Uninstall with Twan Clean."
+          }
+        }
+      }
+    },
+    "Tiếng Việt" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tiếng Việt"
           }
         }
       }
@@ -1915,6 +2185,16 @@
         }
       }
     },
+    "Welcome to Twan Clean" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chào mừng đến với Twan Clean"
+          }
+        }
+      }
+    },
     "What" : {
       "localizations" : {
         "vi" : {
@@ -1955,6 +2235,26 @@
         }
       }
     },
+    "Your data stays on this Mac" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dữ liệu của bạn ở lại trên máy này"
+          }
+        }
+      }
+    },
+    "Your files go to the Trash" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tệp của bạn vào Thùng rác"
+          }
+        }
+      }
+    },
     "macOS can also free %@ of purgeable space by itself when it needs room." : {
       "localizations" : {
         "vi" : {
@@ -1971,6 +2271,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "macOS cần bạn cho phép trong Mục đăng nhập."
+          }
+        }
+      }
+    },
+    "macOS protects folders such as Mail, Desktop, Documents and other apps' data. Without this access, Twan Clean skips them and shows them as locked, so it never interrupts you with permission prompts." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS bảo vệ các thư mục như Mail, Desktop, Documents và dữ liệu của app khác. Khi chưa có quyền này, Twan Clean bỏ qua chúng và hiện là bị khoá, nên không bao giờ làm phiền bạn bằng các hộp thoại hỏi quyền."
           }
         }
       }
