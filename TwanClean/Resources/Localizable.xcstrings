@@ -167,6 +167,16 @@
         }
       }
     },
+    "Always Ignore" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Luôn bỏ qua"
+          }
+        }
+      }
+    },
     "App Uninstaller" : {
       "localizations" : {
         "vi" : {
@@ -357,6 +367,16 @@
         }
       }
     },
+    "Comparing Library folders with your installed apps…" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đang so các thư mục Library với các app đang cài…"
+          }
+        }
+      }
+    },
     "Containers" : {
       "localizations" : {
         "vi" : {
@@ -457,6 +477,16 @@
         }
       }
     },
+    "Find files left by deleted apps" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tìm tệp sót lại của app đã xoá"
+          }
+        }
+      }
+    },
     "Find junk in %lld places at once" : {
       "localizations" : {
         "vi" : {
@@ -543,6 +573,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nếu macOS chặn, hãy cho phép Twan Clean trong Cài đặt hệ thống › Quyền riêng tư & Bảo mật › Quản lý ứng dụng."
+          }
+        }
+      }
+    },
+    "Ignored (%lld)" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đã bỏ qua (%lld)"
+          }
+        }
+      }
+    },
+    "Ignored Items" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mục đã bỏ qua"
           }
         }
       }
@@ -753,6 +803,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Không bỏ qua thư mục nào."
+          }
+        }
+      }
+    },
+    "No orphaned files found" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Không tìm thấy tệp mồ côi"
           }
         }
       }
@@ -1183,6 +1243,16 @@
         }
       }
     },
+    "Stop Ignoring" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thôi bỏ qua"
+          }
+        }
+      }
+    },
     "Stop skipping this folder" : {
       "localizations" : {
         "vi" : {
@@ -1359,6 +1429,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Thùng rác"
+          }
+        }
+      }
+    },
+    "Twan Clean compares caches, logs and saved states with the apps installed now. Nothing is selected for you, and removed files go to the Trash." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Twan Clean so cache, log và trạng thái đã lưu với các app đang cài. Không mục nào được chọn sẵn, và tệp bị xoá sẽ vào Thùng rác."
           }
         }
       }

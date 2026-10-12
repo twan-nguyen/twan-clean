@@ -12,6 +12,7 @@ struct TwanCleanApp: App {
                 .environmentObject(model.smartScan)
                 .environmentObject(model.spaceLens)
                 .environmentObject(model.uninstaller)
+                .environmentObject(model.orphans)
                 .onAppear { appDelegate.model = model }
         }
         .defaultSize(width: 1000, height: 680)

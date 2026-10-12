@@ -53,24 +53,7 @@ struct MainWindow: View {
         case .uninstaller:
             UninstallerView()
         case .orphans:
-            FeaturePlaceholderView(item: item)
+            OrphansView()
         }
-    }
-}
-
-/// Stands in for a feature screen until that feature is implemented.
-private struct FeaturePlaceholderView: View {
-    let item: SidebarItem
-
-    var body: some View {
-        VStack(spacing: 12) {
-            Image(systemName: item.systemImage)
-                .font(.system(size: 48))
-                .foregroundStyle(.secondary)
-            Text(item.title)
-                .font(.title2)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .navigationTitle(Text(item.title))
     }
 }
