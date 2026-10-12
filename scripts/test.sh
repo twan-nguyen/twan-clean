@@ -7,7 +7,7 @@ cd "$(dirname "$0")/.."
 xcodegen generate --quiet
 set +e
 xcodebuild test -project TwanClean.xcodeproj -scheme TwanClean \
-  -destination 'platform=macOS,arch=arm64' "$@" 2>&1 \
+  -destination "${TEST_DESTINATION:-platform=macOS,arch=arm64}" "$@" 2>&1 \
   | grep -E "error:|warning: .*\.swift|failed|Executed [0-9]+ tests|TEST (SUCCEEDED|FAILED)" \
   | grep -v "linkd.autoShortcut"
 exit "${PIPESTATUS[0]}"

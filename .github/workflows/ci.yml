@@ -20,13 +20,5 @@ jobs:
       - name: Install XcodeGen
         run: brew install xcodegen
 
-      - name: Generate project
-        run: xcodegen generate
-
       - name: Test
-        run: |
-          xcodebuild test \
-            -project TwanClean.xcodeproj \
-            -scheme TwanClean \
-            -destination 'platform=macOS' \
-            -quiet
+        run: scripts/test.sh
