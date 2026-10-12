@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>en</string>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleName</key>
+	<string>Twan Clean</string>
+	<key>CFBundleDisplayName</key>
+	<string>Twan Clean</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>$(MARKETING_VERSION)</string>
+	<key>CFBundleVersion</key>
+	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>en</string>
+		<string>vi</string>
+	</array>
+	<key>LSMinimumSystemVersion</key>
+	<string>$(MACOSX_DEPLOYMENT_TARGET)</string>
+	<key>LSApplicationCategoryType</key>
+	<string>public.app-category.utilities</string>
+	<key>NSHumanReadableCopyright</key>
+	<string>Copyright © 2026 Twan. MIT License.</string>
+	<key>NSDesktopFolderUsageDescription</key>
+	<string>Twan Clean scans your Desktop for large and old files.</string>
+	<key>NSDocumentsFolderUsageDescription</key>
+	<string>Twan Clean scans your Documents for large and old files.</string>
+	<key>NSDownloadsFolderUsageDescription</key>
+	<string>Twan Clean scans your Downloads for large and old files.</string>
+	<key>NSRemovableVolumesUsageDescription</key>
+	<string>Twan Clean can measure disk usage on removable volumes in Space Lens.</string>
+	<key>NSSystemAdministrationUsageDescription</key>
+	<string>Twan Clean asks for administrator access only to remove system caches or app files you selected.</string>
+	<key>NSAppleEventsUsageDescription</key>
+	<string>Twan Clean uses Apple Events to run the administrator removal you approved.</string>
+</dict>
+</plist>

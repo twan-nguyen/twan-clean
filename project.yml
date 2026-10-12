@@ -1,0 +1,76 @@
+name: TwanClean
+options:
+  bundleIdPrefix: com.twan
+  deploymentTarget:
+    macOS: "13.0"
+  createIntermediateGroups: true
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    MACOSX_DEPLOYMENT_TARGET: "13.0"
+    ARCHS: "arm64 x86_64"
+    DEAD_CODE_STRIPPING: "YES"
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+  configs:
+    Debug:
+      ONLY_ACTIVE_ARCH: "YES"
+    Release:
+      ONLY_ACTIVE_ARCH: "NO"
+      STRIP_INSTALLED_PRODUCT: "YES"
+      STRIP_STYLE: "non-global"
+
+configFiles:
+  Debug: Configs/Debug.xcconfig
+  Release: Configs/Release.xcconfig
+
+targets:
+  TwanClean:
+    type: application
+    platform: macOS
+    sources:
+      - TwanClean
+    settings:
+      base:
+        PRODUCT_NAME: TwanClean
+        PRODUCT_BUNDLE_IDENTIFIER: com.twan.twanclean
+        INFOPLIST_FILE: TwanClean/Resources/Info.plist
+        GENERATE_INFOPLIST_FILE: "NO"
+        CODE_SIGN_ENTITLEMENTS: TwanClean/Resources/TwanClean.entitlements
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        SWIFT_EMIT_LOC_STRINGS: "YES"
+        LOCALIZATION_PREFERS_STRING_CATALOGS: "YES"
+        COMBINE_HIDPI_IMAGES: "YES"
+        LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/../Frameworks"
+
+  TwanCleanTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - TwanCleanTests
+    dependencies:
+      - target: TwanClean
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.twan.twanclean.tests
+        GENERATE_INFOPLIST_FILE: "YES"
+        MACOSX_DEPLOYMENT_TARGET: "14.0"
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/TwanClean.app/Contents/MacOS/TwanClean"
+        BUNDLE_LOADER: "$(TEST_HOST)"
+
+schemes:
+  TwanClean:
+    build:
+      targets:
+        TwanClean: all
+        TwanCleanTests: [test]
+    run:
+      config: Debug
+    test:
+      config: Debug
+      gatherCoverageData: true
+      targets:
+        - name: TwanCleanTests
+    archive:
+      config: Release
