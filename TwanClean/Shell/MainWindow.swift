@@ -53,7 +53,7 @@ private struct MainSplitView: View {
                 Divider()
                 PermissionFooter(permissions: permissions)
             }
-            .navigationSplitViewColumnWidth(min: 220, ideal: 236)
+            .navigationSplitViewColumnWidth(min: 220, ideal: 236, max: 260)
         } detail: {
             detail(for: selection ?? .smartScan)
                 .id(selection)

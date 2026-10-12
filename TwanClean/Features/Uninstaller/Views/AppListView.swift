@@ -25,9 +25,10 @@ struct AppListView: View {
                 Button {
                     model.reloadApps()
                 } label: {
-                    Image(systemName: "arrow.clockwise")
+                    Label("Reload", systemImage: "arrow.clockwise").labelStyle(.iconOnly)
                 }
                 .buttonStyle(.borderless)
+                .disabled(model.isLoadingApps)
                 .help(Text("Reload"))
             }
             HStack {

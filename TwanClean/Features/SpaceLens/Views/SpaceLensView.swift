@@ -81,7 +81,7 @@ struct SpaceLensView: View {
                     .disabled(model.phase != .ready)
                     .help(Text("Close this map and choose another folder to scan"))
                 if model.path.count > 1 {
-                    Button { model.goUp() } label: { Image(systemName: "chevron.left") }
+                    Button { model.goUp() } label: { Label("Back", systemImage: "chevron.left").labelStyle(.iconOnly) }
                         .buttonStyle(PillButtonStyle())
                         .help(Text("Back"))
                 }

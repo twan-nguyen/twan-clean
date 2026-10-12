@@ -109,9 +109,12 @@ struct BubbleCanvas: View {
         let size = context.resolve(Text(verbatim: bubble.bytes.formattedBytes)
             .font(.system(size: fontSize - 1)).foregroundColor(.secondary))
         let unbounded = CGSize(width: CGFloat.greatestFiniteMagnitude, height: .greatestFiniteMagnitude)
-        let nameSize = name.measure(in: unbounded)
+        let fullName = name.measure(in: unbounded)
         let sizeSize = size.measure(in: unbounded)
-        let nameWidth = min(nameSize.width, bubble.frame.width * 0.72)
+        // Measured at the width it gets, so a shortened name is still centred.
+        let nameSize = name.measure(in: CGSize(width: min(fullName.width, bubble.frame.width * 0.72),
+                                               height: fullName.height))
+        let nameWidth = nameSize.width
         let top = bubble.frame.midY - (nameSize.height + sizeSize.height) / 2
         context.draw(name, in: CGRect(x: bubble.frame.midX - nameWidth / 2, y: top,
                                       width: nameWidth, height: nameSize.height))

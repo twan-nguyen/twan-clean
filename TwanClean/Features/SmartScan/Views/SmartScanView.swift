@@ -58,6 +58,7 @@ struct SmartScanView: View {
                           message: "Nothing is removed until you review the results and choose what to clean.") {
                 Button { model.scan() } label: { Label("Smart Scan", systemImage: "sparkles") }
                     .buttonStyle(GlowButtonStyle())
+                    .keyboardShortcut(.defaultAction)
             }
         }
         SectionHeader("What Smart Scan checks")
@@ -196,7 +197,7 @@ private struct CategoryBarChart: View {
     }
 
     private var bars: [Bar] {
-        results.prefix(8).map { Bar(category: $0.category, bytes: $0.totalBytes) }
+        results.map { Bar(category: $0.category, bytes: $0.totalBytes) }
     }
 
     var body: some View {
@@ -254,6 +255,7 @@ private struct CategoryToggleRow: View {
                 EmptyView()
             }
             .toggleStyle(.tintedCheckbox(result.category.tint))
+            .accessibilityLabel(Text(result.category.title))
             .disabled(result.items.isEmpty || model.phase != .ready)
             .help(Text("Select all in this category"))
 

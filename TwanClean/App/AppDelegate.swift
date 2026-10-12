@@ -14,6 +14,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var pendingUninstall: URL?
     private var menuBar: MenuBarController?
 
+    /// Before any window exists, so it never flashes in the other appearance.
+    func applicationWillFinishLaunching(_ notification: Notification) {
+        let saved = UserDefaults.standard.string(forKey: AppearanceMode.storageKey)
+        (saved.flatMap(AppearanceMode.init(rawValue:)) ?? .system).apply()
+    }
+
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.servicesProvider = self
         NSUpdateDynamicServices()

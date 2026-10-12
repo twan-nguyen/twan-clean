@@ -7,15 +7,22 @@ struct CategoryDetailView: View {
     @State private var confirming = false
 
     private var result: CategoryResult? { model.results[category] }
+    private var showsFooter: Bool { !isScanningThis && !(result?.items.isEmpty ?? true) }
     private var isScanningThis: Bool { model.isScanning && model.scanningCategories.contains(category) }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            header
-            content
+        VStack(spacing: 0) {
+            VStack(alignment: .leading, spacing: 14) {
+                header
+                content
+            }
+            .padding(.horizontal, 24)
+            .padding(.top, 20)
+            .padding(.bottom, showsFooter ? 12 : 20)
+            if showsFooter {
+                footer
+            }
         }
-        .padding(.horizontal, 24)
-        .padding(.top, 20)
         .navigationTitle(Text(category.title))
         .sheet(isPresented: $confirming) {
             CleanConfirmView(items: model.selectedItems(in: [category])) {
@@ -79,8 +86,6 @@ struct CategoryDetailView: View {
                 EmptyStateCard(systemImage: "checkmark.seal.fill", title: "Nothing to clean here")
             } else {
                 itemList(result.items)
-                footer
-                    .padding(.horizontal, -24)
             }
         } else {
             EmptyStateCard(systemImage: category.systemImage, tint: category.tint, title: "Not scanned yet")

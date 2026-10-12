@@ -249,6 +249,7 @@ struct GlowButtonStyle: ButtonStyle {
                 .animation(.spring(response: 0.3, dampingFraction: 0.7), value: hovering)
                 .animation(.easeOut(duration: 0.12), value: configuration.isPressed)
                 .onHover { hovering = $0 && isEnabled }
+                .onChange(of: isEnabled) { if !$0 { hovering = false } }
         }
     }
 }
@@ -256,13 +257,23 @@ struct GlowButtonStyle: ButtonStyle {
 /// Quiet capsule for secondary actions next to a glow button.
 struct PillButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .font(.system(size: 12.5, weight: .medium))
-            .padding(.horizontal, 14)
-            .padding(.vertical, 7)
-            .background(Capsule().fill(Color.primary.opacity(configuration.isPressed ? 0.14 : 0.08)))
-            .overlay(Capsule().strokeBorder(Color.primary.opacity(0.08), lineWidth: 0.5))
-            .contentShape(Capsule())
+        PillBody(configuration: configuration)
+    }
+
+    private struct PillBody: View {
+        let configuration: ButtonStyleConfiguration
+        @Environment(\.isEnabled) private var isEnabled
+
+        var body: some View {
+            configuration.label
+                .font(.system(size: 12.5, weight: .medium))
+                .padding(.horizontal, 14)
+                .padding(.vertical, 7)
+                .background(Capsule().fill(Color.primary.opacity(configuration.isPressed ? 0.14 : 0.08)))
+                .overlay(Capsule().strokeBorder(Color.primary.opacity(0.08), lineWidth: 0.5))
+                .contentShape(Capsule())
+                .opacity(isEnabled ? 1 : 0.4)
+        }
     }
 }
 
@@ -582,38 +593,53 @@ extension View {
     }
 }
 
-/// Checkbox with a tinted fill, keeping the native checkbox for VoiceOver.
+/// Checkbox with a tinted fill. It is a button underneath, so it takes
+/// keyboard focus and toggles with Space, and it reads as a checkbox to
+/// VoiceOver.
 struct TintedCheckboxStyle: ToggleStyle {
     var tint: Color = Tint.teal
 
     func makeBody(configuration: Configuration) -> some View {
-        HStack(spacing: 8) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 4.5, style: .continuous)
-                    .fill(configuration.isOn ? tint : Color.primary.opacity(0.05))
-                RoundedRectangle(cornerRadius: 4.5, style: .continuous)
-                    .strokeBorder(configuration.isOn ? tint : Color.primary.opacity(0.28), lineWidth: 1)
-                Image(systemName: "checkmark")
-                    .font(.system(size: 9, weight: .bold))
-                    .foregroundStyle(.white)
-                    .scaleEffect(configuration.isOn ? 1 : 0.3)
-                    .opacity(configuration.isOn ? 1 : 0)
+        CheckboxBody(configuration: configuration, tint: tint)
+    }
+
+    private struct CheckboxBody: View {
+        let configuration: ToggleStyleConfiguration
+        let tint: Color
+        @Environment(\.isEnabled) private var isEnabled
+
+        var body: some View {
+            Button {
+                configuration.isOn.toggle()
+            } label: {
+                HStack(spacing: 8) {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 4.5, style: .continuous)
+                            .fill(configuration.isOn ? tint : Color.primary.opacity(0.05))
+                        RoundedRectangle(cornerRadius: 4.5, style: .continuous)
+                            .strokeBorder(configuration.isOn ? tint : Color.primary.opacity(0.28), lineWidth: 1)
+                        Image(systemName: "checkmark")
+                            .font(.system(size: 9, weight: .bold))
+                            .foregroundStyle(.white)
+                            .scaleEffect(configuration.isOn ? 1 : 0.3)
+                            .opacity(configuration.isOn ? 1 : 0)
+                    }
+                    .frame(width: 15, height: 15)
+                    .animation(.spring(response: 0.25, dampingFraction: 0.6), value: configuration.isOn)
+                    configuration.label
+                }
+                .contentShape(Rectangle())
             }
-            .frame(width: 15, height: 15)
-            .animation(.spring(response: 0.25, dampingFraction: 0.6), value: configuration.isOn)
-            configuration.label
-        }
-        .contentShape(Rectangle())
-        .onTapGesture { configuration.isOn.toggle() }
-        .accessibilityRepresentation {
-            Toggle(isOn: configuration.$isOn) { configuration.label }
-                .toggleStyle(.checkbox)
+            .buttonStyle(.plain)
+            .opacity(isEnabled ? 1 : 0.4)
+            .accessibilityRepresentation {
+                Toggle(isOn: configuration.$isOn) { configuration.label }
+                    .toggleStyle(.checkbox)
+            }
         }
     }
 }
 
 extension ToggleStyle where Self == TintedCheckboxStyle {
-    static var tintedCheckbox: TintedCheckboxStyle { TintedCheckboxStyle() }
-
     static func tintedCheckbox(_ tint: Color) -> TintedCheckboxStyle { TintedCheckboxStyle(tint: tint) }
 }
