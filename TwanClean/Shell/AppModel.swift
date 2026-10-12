@@ -10,4 +10,12 @@ final class AppModel: ObservableObject {
     let orphans = OrphansViewModel()
     /// A screen another part of the app asks the window to show.
     @Published var route: SidebarItem?
+    /// Brings back the main window, set once it first appears.
+    var openMainWindow: () -> Void = {}
+
+    func showMainWindow(_ item: SidebarItem? = nil) {
+        openMainWindow()
+        NSApp.activate(ignoringOtherApps: true)
+        if let item { route = item }
+    }
 }

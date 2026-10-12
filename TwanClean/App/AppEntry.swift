@@ -7,8 +7,12 @@ enum AppEntry {
         case .gui:
             TwanCleanApp.main()
         case .scheduledRun:
-            FileHandle.standardError.write(Data("Scheduled runs are not available in this build.\n".utf8))
-            exit(EX_UNAVAILABLE)
+            // No window and no Dock icon: run the scheduled scan and exit.
+            Task {
+                await ScheduledRunner().run()
+                exit(EXIT_SUCCESS)
+            }
+            dispatchMain()
         }
     }
 }

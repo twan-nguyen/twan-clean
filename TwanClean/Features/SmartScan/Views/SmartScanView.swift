@@ -35,6 +35,10 @@ struct SmartScanView: View {
                 Task { await model.clean() }
             }
         }
+        .alert(Text(model.notice ?? ""), isPresented: Binding(get: { model.notice != nil },
+                                                             set: { if !$0 { model.notice = nil } })) {
+            Button("OK", role: .cancel) {}
+        }
         .sheet(item: $model.outcome, onDismiss: { disk = DiskSpace.current() }) { outcome in
             CleanupOutcomeView(outcome: outcome) {
                 Task { await model.retryWithAdministrator() }

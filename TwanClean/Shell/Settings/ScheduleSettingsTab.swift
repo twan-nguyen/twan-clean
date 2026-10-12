@@ -1,0 +1,126 @@
+import ServiceManagement
+import SwiftUI
+
+struct ScheduleSettingsTab: View {
+    private let store = ScheduleStore()
+    @State private var settings = ScheduleStore().loadSettings()
+    @State private var summary = ScheduleStore().loadSummary()
+    @State private var agentStatus = SchedulerAgent.status
+    @State private var errorMessage: String?
+    @State private var notificationsAllowed = true
+
+    var body: some View {
+        Form {
+            Section {
+                Toggle("Run automatically", isOn: Binding(get: { settings.isEnabled }, set: { setEnabled($0) }))
+                if settings.isEnabled {
+                    statusRow
+                }
+                if let errorMessage {
+                    Text(errorMessage)
+                        .font(.caption)
+                        .foregroundStyle(.red)
+                }
+            } footer: {
+                Text("Runs in the background even when Twan Clean is closed. If the Mac is asleep at that time, it runs soon after it wakes.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            Section("When") {
+                Picker("Repeat", selection: $settings.frequency) {
+                    ForEach(ScheduleSettings.Frequency.allCases) { Text($0.title).tag($0) }
+                }
+                Picker("From", selection: $settings.hour) {
+                    ForEach(0..<24, id: \.self) { hour in
+                        Text(Calendar.current.date(bySettingHour: hour, minute: 0, second: 0, of: Date())!,
+                             format: .dateTime.hour().minute())
+                            .tag(hour)
+                    }
+                }
+            }
+
+            Section("What") {
+                Picker("Action", selection: $settings.action) {
+                    ForEach(ScheduleSettings.Action.allCases) { Text($0.title).tag($0) }
+                }
+                if settings.action == .clean {
+                    Stepper(value: Binding(get: { Int(settings.minimumBytesToClean / 1_000_000) },
+                                           set: { settings.minimumBytesToClean = Int64($0) * 1_000_000 }),
+                            in: 0...10_000, step: 50) {
+                        LabeledContent("Only when at least", value: Int64(settings.minimumBytesToClean).formattedBytes)
+                    }
+                    Text("Only caches, logs and other data apps recreate are cleaned. Anything that needs your password, belongs to a running app or is your own file is left for you to review.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                ForEach(ScheduleSettings.schedulableCategories) { category in
+                    Toggle(isOn: Binding(
+                        get: { settings.categories.contains(category) },
+                        set: { on in
+                            settings.categories.removeAll { $0 == category }
+                            if on { settings.categories.append(category) }
+                        })) {
+                        Label { Text(category.title) } icon: { Image(systemName: category.systemImage) }
+                    }
+                }
+            }
+
+            if let summary {
+                Section("Last Run") {
+                    LabeledContent("Date") { Text(summary.date, format: .dateTime) }
+                    LabeledContent("Found", value: summary.foundBytes.formattedBytes)
+                    if summary.cleanedBytes > 0 {
+                        LabeledContent("Cleaned", value: summary.cleanedBytes.formattedBytes)
+                    }
+                }
+            }
+        }
+        .formStyle(.grouped)
+        .onChange(of: settings) { try? store.save($0) }
+        .task {
+            notificationsAllowed = await NotificationService.isAuthorized()
+            agentStatus = SchedulerAgent.status
+        }
+    }
+
+    @ViewBuilder
+    private var statusRow: some View {
+        switch agentStatus {
+        case .enabled:
+            LabeledContent("Next run") {
+                Text(settings.nextRun(now: Date()), format: .dateTime.weekday().day().month().hour().minute())
+            }
+        case .requiresApproval:
+            HStack {
+                Label("macOS needs your approval in Login Items.", systemImage: "exclamationmark.triangle")
+                    .foregroundStyle(.orange)
+                Spacer()
+                Button("Open Login Items") { SMAppService.openSystemSettingsLoginItems() }
+            }
+        default:
+            Label("The background task is not registered.", systemImage: "exclamationmark.triangle")
+                .foregroundStyle(.orange)
+        }
+        if !notificationsAllowed {
+            Label("Notifications are off, so results only show here and in the menu bar.", systemImage: "bell.slash")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    private func setEnabled(_ enabled: Bool) {
+        errorMessage = nil
+        do {
+            try SchedulerAgent.setEnabled(enabled)
+            settings.isEnabled = enabled
+        } catch {
+            errorMessage = error.localizedDescription
+            settings.isEnabled = false
+        }
+        agentStatus = SchedulerAgent.status
+        if enabled {
+            Task { notificationsAllowed = await NotificationService.requestAuthorization() }
+        }
+    }
+}

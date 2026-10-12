@@ -5,18 +5,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// Set once the main window appears. Requests that arrive earlier, such
     /// as a Finder service that launched the app, wait until then.
     var model: AppModel? {
-        didSet { deliverPendingUninstall() }
+        didSet {
+            deliverPendingUninstall()
+            if let model, menuBar == nil { menuBar = MenuBarController(model: model) }
+        }
     }
 
     private var pendingUninstall: URL?
+    private var menuBar: MenuBarController?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.servicesProvider = self
         NSUpdateDynamicServices()
     }
 
+    /// With the menu bar icon shown, closing the window keeps the app there.
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
-        true
+        !MenuBarSettings.isShown
     }
 
     /// Finder › Services › Uninstall with Twan Clean, declared in Info.plist.

@@ -32,6 +32,10 @@ struct CategoryDetailView: View {
                 Task { await model.clean([category]) }
             }
         }
+        .alert(Text(model.notice ?? ""), isPresented: Binding(get: { model.notice != nil },
+                                                             set: { if !$0 { model.notice = nil } })) {
+            Button("OK", role: .cancel) {}
+        }
         .sheet(item: $model.outcome) { outcome in
             CleanupOutcomeView(outcome: outcome) {
                 Task { await model.retryWithAdministrator() }

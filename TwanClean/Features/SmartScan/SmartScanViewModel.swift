@@ -69,19 +69,34 @@ final class SmartScanViewModel: ObservableObject {
     @Published private(set) var lastScanDate: Date?
     @Published var selection: Set<String> = []
     @Published var outcome: CleanupOutcome?
+    /// Shown when a scheduled run is busy and the request must wait.
+    @Published var notice: String?
 
     let progress = ScanProgressReporter()
     private let coordinator: SmartScanCoordinator
     private let removal: RemovalService
     private let makeContext: @MainActor (ScanProgressReporter) -> ScanContext
+    private let runLockFile: URL?
     private var scanTask: Task<Void, Never>?
 
     init(coordinator: SmartScanCoordinator = SmartScanCoordinator(),
          removal: RemovalService = RemovalService(),
-         makeContext: @escaping @MainActor (ScanProgressReporter) -> ScanContext = SmartScanViewModel.liveContext) {
+         makeContext: @escaping @MainActor (ScanProgressReporter) -> ScanContext = SmartScanViewModel.liveContext,
+         runLockFile: URL? = RunLock.defaultFile) {
         self.coordinator = coordinator
         self.removal = removal
         self.makeContext = makeContext
+        self.runLockFile = runLockFile
+    }
+
+    /// Takes the lock shared with the scheduled run, or explains why not.
+    private func takeRunLock() -> (granted: Bool, lock: RunLock?) {
+        guard let runLockFile else { return (true, nil) }
+        guard let lock = RunLock.acquire(at: runLockFile) else {
+            notice = String(localized: "A scheduled scan is running. Try again in a moment.")
+            return (false, nil)
+        }
+        return (true, lock)
     }
 
     /// The real home folder, the saved settings and the apps running now.
@@ -106,6 +121,8 @@ final class SmartScanViewModel: ObservableObject {
     @discardableResult
     func startScan(_ categories: [CleanupCategoryID]) -> Task<Void, Never>? {
         guard phase != .scanning, phase != .cleaning else { return nil }
+        let runLock = takeRunLock()
+        guard runLock.granted else { return nil }
         phase = .scanning
         scanningCategories = Set(categories)
         finishedCount = 0
@@ -122,6 +139,7 @@ final class SmartScanViewModel: ObservableObject {
             }
             self.scanningCategories = []
             self.phase = self.results.isEmpty ? .idle : .ready
+            withExtendedLifetime(runLock.lock) {}
         }
         return scanTask
     }
@@ -183,9 +201,12 @@ final class SmartScanViewModel: ObservableObject {
     func clean(_ categories: Set<CleanupCategoryID>? = nil) async {
         let items = selectedItems(in: categories)
         guard !items.isEmpty, phase == .ready else { return }
+        let runLock = takeRunLock()
+        guard runLock.granted else { return }
         phase = .cleaning
         let report = await removal.remove(items.map(\.removalRequest))
         finishCleaning(report, into: CleanupOutcome(report))
+        withExtendedLifetime(runLock.lock) {}
     }
 
     /// Retries what permissions blocked, after the administrator prompt.

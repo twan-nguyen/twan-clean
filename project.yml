@@ -30,7 +30,15 @@ targets:
     type: application
     platform: macOS
     sources:
-      - TwanClean
+      - path: TwanClean
+        excludes:
+          - "Resources/LaunchAgents/**"
+      # SMAppService.agent finds the scheduler in Contents/Library/LaunchAgents.
+      - path: TwanClean/Resources/LaunchAgents
+        buildPhase:
+          copyFiles:
+            destination: wrapper
+            subpath: Contents/Library/LaunchAgents
     settings:
       base:
         PRODUCT_NAME: TwanClean

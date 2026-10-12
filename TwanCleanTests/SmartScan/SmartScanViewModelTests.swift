@@ -26,7 +26,8 @@ final class SmartScanViewModelTests: XCTestCase {
         return SmartScanViewModel(
             coordinator: SmartScanCoordinator(scanners: [UserCacheScanner(), LargeOldFilesScanner()]),
             removal: RemovalService(policy: home.policy),
-            makeContext: { _ in home.scanContext(settings: settings) })
+            makeContext: { _ in home.scanContext(settings: settings) },
+            runLockFile: tree.url("scan.lock"))
     }
 
     func testScanSelectsOnlyDefaultSelectedItems() async {
@@ -52,6 +53,16 @@ final class SmartScanViewModelTests: XCTestCase {
         XCTAssertFalse(tree.exists(home.url("Library/Caches/com.example.editor")))
         XCTAssertTrue(tree.exists(home.url("Library/Caches/com.example.player")))
         XCTAssertTrue(tree.exists(home.url("Downloads/huge.iso")))
+    }
+
+    func testScanWaitsWhileAScheduledRunHoldsTheLock() async throws {
+        let model = makeModel()
+        let held = try XCTUnwrap(RunLock.acquire(at: tree.url("scan.lock")))
+
+        XCTAssertNil(model.startScan([.userCache]))
+        XCTAssertNotNil(model.notice)
+        XCTAssertEqual(model.phase, .idle)
+        withExtendedLifetime(held) {}
     }
 
     func testRescanningOneCategoryKeepsTheOthers() async {
