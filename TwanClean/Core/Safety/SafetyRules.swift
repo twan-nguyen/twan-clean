@@ -19,20 +19,33 @@ struct SafetyRules: Sendable {
     var protectedRoots: [String] {
         [
             "/", "/System", "/Applications", "/Library", "/Users", "/Volumes",
-            "/private", "/private/var", "/private/tmp", "/private/etc",
+            "/private", "/private/var", "/private/tmp", "/private/etc", "/tmp", "/var", "/etc",
             "/usr", "/bin", "/sbin", "/opt", "/cores",
             home,
             "\(home)/Library", "\(home)/Applications", "\(home)/Desktop", "\(home)/Documents",
             "\(home)/Downloads", "\(home)/Movies", "\(home)/Music", "\(home)/Pictures",
             "\(home)/Public", "\(home)/.Trash",
-        ]
+        ] + Self.standardLibraryFolders.map { "\(home)/Library/\($0)" }
+            + Self.standardLibraryFolders.map { "/Library/\($0)" }
     }
+
+    /// Folders macOS creates in every Library. They hold many apps' data, so
+    /// they are never removed as a whole.
+    static let standardLibraryFolders: [String] = [
+        "Application Support", "Application Scripts", "Caches", "Containers", "Group Containers",
+        "Preferences", "Logs", "LaunchAgents", "LaunchDaemons", "PrivilegedHelperTools",
+        "Saved Application State", "HTTPStorages", "WebKit", "Cookies", "Developer", "Frameworks",
+        "Fonts", "Input Methods", "Internet Plug-Ins", "PreferencePanes", "Services", "Sounds",
+        "Spelling", "Autosave Information", "Receipts", "Audio", "Extensions", "Printers",
+        "Screen Savers", "Speech", "QuickLook", "Spotlight", "ColorPickers", "Components",
+        "Keyboard Layouts", "Mail", "Safari",
+    ]
 
     /// Trees whose contents are never removable, whatever the purpose.
     var forbiddenTrees: [String] {
         [
             "/System", "/usr", "/bin", "/sbin", "/private/etc", "/Library/Apple",
-            "/Library/Keychains", "/Library/SystemExtensions",
+            "/Library/Keychains", "/Library/SystemExtensions", "/Library/Preferences/SystemConfiguration",
             "\(home)/Library/Keychains",
             "\(home)/Library/Mobile Documents",
             "\(home)/Library/CloudStorage",
@@ -75,12 +88,13 @@ struct SafetyRules: Sendable {
                 "\(home)/Library/WebKit",
                 "\(home)/Library/Saved Application State",
                 "\(home)/Library/Developer/Xcode/DerivedData",
-                "\(home)/Library/Developer/Xcode/Archives",
                 "\(home)/Library/Developer/CoreSimulator/Caches",
                 "\(home)/Library/Mail Downloads",
                 "\(home)/Library/Containers/com.apple.mail/Data/Library/Mail Downloads",
+                "\(home)/Library/Containers/com.docker.docker/Data/cache",
                 "\(home)/Library/Containers/com.docker.docker/Data/log",
                 "\(home)/Library/Containers/com.docker.docker/Data/tmp",
+                "\(home)/Library/Group Containers/group.com.docker/Caches",
                 "\(home)/Library/pnpm/store",
                 "\(home)/.npm",
                 "\(home)/.cache",
@@ -94,6 +108,8 @@ struct SafetyRules: Sendable {
             ]
         case .trashContents:
             ["\(home)/.Trash"]
+        case .buildArchive:
+            ["\(home)/Library/Developer/Xcode/Archives"]
         case .userFile:
             [home]
         case .appBundle:
@@ -123,6 +139,11 @@ struct SafetyRules: Sendable {
             ]
         }
     }
+
+    /// Temporary folders shared by every process. Only their direct children
+    /// are ever offered, and macOS's own entries (such as the ssh-agent socket
+    /// folder) are left alone.
+    static let sharedTemporaryFolders = ["/private/tmp", "/private/var/tmp"]
 
     /// Trees a purpose may not touch even though an allowed tree contains them.
     func excludedTrees(for purpose: RemovalPurpose) -> [String] {

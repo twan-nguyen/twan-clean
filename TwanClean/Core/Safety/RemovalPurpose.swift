@@ -18,6 +18,9 @@ enum RemovalPurpose: String, Sendable, CaseIterable {
     case trashContents
     /// A user's own file, such as a large download or an AI chat history.
     case userFile
+    /// An Xcode archive. Its debug symbols cannot be rebuilt, so it is never
+    /// deleted outright.
+    case buildArchive
     /// An application bundle.
     case appBundle
     /// Support files an application left in a Library folder.
@@ -29,7 +32,7 @@ enum RemovalPurpose: String, Sendable, CaseIterable {
         switch self {
         case .regenerableCache, .trashContents:
             .delete
-        case .userFile, .appBundle, .appLeftover, .orphan:
+        case .userFile, .buildArchive, .appBundle, .appLeftover, .orphan:
             .trash
         }
     }

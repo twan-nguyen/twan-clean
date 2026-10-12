@@ -10,6 +10,7 @@ enum RefusalReason: Equatable, Sendable {
     case appleItem
     case notAnAppBundle
     case changedSinceScan
+    case mountPoint
 }
 
 enum PolicyDecision: Equatable, Sendable {
@@ -46,45 +47,87 @@ struct PathPolicy: Sendable {
         }
         let canonical = canonicalParent == "/" ? "/\(name)" : "\(canonicalParent)/\(name)"
 
-        if let reason = refusal(for: canonical, name: name, purpose: purpose) {
+        if let reason = refusal(for: canonical, purpose: purpose) {
             return .refused(reason)
         }
         return .allowed(URL(fileURLWithPath: canonical))
     }
 
-    private func refusal(for path: String, name: String, purpose: RemovalPurpose) -> RefusalReason? {
+    private func refusal(for path: String, purpose: RemovalPurpose) -> RefusalReason? {
         if rules.protectedRoots.contains(where: { Self.isSame(path, $0) }) {
             return .protectedRoot
         }
         if rules.forbiddenTrees.contains(where: { Self.isSame(path, $0) || Self.isInside(path, $0) }) {
             return .systemLocation
         }
-        let isAllowed = rules.allowedTrees(for: purpose).contains { Self.isInside(path, $0) }
-            && !rules.excludedTrees(for: purpose).contains { Self.isSame(path, $0) || Self.isInside(path, $0) }
-        guard isAllowed else { return .outsideAllowedArea }
+        guard let root = rules.allowedTrees(for: purpose).first(where: { Self.isInside(path, $0) }),
+              !rules.excludedTrees(for: purpose).contains(where: { Self.isSame(path, $0) || Self.isInside(path, $0) })
+        else {
+            return .outsideAllowedArea
+        }
+
+        // Components below the allowed tree, e.g. ["com.example", "Cache.db"].
+        let below = Self.components(of: path, below: root)
 
         switch purpose {
-        case .orphan where name.lowercased().hasPrefix("com.apple."):
-            return .appleItem
-        case .appBundle where !name.lowercased().hasSuffix(".app"):
-            return .notAnAppBundle
+        case .appLeftover, .orphan:
+            // Support files belong to an app's own folder, never to a whole
+            // standard Library folder such as Application Support.
+            if purpose == .appLeftover, Self.isSame(root, "\(rules.home)/Library"), below.count < 2 {
+                return .protectedRoot
+            }
+            if below.contains(where: Self.isAppleName) {
+                return .appleItem
+            }
+        case .appBundle:
+            // An app inside another app is part of it.
+            guard below.last.map(Self.isAppBundleName) == true, !below.dropLast().contains(where: Self.isAppBundleName)
+            else { return .notAnAppBundle }
+        case .regenerableCache where SafetyRules.sharedTemporaryFolders.contains(where: { Self.isSame(root, $0) }):
+            if below.count != 1 { return .outsideAllowedArea }
+            if Self.isAppleName(below[0]) { return .appleItem }
         default:
-            return nil
+            break
         }
+        return nil
     }
 
-    // The boot volume is case-insensitive, so comparisons are too: refusing
-    // "/system/x" matters more than allowing an oddly cased cache path.
+    private static func isAppleName(_ name: String) -> Bool {
+        let lowered = name.lowercased()
+        return lowered.hasPrefix("com.apple.") || lowered.hasPrefix("group.com.apple.")
+    }
+
+    private static func isAppBundleName(_ name: String) -> Bool {
+        name.lowercased().hasSuffix(".app")
+    }
+
+    private static func components(of path: String, below root: String) -> [String] {
+        let rootCount = (root as NSString).pathComponents.count
+        return Array((path as NSString).pathComponents.dropFirst(rootCount))
+    }
+
+    // MARK: - Comparison
+
+    // Paths are compared as Unicode scalars after canonical composition and
+    // case folding. The boot volume ignores case and normalisation, so these
+    // comparisons must too; comparing grapheme clusters would let a name that
+    // starts with a combining mark merge with the "/" before it and slip past
+    // a prefix check.
+
+    private static func key(_ path: String) -> [Unicode.Scalar] {
+        Array(path.precomposedStringWithCanonicalMapping.lowercased().unicodeScalars)
+    }
 
     static func isSame(_ path: String, _ other: String) -> Bool {
-        path.compare(other, options: .caseInsensitive) == .orderedSame
+        key(path) == key(other)
     }
 
     /// True when `path` sits strictly below `root`. The separator boundary keeps
     /// "/Library/CachesX" out of "/Library/Caches".
     static func isInside(_ path: String, _ root: String) -> Bool {
-        let prefix = root.hasSuffix("/") ? root : root + "/"
-        return path.count > prefix.count
-            && path.lowercased().hasPrefix(prefix.lowercased())
+        var prefix = key(root)
+        if prefix.last != "/" { prefix.append("/") }
+        let candidate = key(path)
+        return candidate.count > prefix.count && candidate.starts(with: prefix)
     }
 }

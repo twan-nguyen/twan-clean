@@ -26,4 +26,30 @@ struct FileIdentity: Hashable, Sendable {
     static func of(_ url: URL) -> FileIdentity? {
         of(path: url.path)
     }
+
+    enum Lookup: Equatable {
+        case found(FileIdentity)
+        case missing
+        /// The item may exist but cannot be examined, e.g. for lack of access.
+        case unexaminable
+    }
+
+    /// Like `of(path:)`, but tells a missing item from one that cannot be
+    /// examined, so an inaccessible file is never reported as already gone.
+    static func lookup(_ url: URL) -> Lookup {
+        var status = stat()
+        if lstat(url.path, &status) == 0 { return .found(FileIdentity(status)) }
+        return errno == ENOENT || errno == ENOTDIR ? .missing : .unexaminable
+    }
+
+    /// Whether the item is the root of a mounted volume, which removal must
+    /// never descend into.
+    static func isMountPoint(_ url: URL) -> Bool {
+        var item = stat()
+        var parent = stat()
+        guard lstat(url.path, &item) == 0, lstat(url.deletingLastPathComponent().path, &parent) == 0 else {
+            return false
+        }
+        return item.st_dev != parent.st_dev
+    }
 }

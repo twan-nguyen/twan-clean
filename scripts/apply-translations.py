@@ -5,7 +5,8 @@ Usage: scripts/apply-translations.py <translations.json>
 
 The input maps each English source key to its Vietnamese text. Keys that are
 not in the catalog are reported and skipped, so run scripts/sync-strings.sh
-first. Prints the keys that still lack a Vietnamese translation.
+first. Removes keys that are no longer used in source, then prints the keys
+that still lack a Vietnamese translation.
 """
 import json
 import sys
@@ -33,6 +34,11 @@ def main() -> int:
             "stringUnit": {"state": "translated", "value": value}
         }
 
+    # Keys no longer used in source are dropped rather than left stale.
+    for key in [key for key, entry in strings.items() if entry.get("extractionState") == "stale"]:
+        del strings[key]
+        print(f"removed stale: {key!r}")
+
     CATALOG.write_text(
         json.dumps(catalog, ensure_ascii=False, indent=2, sort_keys=True).replace('": ', '" : ') + "\n",
         encoding="utf-8",
@@ -42,7 +48,6 @@ def main() -> int:
         key
         for key, entry in strings.items()
         if entry.get("shouldTranslate", True)
-        and entry.get("extractionState") != "stale"
         and LANGUAGE not in entry.get("localizations", {})
     ]
     for key in missing:

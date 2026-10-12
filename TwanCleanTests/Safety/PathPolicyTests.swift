@@ -63,7 +63,7 @@ final class PathPolicyTests: XCTestCase {
     }
 
     func testAllowedTreeRootItselfIsNotRemovable() {
-        assertRefused(home.url("Library/Caches"), .regenerableCache, .outsideAllowedArea)
+        assertRefused(home.url("Library/Caches"), .regenerableCache, .protectedRoot)
     }
 
     func testSystemTreesAreRefusedForEveryPurpose() {
@@ -138,5 +138,88 @@ final class PathPolicyTests: XCTestCase {
 
     func testNonFileURLIsRefused() throws {
         assertRefused(try XCTUnwrap(URL(string: "https://example.com/x")), .userFile, .notAFileURL)
+    }
+
+    // MARK: - Leftovers, orphans and Apple data
+
+    func testLeftoversNeverIncludeAWholeStandardLibraryFolder() throws {
+        try tree.makeDirectory("home/Library/Application Support/com.example.app")
+        assertRefused(home.url("Library/Application Support"), .appLeftover, .protectedRoot)
+        assertRefused(home.url("Library/Preferences"), .appLeftover, .protectedRoot)
+        let own = home.url("Library/Application Support/com.example.app")
+        XCTAssertEqual(decision(own, .appLeftover), .allowed(own))
+    }
+
+    func testCollapsedPathCannotReachAStandardLibraryFolder() throws {
+        try tree.makeDirectory("home/Library/Application Support/Foo")
+        assertRefused(home.url("Library/Application Support/Foo/.."), .appLeftover, .protectedRoot)
+    }
+
+    func testAppleDataIsRefusedForLeftoversAtAnyDepth() throws {
+        try tree.makeFile("home/Library/Group Containers/group.com.apple.notes/NoteStore.sqlite")
+        assertRefused(home.url("Library/Group Containers/group.com.apple.notes"), .appLeftover, .appleItem)
+        assertRefused(home.url("Library/Group Containers/group.com.apple.notes/NoteStore.sqlite"), .appLeftover, .appleItem)
+    }
+
+    func testAppleDataIsRefusedForOrphansAtAnyDepth() throws {
+        try tree.makeFile("home/Library/Caches/com.apple.Safari/sub/file")
+        assertRefused(home.url("Library/Caches/com.apple.Safari/sub"), .orphan, .appleItem)
+    }
+
+    func testNetworkSettingsAreNeverLeftovers() {
+        assertRefused(URL(fileURLWithPath: "/Library/Preferences/SystemConfiguration"), .appLeftover, .systemLocation)
+    }
+
+    // MARK: - App bundles
+
+    func testAppInsideAnotherAppIsRefused() {
+        let nested = URL(fileURLWithPath: "/Applications/Xcode.app/Contents/Developer/Applications/Simulator.app")
+        if case .allowed = decision(nested, .appBundle) {
+            XCTFail("nested app allowed")
+        }
+    }
+
+    // MARK: - Shared temporary folders
+
+    func testOnlyDirectChildrenOfSharedTemporaryFoldersAreRemovable() throws {
+        let folder = URL(fileURLWithPath: "/private/tmp/TwanCleanTests-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: folder) }
+
+        XCTAssertEqual(decision(folder, .regenerableCache), .allowed(URL(fileURLWithPath: folder.path)))
+        assertRefused(folder.appendingPathComponent("inner"), .regenerableCache, .outsideAllowedArea)
+    }
+
+    func testMacOSTemporaryItemsAreRefused() {
+        assertRefused(URL(fileURLWithPath: "/private/tmp/com.apple.launchd.AbCdEf"), .regenerableCache, .appleItem)
+    }
+
+    func testTmpAliasIsResolved() {
+        assertRefused(URL(fileURLWithPath: "/tmp/com.apple.launchd.AbCdEf"), .regenerableCache, .appleItem)
+        assertRefused(URL(fileURLWithPath: "/tmp"), .regenerableCache, .protectedRoot)
+    }
+
+    // MARK: - Unicode
+
+    func testCombiningMarkCannotSlipPastForbiddenTrees() throws {
+        try tree.makeDirectory("home/.ssh")
+        assertRefused(home.url(".ssh/\u{301}evil"), .userFile, .systemLocation)
+    }
+
+    func testDecomposedNamesMatchComposedRules() throws {
+        // "Tài liệu" with the accent as a separate combining mark.
+        try tree.makeDirectory("home/Documents")
+        let decomposed = home.url("Library/Caches/../../.ssh")
+        assertRefused(decomposed, .userFile, .systemLocation)
+        XCTAssertTrue(PathPolicy.isSame("/a/T\u{E0}i", "/a/Ta\u{300}i"))
+    }
+
+    // MARK: - Archives
+
+    func testArchivesGoToTheTrash() throws {
+        let archive = try tree.makeDirectory("home/Library/Developer/Xcode/Archives/2026-10-12/App.xcarchive")
+        XCTAssertEqual(decision(archive, .buildArchive), .allowed(URL(fileURLWithPath: archive.path)))
+        assertRefused(archive, .regenerableCache, .outsideAllowedArea)
+        XCTAssertEqual(RemovalPurpose.buildArchive.mode, .trash)
     }
 }

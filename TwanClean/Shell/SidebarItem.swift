@@ -1,12 +1,21 @@
 import Foundation
 
-enum SidebarItem: String, Hashable, CaseIterable, Identifiable {
+enum SidebarItem: Hashable, Identifiable {
     case smartScan
     case spaceLens
     case uninstaller
     case orphans
+    case category(CleanupCategoryID)
 
-    var id: String { rawValue }
+    var id: String {
+        switch self {
+        case .smartScan: "smartScan"
+        case .spaceLens: "spaceLens"
+        case .uninstaller: "uninstaller"
+        case .orphans: "orphans"
+        case .category(let category): "category.\(category.rawValue)"
+        }
+    }
 
     var title: LocalizedStringResource {
         switch self {
@@ -14,6 +23,7 @@ enum SidebarItem: String, Hashable, CaseIterable, Identifiable {
         case .spaceLens: "Space Lens"
         case .uninstaller: "App Uninstaller"
         case .orphans: "Orphaned Files"
+        case .category(let category): category.title
         }
     }
 
@@ -23,6 +33,7 @@ enum SidebarItem: String, Hashable, CaseIterable, Identifiable {
         case .spaceLens: "circle.hexagongrid"
         case .uninstaller: "trash.square"
         case .orphans: "questionmark.folder"
+        case .category(let category): category.systemImage
         }
     }
 }

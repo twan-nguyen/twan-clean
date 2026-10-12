@@ -17,8 +17,9 @@ final class SizingSession: @unchecked Sendable {
 struct SizeMeasurement: Equatable, Sendable {
     var bytes: Int64 = 0
     var fileCount = 0
-    /// Folders that could not be listed, so `bytes` is a lower bound when > 0.
-    var unreadableDirectories = 0
+    /// Folders that could not be listed and items that could not be examined,
+    /// so `bytes` is a lower bound when > 0.
+    var unreadableEntries = 0
     /// Newest modification date of any file inside.
     var latestModification: Date?
 }
@@ -46,9 +47,9 @@ struct AllocatedSizeCalculator: Sendable {
                 if let date = entry.modificationDate, date > (result.latestModification ?? .distantPast) {
                     result.latestModification = date
                 }
-            case .unreadableDirectory:
-                result.unreadableDirectories += 1
-            case .directory, .directoryEnd, .unreadable:
+            case .unreadableDirectory, .unreadable:
+                result.unreadableEntries += 1
+            case .directory, .directoryEnd:
                 break
             }
             return .continue

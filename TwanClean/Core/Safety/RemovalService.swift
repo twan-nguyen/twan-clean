@@ -72,15 +72,23 @@ struct RemovalService: Sendable {
             report.refused.append((request, reason))
             return nil
         case .allowed(let url):
-            guard let current = FileIdentity.of(url) else {
+            switch FileIdentity.lookup(url) {
+            case .missing:
                 report.alreadyGone.append(request)
                 return nil
-            }
-            guard current == request.identity else {
+            case .unexaminable:
+                report.needsAdministrator.append(request)
+                return nil
+            case .found(let current) where current != request.identity:
                 report.refused.append((request, .changedSinceScan))
                 return nil
+            case .found:
+                if FileIdentity.isMountPoint(url) {
+                    report.refused.append((request, .mountPoint))
+                    return nil
+                }
+                return url
             }
-            return url
         }
     }
 
@@ -100,6 +108,9 @@ struct RemovalService: Sendable {
             report.removed.append(request)
         } catch where Self.isPermissionError(error) {
             report.needsAdministrator.append(request)
+        } catch where FileIdentity.lookup(url) == .missing {
+            // Removed by someone else in the meantime.
+            report.alreadyGone.append(request)
         } catch {
             report.failed.append(.init(request: request, message: error.localizedDescription))
         }

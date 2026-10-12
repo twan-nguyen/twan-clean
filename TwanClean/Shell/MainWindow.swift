@@ -14,6 +14,11 @@ struct MainWindow: View {
                     row(.uninstaller)
                     row(.orphans)
                 }
+                Section("Cleanup") {
+                    ForEach(CleanupCategoryID.allCases) { category in
+                        row(.category(category))
+                    }
+                }
             }
             .navigationSplitViewColumnWidth(min: 200, ideal: 220)
         } detail: {
@@ -32,7 +37,15 @@ struct MainWindow: View {
 
     @ViewBuilder
     private func detail(for item: SidebarItem) -> some View {
-        FeaturePlaceholderView(item: item)
+        switch item {
+        case .smartScan:
+            SmartScanView(selection: $selection)
+        case .category(let category):
+            CategoryDetailView(category: category)
+                .id(category)
+        case .spaceLens, .uninstaller, .orphans:
+            FeaturePlaceholderView(item: item)
+        }
     }
 }
 

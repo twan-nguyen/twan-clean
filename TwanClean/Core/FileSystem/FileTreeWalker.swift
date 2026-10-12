@@ -11,7 +11,7 @@ struct FileTreeEntry {
         case symlink
         /// A directory whose contents could not be listed.
         case unreadableDirectory
-        /// Anything else that could not be examined.
+        /// Anything else that could not be examined, including a missing root.
         case unreadable
     }
 

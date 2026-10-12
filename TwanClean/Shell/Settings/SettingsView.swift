@@ -5,9 +5,10 @@ struct SettingsView: View {
         TabView {
             GeneralSettingsTab()
                 .tabItem { Label("General", systemImage: "gearshape") }
+            ScanSettingsTab()
+                .tabItem { Label("Scanning", systemImage: "magnifyingglass") }
         }
-        .frame(width: 480)
-        .padding(20)
+        .frame(width: 520, height: 420)
     }
 }
 
@@ -23,5 +24,6 @@ private struct GeneralSettingsTab: View {
         Form {
             LabeledContent("Version", value: version)
         }
+        .formStyle(.grouped)
     }
 }

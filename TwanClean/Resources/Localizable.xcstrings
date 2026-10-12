@@ -1,6 +1,122 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "%@ available of %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ available of %2$@"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Còn trống %@ trên tổng %@"
+          }
+        }
+      }
+    },
+    "%@ selected" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đã chọn %@"
+          }
+        }
+      }
+    },
+    "%lld caches, logs and temporary items. Apps recreate them when needed." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld mục cache, log và tệp tạm. Ứng dụng sẽ tự tạo lại khi cần."
+          }
+        }
+      }
+    },
+    "%lld items could not be removed without more access" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld mục cần thêm quyền mới xoá được"
+          }
+        }
+      }
+    },
+    "%lld items failed" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld mục thất bại"
+          }
+        }
+      }
+    },
+    "%lld items need your password" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld mục cần mật khẩu của bạn"
+          }
+        }
+      }
+    },
+    "%lld items removed" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đã xoá %lld mục"
+          }
+        }
+      }
+    },
+    "%lld items you can still restore from the Trash. Space is freed when you empty it." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld mục vẫn khôi phục được từ Thùng rác. Dung lượng được giải phóng khi bạn dọn Thùng rác."
+          }
+        }
+      }
+    },
+    "%lld months" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld tháng"
+          }
+        }
+      }
+    },
+    "AI Apps" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ứng dụng AI"
+          }
+        }
+      }
+    },
+    "Add Folder…" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thêm thư mục…"
+          }
+        }
+      }
+    },
     "Administrator authorization was cancelled." : {
       "localizations" : {
         "vi" : {
@@ -21,6 +137,16 @@
         }
       }
     },
+    "App is running" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "App đang chạy"
+          }
+        }
+      }
+    },
     "Applications" : {
       "localizations" : {
         "vi" : {
@@ -31,12 +157,412 @@
         }
       }
     },
+    "Attachments Mail downloaded to show you; the originals stay on the mail server." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tệp đính kèm Mail tải về để hiển thị; bản gốc vẫn nằm trên máy chủ thư."
+          }
+        }
+      }
+    },
+    "Big files, and old files you have not touched in a long time. Nothing here is selected for you, and removed files go to the Trash." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tệp lớn và tệp cũ lâu không dùng. Không mục nào được chọn sẵn, và tệp bị xoá sẽ vào Thùng rác."
+          }
+        }
+      }
+    },
+    "Build products, simulator caches and archives from Xcode." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sản phẩm build, cache simulator và archive của Xcode."
+          }
+        }
+      }
+    },
+    "Cached data apps rebuild when they need it." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dữ liệu cache mà ứng dụng tự tạo lại khi cần."
+          }
+        }
+      }
+    },
+    "Cancel" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Huỷ"
+          }
+        }
+      }
+    },
+    "Clean" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dọn dẹp"
+          }
+        }
+      }
+    },
+    "Clean %@?" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dọn %@?"
+          }
+        }
+      }
+    },
+    "Cleaning…" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đang dọn…"
+          }
+        }
+      }
+    },
+    "Cleanup" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dọn dẹp"
+          }
+        }
+      }
+    },
+    "Clean…" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dọn dẹp…"
+          }
+        }
+      }
+    },
+    "Delete permanently: %@" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Xoá hẳn: %@"
+          }
+        }
+      }
+    },
+    "Docker Cache" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cache Docker"
+          }
+        }
+      }
+    },
+    "Docker Desktop logs and caches." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Log và cache của Docker Desktop."
+          }
+        }
+      }
+    },
+    "Docker reports %@ of unused images, containers and build cache. Free it with “docker system prune” so Docker stays consistent." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Docker báo có %@ image, container và build cache không dùng. Hãy giải phóng bằng “docker system prune” để Docker không bị lỗi."
+          }
+        }
+      }
+    },
+    "Done" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Xong"
+          }
+        }
+      }
+    },
+    "Downloads Homebrew keeps after installing packages." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Các tệp tải về Homebrew giữ lại sau khi cài gói."
+          }
+        }
+      }
+    },
+    "Find junk in %lld places at once" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tìm rác ở %lld nơi cùng lúc"
+          }
+        }
+      }
+    },
+    "Folders to Skip" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thư mục bỏ qua"
+          }
+        }
+      }
+    },
+    "Found %@" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tìm thấy %@"
+          }
+        }
+      }
+    },
+    "Freed %@" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đã giải phóng %@"
+          }
+        }
+      }
+    },
     "General" : {
       "localizations" : {
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Chung"
+          }
+        }
+      }
+    },
+    "Give Twan Clean Full Disk Access first; many of these items only need that. Then clean again." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hãy cấp quyền truy cập toàn ổ đĩa cho Twan Clean trước; nhiều mục chỉ cần quyền này. Sau đó dọn lại."
+          }
+        }
+      }
+    },
+    "Homebrew Cache" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cache Homebrew"
+          }
+        }
+      }
+    },
+    "Items already in your Trash." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Các mục đang nằm trong Thùng rác."
+          }
+        }
+      }
+    },
+    "Items belonging to macOS are never removed." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Không bao giờ xoá các mục thuộc về macOS."
+          }
+        }
+      }
+    },
+    "Large & Old Files" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tệp lớn & cũ"
+          }
+        }
+      }
+    },
+    "Large files are at least" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tệp lớn có dung lượng từ"
+          }
+        }
+      }
+    },
+    "Logs and caches from Ollama and LM Studio. Chat history is never selected for you." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Log và cache của Ollama và LM Studio. Lịch sử trò chuyện không bao giờ được chọn sẵn."
+          }
+        }
+      }
+    },
+    "Logs and temporary files left by macOS and apps." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Log và tệp tạm do macOS và ứng dụng để lại."
+          }
+        }
+      }
+    },
+    "Mail Attachments" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tệp đính kèm Mail"
+          }
+        }
+      }
+    },
+    "May be needed" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Có thể cần"
+          }
+        }
+      }
+    },
+    "Move to Trash: %@" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chuyển vào Thùng rác: %@"
+          }
+        }
+      }
+    },
+    "Needs password" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cần mật khẩu"
+          }
+        }
+      }
+    },
+    "No folders skipped." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Không bỏ qua thư mục nào."
+          }
+        }
+      }
+    },
+    "Node Cache" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cache Node"
+          }
+        }
+      }
+    },
+    "Not scanned yet" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chưa quét"
+          }
+        }
+      }
+    },
+    "Nothing is removed until you review the results and choose what to clean." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Không có gì bị xoá cho tới khi bạn xem kết quả và chọn mục cần dọn."
+          }
+        }
+      }
+    },
+    "Nothing to clean here" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Không có gì để dọn"
+          }
+        }
+      }
+    },
+    "Old files are untouched for" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tệp cũ là tệp không đụng tới trong"
+          }
+        }
+      }
+    },
+    "Open Full Disk Access Settings" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mở cài đặt Truy cập toàn ổ đĩa"
+          }
+        }
+      }
+    },
+    "Open Settings" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mở Cài đặt"
           }
         }
       }
@@ -61,12 +587,168 @@
         }
       }
     },
+    "Package caches from npm, Yarn and pnpm." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cache gói của npm, Yarn và pnpm."
+          }
+        }
+      }
+    },
+    "Partly unreadable" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Không đọc được hết"
+          }
+        }
+      }
+    },
+    "Personal data" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dữ liệu cá nhân"
+          }
+        }
+      }
+    },
+    "Remove with Password…" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Xoá bằng mật khẩu…"
+          }
+        }
+      }
+    },
+    "Scan" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quét"
+          }
+        }
+      }
+    },
+    "Scan %@" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quét %@"
+          }
+        }
+      }
+    },
+    "Scan Again" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quét lại"
+          }
+        }
+      }
+    },
+    "Scanned %@" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đã quét %@"
+          }
+        }
+      }
+    },
+    "Scanning" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quét"
+          }
+        }
+      }
+    },
+    "Scanning… %lld of %lld categories" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Scanning… %1$lld of %2$lld categories"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đang quét… %lld/%lld hạng mục"
+          }
+        }
+      }
+    },
+    "Select All" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chọn tất cả"
+          }
+        }
+      }
+    },
+    "Select None" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bỏ chọn tất cả"
+          }
+        }
+      }
+    },
+    "Selected: %@" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đã chọn: %@"
+          }
+        }
+      }
+    },
+    "Show in Finder" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hiện trong Finder"
+          }
+        }
+      }
+    },
     "Smart Scan" : {
       "localizations" : {
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Quét thông minh"
+          }
+        }
+      }
+    },
+    "Some locations could not be read" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Một số vị trí không đọc được"
           }
         }
       }
@@ -81,12 +763,62 @@
         }
       }
     },
+    "Startup Disk" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ổ khởi động"
+          }
+        }
+      }
+    },
+    "Stop skipping this folder" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thôi bỏ qua thư mục này"
+          }
+        }
+      }
+    },
+    "System Junk" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rác hệ thống"
+          }
+        }
+      }
+    },
     "The administrator command failed: %@" : {
       "localizations" : {
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Lệnh quản trị thất bại: %@"
+          }
+        }
+      }
+    },
+    "The item changed after the scan. Scan again to review it." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mục này đã thay đổi sau khi quét. Hãy quét lại để xem."
+          }
+        }
+      }
+    },
+    "The item could not be found." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Không tìm thấy mục này."
           }
         }
       }
@@ -101,6 +833,26 @@
         }
       }
     },
+    "The item is a separate disk and is never removed." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mục này là một ổ đĩa riêng và không bao giờ bị xoá."
+          }
+        }
+      }
+    },
+    "The item is not an application." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mục này không phải là ứng dụng."
+          }
+        }
+      }
+    },
     "The item is still present after administrator removal." : {
       "localizations" : {
         "vi" : {
@@ -111,12 +863,122 @@
         }
       }
     },
+    "They belong to macOS or another user. Twan Clean can remove them with your administrator password." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chúng thuộc về macOS hoặc người dùng khác. Twan Clean có thể xoá bằng mật khẩu quản trị của bạn."
+          }
+        }
+      }
+    },
+    "This location is outside what Twan Clean may remove." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vị trí này nằm ngoài vùng Twan Clean được phép xoá."
+          }
+        }
+      }
+    },
+    "This location is protected and is never removed." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vị trí này được bảo vệ và không bao giờ bị xoá."
+          }
+        }
+      }
+    },
+    "Trash" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thùng rác"
+          }
+        }
+      }
+    },
+    "Twan Clean could not read %lld locations. Give it Full Disk Access to see everything, then scan again." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Twan Clean không đọc được %lld vị trí. Hãy cấp quyền truy cập toàn ổ đĩa để thấy đầy đủ, rồi quét lại."
+          }
+        }
+      }
+    },
+    "Twan Clean needs your password to remove the selected items." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Twan Clean cần mật khẩu của bạn để xoá các mục đã chọn."
+          }
+        }
+      }
+    },
+    "Twan Clean will ask for it after removing everything else." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Twan Clean sẽ hỏi mật khẩu sau khi đã xoá xong các mục còn lại."
+          }
+        }
+      }
+    },
+    "Used by macOS" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS đang dùng"
+          }
+        }
+      }
+    },
+    "User Cache" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cache người dùng"
+          }
+        }
+      }
+    },
     "Version" : {
       "localizations" : {
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Phiên bản"
+          }
+        }
+      }
+    },
+    "Xcode Junk" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rác Xcode"
+          }
+        }
+      }
+    },
+    "macOS can also free %@ of purgeable space by itself when it needs room." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS còn có thể tự giải phóng %@ dung lượng có thể xoá khi cần chỗ."
           }
         }
       }

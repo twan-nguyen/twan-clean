@@ -78,7 +78,7 @@ final class AllocatedSizeCalculatorTests: XCTestCase {
 
         let size = try AllocatedSizeCalculator().measure(tree.url("data"))
 
-        XCTAssertEqual(size.unreadableDirectories, 1)
+        XCTAssertEqual(size.unreadableEntries, 1)
         XCTAssertEqual(size.fileCount, 0)
     }
 
