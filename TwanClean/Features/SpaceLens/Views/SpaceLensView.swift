@@ -76,6 +76,10 @@ struct SpaceLensView: View {
     private func browser(_ folder: SizeNode) -> some View {
         VStack(spacing: 0) {
             HStack(spacing: 10) {
+                Button { model.startOver() } label: { Label("New Scan", systemImage: "arrow.uturn.backward") }
+                    .buttonStyle(PillButtonStyle())
+                    .disabled(model.phase != .ready)
+                    .help(Text("Close this map and choose another folder to scan"))
                 if model.path.count > 1 {
                     Button { model.goUp() } label: { Image(systemName: "chevron.left") }
                         .buttonStyle(PillButtonStyle())

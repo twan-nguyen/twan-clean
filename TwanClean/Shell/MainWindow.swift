@@ -26,6 +26,10 @@ private struct MainSplitView: View {
     @EnvironmentObject private var orphans: OrphansViewModel
     @StateObject private var permissions = PermissionCoordinator()
     @State private var selection: SidebarItem? = .smartScan
+    /// Set while the user is on a page reached from Smart Scan's results:
+    /// where they went and where the Back button returns.
+    @State private var backTarget: SidebarItem?
+    @State private var backReturn: SidebarItem?
 
     var body: some View {
         NavigationSplitView {
@@ -60,6 +64,25 @@ private struct MainSplitView: View {
             ToolbarItem(placement: .navigation) {
                 AppearancePill(selection: $appearance)
             }
+            ToolbarItem(placement: .navigation) {
+                if let backReturn, selection == backTarget {
+                    Button {
+                        selection = backReturn
+                    } label: {
+                        Label("Back", systemImage: "chevron.left")
+                            .labelStyle(.titleAndIcon)
+                    }
+                    .help(Text("Back to \(String(localized: backReturn.title))"))
+                }
+            }
+        }
+        .onChange(of: selection) { newValue in
+            // Going anywhere else, from the sidebar or with Back itself,
+            // ends the detour.
+            if newValue != backTarget {
+                backTarget = nil
+                backReturn = nil
+            }
         }
         .onReceive(appModel.$route.compactMap { $0 }) { route in
             selection = route
@@ -86,7 +109,11 @@ private struct MainSplitView: View {
     private func detail(for item: SidebarItem) -> some View {
         switch item {
         case .smartScan:
-            SmartScanView(selection: $selection)
+            SmartScanView { target in
+                backReturn = .smartScan
+                backTarget = target
+                selection = target
+            }
         case .category(let category):
             CategoryDetailView(category: category)
         case .spaceLens:

@@ -3,7 +3,8 @@ import SwiftUI
 
 /// The Smart Scan home: scan every category at once and clean the selection.
 struct SmartScanView: View {
-    @Binding var selection: SidebarItem?
+    /// Opens a category's page, remembering Smart Scan as the way back.
+    let open: (SidebarItem) -> Void
     @EnvironmentObject private var model: SmartScanViewModel
     @State private var disk = DiskSpace.current()
     @State private var confirming = false
@@ -66,7 +67,7 @@ struct SmartScanView: View {
         LazyVGrid(columns: [GridItem(.adaptive(minimum: 250), spacing: 12)], spacing: 12) {
             ForEach(CleanupCategoryID.allCases) { category in
                 Button {
-                    selection = .category(category)
+                    open(.category(category))
                 } label: {
                     CardSurface(padding: 14) {
                         HStack(alignment: .top, spacing: 12) {
@@ -99,12 +100,12 @@ struct SmartScanView: View {
         if model.totalFoundBytes > 0 {
             SectionHeader("By category")
             CardSurface(padding: 18) {
-                CategoryBarChart(results: sortedResults.filter { $0.totalBytes > 0 }) { selection = .category($0) }
+                CategoryBarChart(results: sortedResults.filter { $0.totalBytes > 0 }) { open(.category($0)) }
             }
             CardSurface(padding: 0) {
                 VStack(spacing: 0) {
                     ForEach(sortedResults, id: \.category) { result in
-                        CategoryToggleRow(result: result) { selection = .category(result.category) }
+                        CategoryToggleRow(result: result) { open(.category(result.category)) }
                         if result.category != sortedResults.last?.category {
                             Divider().padding(.leading, 58)
                         }

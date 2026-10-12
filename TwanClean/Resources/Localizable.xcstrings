@@ -395,6 +395,16 @@
         }
       }
     },
+    "Back to %@" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quay lại %@"
+          }
+        }
+      }
+    },
     "Big files, and old files you have not touched in a long time. Nothing here is selected for you, and removed files go to the Trash." : {
       "localizations" : {
         "vi" : {
@@ -571,6 +581,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dọn dẹp…"
+          }
+        }
+      }
+    },
+    "Close this map and choose another folder to scan" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đóng bản đồ này và chọn thư mục khác để quét"
           }
         }
       }
@@ -1327,6 +1347,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Cần mật khẩu"
+          }
+        }
+      }
+    },
+    "New Scan" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quét mới"
           }
         }
       }

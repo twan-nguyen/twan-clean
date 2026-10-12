@@ -81,6 +81,17 @@ final class SpaceLensViewModel: ObservableObject {
         scanTask?.cancel()
     }
 
+    /// Drops the current map and returns to the start screen, where the user
+    /// can pick another folder.
+    func startOver() {
+        guard phase == .ready else { return }
+        root = nil
+        path = []
+        selection = []
+        rootWasChosen = false
+        phase = .idle
+    }
+
     // MARK: - Navigation
 
     func open(_ node: SizeNode) {

@@ -42,6 +42,21 @@ final class SpaceLensViewModelTests: XCTestCase {
         XCTAssertEqual(model.selection.map(\.name), [movieName])
     }
 
+    func testStartingOverReturnsToTheStartScreen() async throws {
+        await model.scanHome()?.value
+        model.open(try node("Downloads", in: model.root))
+        model.toggle(try node(movieName, in: model.current))
+
+        model.startOver()
+
+        XCTAssertEqual(model.phase, .idle)
+        XCTAssertNil(model.root)
+        XCTAssertTrue(model.path.isEmpty)
+        XCTAssertTrue(model.selection.isEmpty)
+        await model.scanHome()?.value
+        XCTAssertEqual(model.phase, .ready)
+    }
+
     func testTrashingMovesToTrashAndUpdatesTheTree() async throws {
         await model.scanHome()?.value
         let downloads = try node("Downloads", in: model.root)
