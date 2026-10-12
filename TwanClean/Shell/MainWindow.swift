@@ -166,14 +166,16 @@ private struct PermissionFooter: View {
     var body: some View {
         HStack(spacing: 10) {
             PulsingDot(tint: tint, isPulsing: permissions.state != .granted)
-            VStack(alignment: .leading, spacing: 0) {
+            VStack(alignment: .leading, spacing: 1) {
                 Text(title)
                     .font(.system(size: 11.5, weight: .semibold))
+                    .lineLimit(1)
                 Text(subtitle)
                     .font(.system(size: 10.5))
                     .foregroundStyle(.secondary)
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
             }
-            .lineLimit(1)
             Spacer(minLength: 4)
             switch permissions.state {
             case .granted:

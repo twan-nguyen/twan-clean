@@ -8,7 +8,8 @@ enum CirclePacker {
     /// The smallest circle, relative to the largest, so tiny items stay
     /// visible and clickable.
     static let minimumRadiusRatio: CGFloat = 0.12
-    static let gap: CGFloat = 1
+    /// Space between circles, relative to a largest radius of 100.
+    static let gap: CGFloat = 3
 
     /// Frames in the same order as `sizes`.
     static func pack(_ sizes: [Int64], in canvas: CGSize, padding: CGFloat = 8) -> [CGRect] {

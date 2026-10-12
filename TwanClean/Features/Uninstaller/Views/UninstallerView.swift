@@ -6,7 +6,7 @@ struct UninstallerView: View {
     var body: some View {
         HSplitView {
             AppListView(model: model)
-                .frame(minWidth: 260, idealWidth: 300, maxWidth: 380)
+                .frame(minWidth: 240, idealWidth: 290, maxWidth: 380)
                 .disabled(model.phase == .uninstalling)
             Group {
                 if let app = model.selectedApp {
@@ -18,7 +18,7 @@ struct UninstallerView: View {
                                    message: "Tip: in Finder, Control-click an app and choose Services › Uninstall with Twan Clean.")
                 }
             }
-            .frame(minWidth: 460)
+            .frame(minWidth: 400)
         }
         .navigationTitle("App Uninstaller")
         .onAppear { model.loadAppsIfNeeded() }

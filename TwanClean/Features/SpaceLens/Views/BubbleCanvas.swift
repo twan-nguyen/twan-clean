@@ -89,10 +89,10 @@ struct BubbleCanvas: View {
     private func draw(_ bubble: Bubble, in context: inout GraphicsContext, highlighted: Bool) {
         let circle = Path(ellipseIn: bubble.frame)
         let color = fill(for: bubble)
-        context.fill(circle, with: .radialGradient(
-            Gradient(colors: [color.opacity(highlighted ? 0.35 : 0.18), color.opacity(highlighted ? 0.6 : 0.42)]),
-            center: CGPoint(x: bubble.frame.midX, y: bubble.frame.midY - bubble.frame.height * 0.2),
-            startRadius: 0, endRadius: bubble.frame.width * 0.7))
+        context.fill(circle, with: .linearGradient(
+            Gradient(colors: [color.opacity(highlighted ? 0.7 : 0.55), color.opacity(highlighted ? 0.5 : 0.32)]),
+            startPoint: CGPoint(x: bubble.frame.midX, y: bubble.frame.minY),
+            endPoint: CGPoint(x: bubble.frame.midX, y: bubble.frame.maxY)))
         let selected: Bool = if case .node(let node) = bubble.content { isSelected(node) } else { false }
         context.stroke(circle, with: .color(selected ? Tint.blue : color.opacity(highlighted ? 1 : 0.7)),
                        lineWidth: selected ? 3 : 1)
@@ -102,16 +102,27 @@ struct BubbleCanvas: View {
         case .node(let node): node.name
         case .others: String(localized: "Other")
         }
-        let label = Text(verbatim: "\(title)\n\(bubble.bytes.formattedBytes)")
-            .font(.system(size: min(13, bubble.frame.width / 9), weight: .medium))
-        context.draw(context.resolve(label), in: bubble.frame.insetBy(dx: bubble.frame.width * 0.18,
-                                                                     dy: bubble.frame.height * 0.3))
+        // Two centred lines, the name cut short to fit inside the circle.
+        let fontSize = min(14, max(10, bubble.frame.width / 9))
+        let name = context.resolve(Text(verbatim: title)
+            .font(.system(size: fontSize, weight: .semibold)).foregroundColor(.primary))
+        let size = context.resolve(Text(verbatim: bubble.bytes.formattedBytes)
+            .font(.system(size: fontSize - 1)).foregroundColor(.secondary))
+        let unbounded = CGSize(width: CGFloat.greatestFiniteMagnitude, height: .greatestFiniteMagnitude)
+        let nameSize = name.measure(in: unbounded)
+        let sizeSize = size.measure(in: unbounded)
+        let nameWidth = min(nameSize.width, bubble.frame.width * 0.72)
+        let top = bubble.frame.midY - (nameSize.height + sizeSize.height) / 2
+        context.draw(name, in: CGRect(x: bubble.frame.midX - nameWidth / 2, y: top,
+                                      width: nameWidth, height: nameSize.height))
+        context.draw(size, in: CGRect(x: bubble.frame.midX - sizeSize.width / 2, y: top + nameSize.height,
+                                      width: sizeSize.width, height: sizeSize.height))
     }
 
     /// Folders cycle through the palette so neighbours stand apart; files
-    /// stay grey and unreadable folders orange.
-    private static let palette = [Tint.cyan, Tint.blue, Tint.purple, Tint.pink, Tint.orange,
-                                  Tint.yellow, Tint.green, Tint.teal, Tint.indigo, Tint.mint]
+    /// stay grey. Orange is kept for folders that could not be read.
+    private static let palette = [Tint.cyan, Tint.blue, Tint.purple, Tint.pink,
+                                  Tint.green, Tint.teal, Tint.indigo, Tint.mint]
 
     private func fill(for bubble: Bubble) -> Color {
         guard case .node(let node) = bubble.content else { return .gray }

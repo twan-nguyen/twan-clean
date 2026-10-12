@@ -90,12 +90,16 @@ struct SpaceLensView: View {
                 Text(folder.bytes.formattedBytes)
                     .font(.system(size: 17, weight: .semibold))
                     .monospacedDigit()
+                    .fixedSize()
                 Button { chooseFolder() } label: { Label("Choose Folder…", systemImage: "folder") }
                     .buttonStyle(PillButtonStyle())
                     .disabled(model.phase == .removing)
-                Button { model.rescan() } label: { Label("Scan Again", systemImage: "arrow.clockwise") }
-                    .buttonStyle(PillButtonStyle())
-                    .disabled(model.phase != .ready)
+                Button { model.rescan() } label: {
+                    Label("Scan Again", systemImage: "arrow.clockwise").labelStyle(.iconOnly)
+                }
+                .buttonStyle(PillButtonStyle())
+                .disabled(model.phase != .ready)
+                .help(Text("Scan Again"))
             }
             .padding(.horizontal, 20)
             .padding(.vertical, 12)
@@ -118,14 +122,14 @@ struct SpaceLensView: View {
                 .padding(.leading, 20)
                 .padding(.trailing, 6)
                 .padding(.bottom, 12)
-                .frame(minWidth: 420)
+                .frame(minWidth: 300)
 
                 FolderContentsList(folder: folder, revision: model.revision, model: model)
                     .cardList()
                     .padding(.leading, 6)
                     .padding(.trailing, 20)
                     .padding(.bottom, 12)
-                    .frame(minWidth: 280, idealWidth: 320, maxWidth: 440)
+                    .frame(minWidth: 250, idealWidth: 320, maxWidth: 440)
             }
 
             SelectionFooter(selectedBytes: model.selectedBytes, isBusy: model.phase == .removing) {
