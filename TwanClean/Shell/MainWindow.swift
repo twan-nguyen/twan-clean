@@ -1,6 +1,15 @@
 import SwiftUI
 
 struct MainWindow: View {
+    /// The widest screen needs 641 pt beside the sidebar (Uninstaller: app
+    /// list 240 + details 400), and the sidebar can grow to 260. Below this
+    /// the window would clip its own content.
+    static let minimumSize = CGSize(width: 960, height: 640)
+    /// Opens with room for every screen, and still fits a 13-inch MacBook Air.
+    static let recommendedSize = CGSize(width: 1200, height: 780)
+    /// The narrowest the content beside the sidebar may become.
+    static let minimumDetailWidth: CGFloat = 680
+
     @AppStorage("onboarding.completed") private var onboardingCompleted = false
     @AppStorage(AppearanceMode.storageKey) private var appearance: AppearanceMode = .system
 
@@ -59,6 +68,7 @@ private struct MainSplitView: View {
                 .id(selection)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .background(AmbientBackground())
+                .navigationSplitViewColumnWidth(min: MainWindow.minimumDetailWidth, ideal: 940)
         }
         .toolbar {
             ToolbarItem(placement: .navigation) {

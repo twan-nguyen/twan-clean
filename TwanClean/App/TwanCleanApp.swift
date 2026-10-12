@@ -7,7 +7,7 @@ struct TwanCleanApp: App {
     var body: some Scene {
         WindowGroup(id: "main") {
             MainWindow()
-                .frame(minWidth: 900, minHeight: 600)
+                .frame(minWidth: MainWindow.minimumSize.width, minHeight: MainWindow.minimumSize.height)
                 .environmentObject(model)
                 .environmentObject(model.smartScan)
                 .environmentObject(model.spaceLens)
@@ -15,7 +15,7 @@ struct TwanCleanApp: App {
                 .environmentObject(model.orphans)
                 .modifier(MainWindowRegistration(model: model, appDelegate: appDelegate))
         }
-        .defaultSize(width: 1000, height: 680)
+        .defaultSize(MainWindow.recommendedSize)
         .windowResizability(.contentMinSize)
 
         Settings {
