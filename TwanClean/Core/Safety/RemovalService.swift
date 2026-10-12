@@ -116,6 +116,22 @@ struct RemovalService: Sendable {
         }
     }
 
+    /// Whether removing the item will need the administrator prompt: its
+    /// folder is not writable, a sticky folder (like /tmp) protects another
+    /// user's item, or a folder owned by someone else will have contents this
+    /// user cannot remove.
+    static func needsAdministrator(_ url: URL) -> Bool {
+        let parent = url.deletingLastPathComponent().path
+        guard access(parent, W_OK) == 0 else { return true }
+        var parentStatus = stat()
+        var itemStatus = stat()
+        guard lstat(parent, &parentStatus) == 0, lstat(url.path, &itemStatus) == 0 else { return true }
+        let ownedByOther = itemStatus.st_uid != getuid()
+        let isDirectory = (itemStatus.st_mode & S_IFMT) == S_IFDIR
+        let parentIsSticky = (parentStatus.st_mode & S_ISVTX) != 0
+        return ownedByOther && (parentIsSticky || isDirectory)
+    }
+
     static func isPermissionError(_ error: Error) -> Bool {
         let nsError = error as NSError
         if nsError.domain == NSCocoaErrorDomain,

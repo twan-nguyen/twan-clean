@@ -24,7 +24,14 @@ struct CleanupOutcome: Identifiable {
     mutating func add(_ report: RemovalReport) {
         freedBytes += report.freedBytes
         removedCount += report.removed.count
-        failures += report.failed.map { Failure(name: $0.request.url.lastPathComponent, message: $0.message) }
+        failures += report.failed.map { failure in
+            // macOS also guards apps themselves: moving one needs the App
+            // Management permission, which only the user can grant.
+            let hint = failure.request.purpose == .appBundle
+                ? " " + String(localized: "If macOS blocked it, allow Twan Clean in System Settings › Privacy & Security › App Management.")
+                : ""
+            return Failure(name: failure.request.url.lastPathComponent, message: failure.message + hint)
+        }
         failures += report.refused.map {
             Failure(name: $0.request.url.lastPathComponent, message: $0.reason.localizedDescription)
         }

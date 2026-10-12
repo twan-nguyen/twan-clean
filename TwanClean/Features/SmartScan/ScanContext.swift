@@ -133,7 +133,7 @@ struct CategoryResultBuilder {
         if size.unreadableEntries > 0 { notes.insert(.partlyUnreadable) }
         if belongsToRunningApp(canonical) { notes.insert(.appIsRunning) }
         if canonical.lastPathComponent.lowercased().hasPrefix("com.apple.") { notes.insert(.usedByMacOS) }
-        let needsAdministrator = Self.needsAdministrator(canonical)
+        let needsAdministrator = RemovalService.needsAdministrator(canonical)
         // Only the user's own regenerable junk is ever preselected: nothing
         // outside the home folder, nothing behind a password, nothing a
         // running app or macOS itself is using, and no personal data.
@@ -168,22 +168,6 @@ struct CategoryResultBuilder {
         var result = result
         result.items.sort { $0.bytes > $1.bytes }
         return result
-    }
-
-    /// Whether removing the item will need the administrator prompt: its
-    /// folder is not writable, a sticky folder (like /tmp) protects another
-    /// user's item, or a folder owned by someone else will have contents this
-    /// user cannot remove.
-    static func needsAdministrator(_ url: URL) -> Bool {
-        let parent = url.deletingLastPathComponent().path
-        guard access(parent, W_OK) == 0 else { return true }
-        var parentStatus = stat()
-        var itemStatus = stat()
-        guard lstat(parent, &parentStatus) == 0, lstat(url.path, &itemStatus) == 0 else { return true }
-        let ownedByOther = itemStatus.st_uid != getuid()
-        let isDirectory = (itemStatus.st_mode & S_IFMT) == S_IFDIR
-        let parentIsSticky = (parentStatus.st_mode & S_ISVTX) != 0
-        return ownedByOther && (parentIsSticky || isDirectory)
     }
 
     static func isDirectory(_ url: URL) -> Bool {

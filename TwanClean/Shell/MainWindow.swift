@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct MainWindow: View {
+    @EnvironmentObject private var appModel: AppModel
     @State private var selection: SidebarItem? = .smartScan
 
     var body: some View {
@@ -24,6 +25,10 @@ struct MainWindow: View {
         } detail: {
             detail(for: selection ?? .smartScan)
         }
+        .onReceive(appModel.$route.compactMap { $0 }) { route in
+            selection = route
+            appModel.route = nil
+        }
     }
 
     private func row(_ item: SidebarItem) -> some View {
@@ -45,7 +50,9 @@ struct MainWindow: View {
                 .id(category)
         case .spaceLens:
             SpaceLensView()
-        case .uninstaller, .orphans:
+        case .uninstaller:
+            UninstallerView()
+        case .orphans:
             FeaturePlaceholderView(item: item)
         }
     }

@@ -6,4 +6,7 @@ import SwiftUI
 final class AppModel: ObservableObject {
     let smartScan = SmartScanViewModel()
     let spaceLens = SpaceLensViewModel()
+    let uninstaller = UninstallerViewModel()
+    /// A screen another part of the app asks the window to show.
+    @Published var route: SidebarItem?
 }

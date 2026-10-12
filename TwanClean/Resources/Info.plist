@@ -41,5 +41,25 @@
 	<string>Twan Clean asks for administrator access only to remove system caches or app files you selected.</string>
 	<key>NSAppleEventsUsageDescription</key>
 	<string>Twan Clean uses Apple Events to run the administrator removal you approved.</string>
+	<key>NSServices</key>
+	<array>
+		<dict>
+			<key>NSMenuItem</key>
+			<dict>
+				<key>default</key>
+				<string>Uninstall with Twan Clean</string>
+			</dict>
+			<key>NSMessage</key>
+			<string>uninstallApp</string>
+			<key>NSPortName</key>
+			<string>Twan Clean</string>
+			<key>NSRequiredContext</key>
+			<dict/>
+			<key>NSSendFileTypes</key>
+			<array>
+				<string>com.apple.application-bundle</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>

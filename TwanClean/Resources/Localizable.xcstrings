@@ -17,6 +17,16 @@
         }
       }
     },
+    "%@ is running" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ đang chạy"
+          }
+        }
+      }
+    },
     "%@ selected" : {
       "localizations" : {
         "vi" : {
@@ -137,6 +147,26 @@
         }
       }
     },
+    "Also files named after the developer. May include files of the developer's other apps, which are never selected for you." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thêm cả tệp đặt theo tên nhà phát triển. Có thể gồm tệp của các app khác cùng nhà phát triển; những tệp này không bao giờ được chọn sẵn."
+          }
+        }
+      }
+    },
+    "Also files whose names contain the app's name or identifier. Recommended." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thêm cả tệp có tên chứa tên hoặc mã định danh của app. Nên dùng."
+          }
+        }
+      }
+    },
     "App Uninstaller" : {
       "localizations" : {
         "vi" : {
@@ -153,6 +183,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "App đang chạy"
+          }
+        }
+      }
+    },
+    "Application" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ứng dụng"
           }
         }
       }
@@ -217,6 +257,16 @@
         }
       }
     },
+    "Caches" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cache"
+          }
+        }
+      }
+    },
     "Cancel" : {
       "localizations" : {
         "vi" : {
@@ -233,6 +283,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Chọn thư mục…"
+          }
+        }
+      }
+    },
+    "Choose an app to see everything it installed" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chọn một app để xem mọi thứ nó đã cài"
+          }
+        }
+      }
+    },
+    "Choose an application to uninstall." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hãy chọn một ứng dụng để gỡ."
           }
         }
       }
@@ -283,6 +353,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dọn dẹp…"
+          }
+        }
+      }
+    },
+    "Containers" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Container"
+          }
+        }
+      }
+    },
+    "Deep" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sâu"
           }
         }
       }
@@ -357,6 +447,16 @@
         }
       }
     },
+    "Enhanced" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nâng cao"
+          }
+        }
+      }
+    },
     "Find junk in %lld places at once" : {
       "localizations" : {
         "vi" : {
@@ -373,6 +473,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Thư mục bỏ qua"
+          }
+        }
+      }
+    },
+    "Force Quit and Uninstall" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buộc thoát và gỡ"
           }
         }
       }
@@ -427,6 +537,16 @@
         }
       }
     },
+    "If macOS blocked it, allow Twan Clean in System Settings › Privacy & Security › App Management." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nếu macOS chặn, hãy cho phép Twan Clean trong Cài đặt hệ thống › Quyền riêng tư & Bảo mật › Quản lý ứng dụng."
+          }
+        }
+      }
+    },
     "Items already in your Trash." : {
       "localizations" : {
         "vi" : {
@@ -467,6 +587,26 @@
         }
       }
     },
+    "Launch Items" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mục khởi chạy"
+          }
+        }
+      }
+    },
+    "Logs" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Log"
+          }
+        }
+      }
+    },
     "Logs and caches from Ollama and LM Studio. Chat history is never selected for you." : {
       "localizations" : {
         "vi" : {
@@ -487,12 +627,32 @@
         }
       }
     },
+    "Looking for the app's files…" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đang tìm các tệp của app…"
+          }
+        }
+      }
+    },
     "Mail Attachments" : {
       "localizations" : {
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tệp đính kèm Mail"
+          }
+        }
+      }
+    },
+    "Matched by developer" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Khớp theo nhà phát triển"
           }
         }
       }
@@ -513,6 +673,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Đang đo…"
+          }
+        }
+      }
+    },
+    "Move %lld Items to Trash" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chuyển %lld mục vào Thùng rác"
           }
         }
       }
@@ -553,6 +723,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Chuyển vào Thùng rác…"
+          }
+        }
+      }
+    },
+    "Name" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tên"
           }
         }
       }
@@ -623,6 +803,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tệp cũ là tệp không đụng tới trong"
+          }
+        }
+      }
+    },
+    "Only files named exactly after the app. Finds the least, never guesses." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chỉ tệp đặt đúng theo tên app. Tìm được ít nhất nhưng không bao giờ đoán."
           }
         }
       }
@@ -717,6 +907,36 @@
         }
       }
     },
+    "Preferences" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tuỳ chọn"
+          }
+        }
+      }
+    },
+    "Quit and Uninstall" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Thoát và gỡ"
+          }
+        }
+      }
+    },
+    "Reload" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tải lại"
+          }
+        }
+      }
+    },
     "Remove with Password…" : {
       "localizations" : {
         "vi" : {
@@ -803,6 +1023,26 @@
         }
       }
     },
+    "Search" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tìm kiếm"
+          }
+        }
+      }
+    },
+    "Search apps" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tìm app"
+          }
+        }
+      }
+    },
     "See what takes up space" : {
       "localizations" : {
         "vi" : {
@@ -863,6 +1103,16 @@
         }
       }
     },
+    "Size" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dung lượng"
+          }
+        }
+      }
+    },
     "Smart Scan" : {
       "localizations" : {
         "vi" : {
@@ -889,6 +1139,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Một số vị trí không đọc được"
+          }
+        }
+      }
+    },
+    "Sort" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sắp xếp"
           }
         }
       }
@@ -933,6 +1193,26 @@
         }
       }
     },
+    "Strict" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nghiêm ngặt"
+          }
+        }
+      }
+    },
+    "Support Files" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tệp hỗ trợ"
+          }
+        }
+      }
+    },
     "System Junk" : {
       "localizations" : {
         "vi" : {
@@ -949,6 +1229,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Lệnh quản trị thất bại: %@"
+          }
+        }
+      }
+    },
+    "The app is still running. Quit it and try again." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "App vẫn đang chạy. Hãy thoát app rồi thử lại."
           }
         }
       }
@@ -1013,6 +1303,16 @@
         }
       }
     },
+    "The selected items, %@ in total, go to the Trash, where you can still restore them." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Các mục đã chọn, tổng cộng %@, sẽ vào Thùng rác và vẫn khôi phục được."
+          }
+        }
+      }
+    },
     "They belong to macOS or another user. Twan Clean can remove them with your administrator password." : {
       "localizations" : {
         "vi" : {
@@ -1043,6 +1343,16 @@
         }
       }
     },
+    "Tip: in Finder, Control-click an app and choose Services › Uninstall with Twan Clean." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mẹo: trong Finder, Control-click vào một app rồi chọn Dịch vụ › Uninstall with Twan Clean."
+          }
+        }
+      }
+    },
     "Trash" : {
       "localizations" : {
         "vi" : {
@@ -1063,6 +1373,16 @@
         }
       }
     },
+    "Twan Clean needs to quit it first. Unsaved changes in the app may be lost if you force it to quit." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Twan Clean cần thoát app trước. Nếu buộc thoát, các thay đổi chưa lưu trong app có thể bị mất."
+          }
+        }
+      }
+    },
     "Twan Clean needs your password to remove the selected items." : {
       "localizations" : {
         "vi" : {
@@ -1079,6 +1399,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Twan Clean sẽ hỏi mật khẩu sau khi đã xoá xong các mục còn lại."
+          }
+        }
+      }
+    },
+    "Uninstall %@?" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gỡ %@?"
+          }
+        }
+      }
+    },
+    "Uninstall…" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gỡ cài đặt…"
           }
         }
       }
