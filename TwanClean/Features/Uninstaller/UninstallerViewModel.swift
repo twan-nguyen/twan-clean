@@ -156,7 +156,18 @@ final class UninstallerViewModel: ObservableObject {
     // MARK: - Uninstalling
 
     func isRunning(_ app: InstalledApp) -> Bool {
-        !NSRunningApplication.runningApplications(withBundleIdentifier: app.bundleIdentifier).isEmpty
+        !runningProcesses(of: app).isEmpty
+    }
+
+    /// The app and the helpers it starts from inside its bundle, such as
+    /// login items and menu bar agents, which keep running after the app
+    /// itself quits.
+    private func runningProcesses(of app: InstalledApp) -> [NSRunningApplication] {
+        NSWorkspace.shared.runningApplications.filter { process in
+            if process.bundleIdentifier == app.bundleIdentifier { return true }
+            guard let url = process.bundleURL ?? process.executableURL else { return false }
+            return PathPolicy.isInside(url.path, app.url.path)
+        }
     }
 
     /// Quits the app if it is running, unloads its launch agents and moves
@@ -204,7 +215,7 @@ final class UninstallerViewModel: ObservableObject {
     }
 
     private func quit(_ app: InstalledApp, force: Bool) async -> Bool {
-        let running = NSRunningApplication.runningApplications(withBundleIdentifier: app.bundleIdentifier)
+        let running = runningProcesses(of: app)
         guard !running.isEmpty else { return true }
         for app in running {
             if force { app.forceTerminate() } else { app.terminate() }
@@ -216,12 +227,14 @@ final class UninstallerViewModel: ObservableObject {
         return running.allSatisfy(\.isTerminated)
     }
 
-    /// Stops the user's launch agents being removed, so nothing keeps running
-    /// from the Trash. Only agents the removal policy accepts are touched;
-    /// system-wide agents and daemons stop at the next restart.
+    /// Stops the launch agents being removed, so nothing keeps running from
+    /// the Trash. Agents in the user's and the shared Library run in the
+    /// user's session and can be stopped without a password; system daemons
+    /// are stopped by the password-protected removal itself.
     private func unloadLaunchAgents(in items: [LeftoverItem]) async {
-        let agents = "\(removal.policy.rules.home)/Library/LaunchAgents"
-        for item in items where item.url.pathExtension == "plist" && PathPolicy.isInside(item.url.path, agents)
+        let folders = ["\(removal.policy.rules.home)/Library/LaunchAgents", "/Library/LaunchAgents"]
+        for item in items where item.url.pathExtension == "plist"
+            && folders.contains(where: { PathPolicy.isInside(item.url.path, $0) })
             && removal.policy.evaluate(item.url, purpose: item.purpose) == .allowed(item.url) {
             _ = await ProcessRunner.run(URL(fileURLWithPath: "/bin/launchctl"),
                                         ["bootout", "gui/\(getuid())", item.url.path], timeout: 10)

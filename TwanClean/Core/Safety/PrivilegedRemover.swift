@@ -133,7 +133,11 @@ struct PrivilegedRemover: Sendable {
         guard digest.count == 64, digest.unicodeScalars.allSatisfy(safe.contains) else {
             throw StagingError.unsafeStagingPath(digest)
         }
-        let removeIfUnchanged = #"[ "$(/usr/bin/stat -f %d:%i "$2")" = "$1" ] && /bin/rm -rfx -- "$2"; exit 0"#
+        // A system daemon keeps running after its plist is gone, so it is
+        // stopped first. The identity check has already passed by then.
+        let removeIfUnchanged = #"[ "$(/usr/bin/stat -f %d:%i "$2")" = "$1" ] || exit 0; "#
+            + #"case "$2" in /Library/LaunchDaemons/*.plist) /bin/launchctl bootout system "$2" 2>/dev/null;; esac; "#
+            + #"/bin/rm -rfx -- "$2"; exit 0"#
         return [
             "list=$(/usr/bin/mktemp) || exit 1",
             "/bin/cat '\(path)' > \"$list\" || { /bin/rm -f \"$list\"; exit 1; }",
