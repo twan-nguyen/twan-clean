@@ -62,9 +62,6 @@ private struct MainSplitView: View {
         }
         .toolbar {
             ToolbarItem(placement: .navigation) {
-                AppearancePill(selection: $appearance)
-            }
-            ToolbarItem(placement: .navigation) {
                 if let backReturn, selection == backTarget {
                     Button {
                         selection = backReturn
@@ -74,6 +71,9 @@ private struct MainSplitView: View {
                     }
                     .help(Text("Back to \(String(localized: backReturn.title))"))
                 }
+            }
+            ToolbarItem(placement: .primaryAction) {
+                AppearancePill(selection: $appearance)
             }
         }
         .onChange(of: selection) { newValue in

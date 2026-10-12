@@ -74,36 +74,31 @@ enum AppearanceMode: String, CaseIterable, Identifiable {
     }
 }
 
-/// Three-way appearance switch with a sliding highlight.
+/// Three-way appearance switch for the toolbar. A native segmented control,
+/// so it sits correctly in the toolbar's own background on every macOS
+/// version instead of drawing a second capsule inside it.
 struct AppearancePill: View {
     @Binding var selection: AppearanceMode
 
     var body: some View {
-        ZStack(alignment: .leading) {
-            RoundedRectangle(cornerRadius: 6, style: .continuous)
-                .fill(Color.primary.opacity(0.10))
-                .frame(width: 28, height: 22)
-                .offset(x: CGFloat(AppearanceMode.allCases.firstIndex(of: selection) ?? 0) * 30)
-            HStack(spacing: 2) {
-                ForEach(AppearanceMode.allCases) { mode in
-                    Button {
-                        selection = mode
-                    } label: {
-                        Image(systemName: mode.systemImage)
-                            .font(.system(size: 12, weight: .semibold))
-                            .frame(width: 28, height: 22)
-                            .foregroundStyle(selection == mode ? Color.primary : .secondary)
-                            .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                    .help(Text(mode.title))
+        Picker(selection: $selection) {
+            ForEach(AppearanceMode.allCases) { mode in
+                Label {
+                    Text(mode.title)
+                } icon: {
+                    Image(systemName: mode.systemImage)
                 }
+                .labelStyle(.iconOnly)
+                .help(Text(mode.title))
+                .tag(mode)
             }
+        } label: {
+            Text("Appearance")
         }
-        .animation(.spring(response: 0.32, dampingFraction: 0.78), value: selection)
-        .padding(.horizontal, 5)
-        .padding(.vertical, 3)
+        .pickerStyle(.segmented)
+        .labelsHidden()
         .fixedSize()
+        .help(Text("Appearance"))
     }
 }
 
