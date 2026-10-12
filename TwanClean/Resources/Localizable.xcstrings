@@ -97,6 +97,16 @@
         }
       }
     },
+    "%lld smaller items" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld mục nhỏ hơn"
+          }
+        }
+      }
+    },
     "AI Apps" : {
       "localizations" : {
         "vi" : {
@@ -167,6 +177,16 @@
         }
       }
     },
+    "Back" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quay lại"
+          }
+        }
+      }
+    },
     "Big files, and old files you have not touched in a long time. Nothing here is selected for you, and removed files go to the Trash." : {
       "localizations" : {
         "vi" : {
@@ -203,6 +223,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Huỷ"
+          }
+        }
+      }
+    },
+    "Choose Folder…" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chọn thư mục…"
           }
         }
       }
@@ -263,6 +293,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Xoá hẳn: %@"
+          }
+        }
+      }
+    },
+    "Deselect" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bỏ chọn"
           }
         }
       }
@@ -467,12 +507,52 @@
         }
       }
     },
+    "Measuring…" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đang đo…"
+          }
+        }
+      }
+    },
+    "Move %lld items to the Trash?" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chuyển %lld mục vào Thùng rác?"
+          }
+        }
+      }
+    },
+    "Move to Trash (%@)" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chuyển vào Thùng rác (%@)"
+          }
+        }
+      }
+    },
     "Move to Trash: %@" : {
       "localizations" : {
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Chuyển vào Thùng rác: %@"
+          }
+        }
+      }
+    },
+    "Move to Trash…" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chuyển vào Thùng rác…"
           }
         }
       }
@@ -547,6 +627,16 @@
         }
       }
     },
+    "Open" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mở"
+          }
+        }
+      }
+    },
     "Open Full Disk Access Settings" : {
       "localizations" : {
         "vi" : {
@@ -573,6 +663,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tệp mồ côi"
+          }
+        }
+      }
+    },
+    "Other" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Khác"
           }
         }
       }
@@ -657,6 +757,16 @@
         }
       }
     },
+    "Scan Home Folder" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quét thư mục Nhà"
+          }
+        }
+      }
+    },
     "Scanned %@" : {
       "localizations" : {
         "vi" : {
@@ -689,6 +799,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Đang quét… %lld/%lld hạng mục"
+          }
+        }
+      }
+    },
+    "See what takes up space" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Xem cái gì đang chiếm chỗ"
+          }
+        }
+      }
+    },
+    "Select" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chọn"
           }
         }
       }
@@ -743,6 +873,16 @@
         }
       }
     },
+    "Some contents could not be read" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Một phần nội dung không đọc được"
+          }
+        }
+      }
+    },
     "Some locations could not be read" : {
       "localizations" : {
         "vi" : {
@@ -759,6 +899,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Space Lens"
+          }
+        }
+      }
+    },
+    "Space Lens measures every folder and shows it as bubbles sized by the space it really uses." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Space Lens đo mọi thư mục và hiển thị thành các bong bóng có kích thước theo dung lượng thật."
           }
         }
       }
@@ -969,6 +1119,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Rác Xcode"
+          }
+        }
+      }
+    },
+    "You can restore them from the Trash. The space is freed when you empty it." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bạn có thể khôi phục chúng từ Thùng rác. Dung lượng được giải phóng khi bạn dọn Thùng rác."
           }
         }
       }

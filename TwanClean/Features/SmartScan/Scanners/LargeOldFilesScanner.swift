@@ -29,6 +29,10 @@ struct LargeOldFilesScanner: CategoryScanner {
         for folder in Self.searchFolders {
             let root = context.homeURL(folder)
             guard FileManager.default.fileExists(atPath: root.path) else { continue }
+            guard !context.isProtected(root) else {
+                unreadable.append(root)
+                continue
+            }
             try FileTreeWalker.walk(root) { entry in
                 // macOS asks before an app may read Downloads, Documents or
                 // Desktop; a refusal shows up as an unreadable root.

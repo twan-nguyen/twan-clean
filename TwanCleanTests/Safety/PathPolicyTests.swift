@@ -19,6 +19,16 @@ final class PathPolicyTests: XCTestCase {
         home.policy.evaluate(url, purpose: purpose)
     }
 
+    /// Compares paths, not URLs: whether Foundation adds a trailing slash to
+    /// a folder URL differs between macOS releases.
+    private func assertAllowed(_ url: URL, _ purpose: RemovalPurpose,
+                               file: StaticString = #filePath, line: UInt = #line) {
+        guard case .allowed(let allowed) = decision(url, purpose) else {
+            return XCTFail("\(url.path) refused for \(purpose)", file: file, line: line)
+        }
+        XCTAssertEqual(allowed.path, url.path, file: file, line: line)
+    }
+
     private func assertRefused(_ url: URL, _ purpose: RemovalPurpose, _ reason: RefusalReason,
                                file: StaticString = #filePath, line: UInt = #line) {
         XCTAssertEqual(decision(url, purpose), .refused(reason), url.path, file: file, line: line)
@@ -28,17 +38,17 @@ final class PathPolicyTests: XCTestCase {
 
     func testCacheItemIsAllowedForRegenerableCache() throws {
         let item = try tree.makeFile("home/Library/Caches/com.example.app/data.bin")
-        XCTAssertEqual(decision(item, .regenerableCache), .allowed(item))
+        assertAllowed(item, .regenerableCache)
     }
 
     func testUserFileInDownloadsIsAllowed() throws {
         let item = try tree.makeFile("home/Downloads/movie.mov")
-        XCTAssertEqual(decision(item, .userFile), .allowed(item))
+        assertAllowed(item, .userFile)
     }
 
     func testTrashChildIsAllowedForTrashContents() throws {
         let item = try tree.makeFile("home/.Trash/old.zip")
-        XCTAssertEqual(decision(item, .trashContents), .allowed(item))
+        assertAllowed(item, .trashContents)
     }
 
     func testRelativeComponentsAreResolvedBeforeChecking() throws {
@@ -114,8 +124,7 @@ final class PathPolicyTests: XCTestCase {
 
     func testAppBundlePurposeRequiresAnAppBundle() {
         assertRefused(URL(fileURLWithPath: "/Applications/readme.txt"), .appBundle, .notAnAppBundle)
-        XCTAssertEqual(decision(URL(fileURLWithPath: "/Applications/Example.app"), .appBundle),
-                       .allowed(URL(fileURLWithPath: "/Applications/Example.app")))
+        assertAllowed(URL(fileURLWithPath: "/Applications/Example.app"), .appBundle)
     }
 
     // MARK: - Symlinks
@@ -129,7 +138,7 @@ final class PathPolicyTests: XCTestCase {
 
     func testSymlinkItselfIsJudgedByItsOwnLocation() throws {
         let link = try tree.makeSymlink("home/Library/Caches/escape", to: home.url("Documents"))
-        XCTAssertEqual(decision(link, .regenerableCache), .allowed(link))
+        assertAllowed(link, .regenerableCache)
     }
 
     func testMissingParentIsUnresolvable() {
@@ -147,7 +156,7 @@ final class PathPolicyTests: XCTestCase {
         assertRefused(home.url("Library/Application Support"), .appLeftover, .protectedRoot)
         assertRefused(home.url("Library/Preferences"), .appLeftover, .protectedRoot)
         let own = home.url("Library/Application Support/com.example.app")
-        XCTAssertEqual(decision(own, .appLeftover), .allowed(own))
+        assertAllowed(own, .appLeftover)
     }
 
     func testCollapsedPathCannotReachAStandardLibraryFolder() throws {
@@ -186,7 +195,7 @@ final class PathPolicyTests: XCTestCase {
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: folder) }
 
-        XCTAssertEqual(decision(folder, .regenerableCache), .allowed(URL(fileURLWithPath: folder.path)))
+        assertAllowed(folder, .regenerableCache)
         assertRefused(folder.appendingPathComponent("inner"), .regenerableCache, .outsideAllowedArea)
     }
 
@@ -218,7 +227,7 @@ final class PathPolicyTests: XCTestCase {
 
     func testArchivesGoToTheTrash() throws {
         let archive = try tree.makeDirectory("home/Library/Developer/Xcode/Archives/2026-10-12/App.xcarchive")
-        XCTAssertEqual(decision(archive, .buildArchive), .allowed(URL(fileURLWithPath: archive.path)))
+        assertAllowed(archive, .buildArchive)
         assertRefused(archive, .regenerableCache, .outsideAllowedArea)
         XCTAssertEqual(RemovalPurpose.buildArchive.mode, .trash)
     }

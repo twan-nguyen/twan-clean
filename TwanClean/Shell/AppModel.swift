@@ -5,4 +5,5 @@ import SwiftUI
 @MainActor
 final class AppModel: ObservableObject {
     let smartScan = SmartScanViewModel()
+    let spaceLens = SpaceLensViewModel()
 }

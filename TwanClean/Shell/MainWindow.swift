@@ -43,7 +43,9 @@ struct MainWindow: View {
         case .category(let category):
             CategoryDetailView(category: category)
                 .id(category)
-        case .spaceLens, .uninstaller, .orphans:
+        case .spaceLens:
+            SpaceLensView()
+        case .uninstaller, .orphans:
             FeaturePlaceholderView(item: item)
         }
     }

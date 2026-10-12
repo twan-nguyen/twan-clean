@@ -31,6 +31,9 @@ struct ScanContext: Sendable {
     let runningBundleIDs: Set<String>
     let progress: ScanProgressReporter
     let now: Date
+    /// Locations to leave unread so macOS does not prompt; nil once Full
+    /// Disk Access is granted.
+    let protectedLocations: ProtectedLocations?
 
     init(home: URL = FileManager.default.homeDirectoryForCurrentUser,
          policy: PathPolicy? = nil,
@@ -39,7 +42,8 @@ struct ScanContext: Sendable {
          settings: ScanSettings = ScanSettings(),
          runningBundleIDs: Set<String> = [],
          progress: ScanProgressReporter = ScanProgressReporter(),
-         now: Date = Date()) {
+         now: Date = Date(),
+         protectedLocations: ProtectedLocations? = nil) {
         self.home = home
         self.policy = policy ?? PathPolicy(rules: SafetyRules(homeDirectory: home))
         self.sizing = sizing
@@ -48,6 +52,12 @@ struct ScanContext: Sendable {
         self.runningBundleIDs = Set(runningBundleIDs.map { $0.lowercased() })
         self.progress = progress
         self.now = now
+        self.protectedLocations = protectedLocations
+    }
+
+    /// Whether reading `url` could make macOS ask for permission.
+    func isProtected(_ url: URL) -> Bool {
+        protectedLocations?.contains(url) ?? false
     }
 
     func homeURL(_ relative: String) -> URL {
@@ -72,6 +82,10 @@ struct CategoryResultBuilder {
     mutating func addChildren(of folder: URL, purpose: RemovalPurpose, selected: Bool = true,
                               notes: Set<CleanableItem.Note> = [],
                               where include: (URL) -> Bool = { _ in true }) throws {
+        guard !context.isProtected(folder) else {
+            noteLocked(folder)
+            return
+        }
         let entries: [String]
         do {
             entries = try FileManager.default.contentsOfDirectory(atPath: folder.path)
@@ -95,6 +109,10 @@ struct CategoryResultBuilder {
     mutating func add(_ url: URL, purpose: RemovalPurpose, selected: Bool = true,
                       notes: Set<CleanableItem.Note> = []) throws {
         try Task.checkCancellation()
+        guard !context.isProtected(url) else {
+            noteLocked(url)
+            return
+        }
         guard case .allowed(let canonical) = context.policy.evaluate(url, purpose: purpose),
               let identity = FileIdentity.of(canonical),
               !result.items.contains(where: { $0.url == canonical }) else { return }
@@ -133,6 +151,13 @@ struct CategoryResultBuilder {
 
     mutating func noteUnreadable(_ url: URL) {
         result.unreadableLocations.append(url)
+    }
+
+    /// A protected location skipped without reading it, when it exists.
+    private mutating func noteLocked(_ url: URL) {
+        if FileIdentity.of(url) != nil, !result.unreadableLocations.contains(url) {
+            result.unreadableLocations.append(url)
+        }
     }
 
     mutating func setDockerReclaimable(_ bytes: Int64?) {

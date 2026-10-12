@@ -82,7 +82,8 @@ final class SmartScanViewModel: ObservableObject {
         ScanContext(
             settings: ScanSettings.load(),
             runningBundleIDs: Set(NSWorkspace.shared.runningApplications.compactMap(\.bundleIdentifier)),
-            progress: progress)
+            progress: progress,
+            protectedLocations: ProtectedLocations.current())
     }
 
     // MARK: - Scanning

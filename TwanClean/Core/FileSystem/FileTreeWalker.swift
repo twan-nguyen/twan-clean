@@ -33,7 +33,8 @@ struct FileTreeEntry {
 enum FileTreeWalker {
     enum Action {
         case `continue`
-        /// Do not descend into the directory just reported.
+        /// Do not descend into the directory just reported. Its
+        /// `directoryEnd` is not reported either.
         case skipDescendants
     }
 
@@ -51,7 +52,14 @@ enum FileTreeWalker {
         defer { fts_close(stream) }
 
         var visited = 0
+        var skipped: UnsafeMutablePointer<FTSENT>?
         while let node = fts_read(stream) {
+            // After FTS_SKIP, fts hands the same folder back as its end; the
+            // caller never saw it open, so that end is not reported.
+            if node == skipped, Int32(node.pointee.fts_info) == FTS_DP {
+                skipped = nil
+                continue
+            }
             visited += 1
             if visited % cancellationInterval == 0 {
                 try Task.checkCancellation()
@@ -59,6 +67,7 @@ enum FileTreeWalker {
             let entry = makeEntry(node)
             if try visit(entry) == .skipDescendants, entry.kind == .directory {
                 fts_set(stream, node, FTS_SKIP)
+                skipped = node
             }
         }
     }

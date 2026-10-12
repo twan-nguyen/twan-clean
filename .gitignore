@@ -15,8 +15,6 @@ dist/
 *.dmg
 *.zip
 
-# Per-developer signing
-Configs/Local.xcconfig
 .derived/
 
 # Local agent notes

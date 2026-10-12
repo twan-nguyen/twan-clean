@@ -10,6 +10,7 @@ struct TwanCleanApp: App {
                 .frame(minWidth: 900, minHeight: 600)
                 .environmentObject(model)
                 .environmentObject(model.smartScan)
+                .environmentObject(model.spaceLens)
         }
         .defaultSize(width: 1000, height: 680)
         .windowResizability(.contentMinSize)

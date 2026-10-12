@@ -1,4 +1,5 @@
-// v1 ships ad-hoc signed (no Developer ID yet); notarization comes later.
+// Built ad-hoc signed; scripts/install.sh re-signs it with the self-signed
+// identity. There is no Developer ID or notarization yet.
 CODE_SIGN_STYLE = Manual
 CODE_SIGN_IDENTITY = -
 DEVELOPMENT_TEAM =

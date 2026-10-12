@@ -1,10 +1,7 @@
-// Debug signs ad-hoc by default so a fresh clone builds without an Apple ID.
-// Copy Local.xcconfig.example to Local.xcconfig and set your Personal Team:
-// an "Apple Development" signature keeps the Full Disk Access grant stable
-// across rebuilds, while an ad-hoc signature loses it on every build.
+// Debug builds and tests are signed ad-hoc. Installed builds are re-signed with
+// a stable self-signed identity by scripts/install.sh, so macOS keeps the Full
+// Disk Access grant across installs.
 CODE_SIGN_STYLE = Manual
 CODE_SIGN_IDENTITY = -
 DEVELOPMENT_TEAM =
 ENABLE_HARDENED_RUNTIME = NO
-
-#include? "Local.xcconfig"
