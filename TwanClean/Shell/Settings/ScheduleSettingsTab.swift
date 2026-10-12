@@ -77,7 +77,7 @@ struct ScheduleSettingsTab: View {
             }
         }
         .formStyle(.grouped)
-        .onChange(of: settings) { try? store.save($0) }
+        .onChange(of: settings) { save($0) }
         .task {
             notificationsAllowed = await NotificationService.isAuthorized()
             agentStatus = SchedulerAgent.status
@@ -99,14 +99,31 @@ struct ScheduleSettingsTab: View {
                 Button("Open Login Items") { SMAppService.openSystemSettingsLoginItems() }
             }
         default:
-            Label("The background task is not registered.", systemImage: "exclamationmark.triangle")
-                .foregroundStyle(.orange)
+            HStack {
+                Label("The background task is not registered.", systemImage: "exclamationmark.triangle")
+                    .foregroundStyle(.orange)
+                Spacer()
+                Button("Open Login Items") { SMAppService.openSystemSettingsLoginItems() }
+            }
         }
         if !notificationsAllowed {
             Label("Notifications are off, so results only show here and in the menu bar.", systemImage: "bell.slash")
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
+    }
+
+    /// Saves what this tab edits on top of the stored settings, so the time
+    /// of the last run, written by the background run, is never rolled back.
+    private func save(_ edited: ScheduleSettings) {
+        var stored = store.loadSettings()
+        stored.isEnabled = edited.isEnabled
+        stored.frequency = edited.frequency
+        stored.hour = edited.hour
+        stored.action = edited.action
+        stored.categories = edited.categories
+        stored.minimumBytesToClean = edited.minimumBytesToClean
+        try? store.save(stored)
     }
 
     private func setEnabled(_ enabled: Bool) {

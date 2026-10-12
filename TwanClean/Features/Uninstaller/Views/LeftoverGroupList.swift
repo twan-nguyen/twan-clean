@@ -47,6 +47,9 @@ struct LeftoverGroupList: View {
                     if item.tier == .developerName || item.tier == .teamIdentifier {
                         badge(String(localized: "Matched by developer"))
                     }
+                    if item.mayBelongToAnotherApp {
+                        badge(String(localized: "May belong to another app"))
+                    }
                 }
                 Text(item.url.deletingLastPathComponent().path)
                     .font(.caption)

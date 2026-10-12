@@ -1049,6 +1049,16 @@
         }
       }
     },
+    "May belong to another app" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Có thể thuộc app khác"
+          }
+        }
+      }
+    },
     "Measuring…" : {
       "localizations" : {
         "vi" : {
@@ -2081,6 +2091,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Twan Clean"
+          }
+        }
+      }
+    },
+    "Twan Clean can only uninstall apps in the Applications folder." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Twan Clean chỉ gỡ được app nằm trong thư mục Applications."
           }
         }
       }

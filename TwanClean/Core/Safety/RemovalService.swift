@@ -49,10 +49,23 @@ struct RemovalReport: Sendable {
 /// `PathPolicy` and against its scanned identity immediately before removal,
 /// and its purpose decides whether it is deleted or moved to the Trash.
 struct RemovalService: Sendable {
-    let policy: PathPolicy
+    /// Moves an item to the Trash and returns where it went.
+    typealias Trash = @Sendable (URL) throws -> URL?
 
-    init(policy: PathPolicy = PathPolicy()) {
+    let policy: PathPolicy
+    let trash: Trash
+
+    init(policy: PathPolicy = PathPolicy(), trash: @escaping Trash = RemovalService.moveToTrash) {
         self.policy = policy
+        self.trash = trash
+    }
+
+    /// Trashing from this process, not a helper, is what makes macOS list
+    /// Twan Clean under Full Disk Access when it is refused.
+    static let moveToTrash: Trash = { url in
+        var location: NSURL?
+        try FileManager.default.trashItem(at: url, resultingItemURL: &location)
+        return location as URL?
     }
 
     func remove(_ requests: [RemovalRequest]) async -> RemovalReport {
@@ -99,11 +112,7 @@ struct RemovalService: Sendable {
             case .delete:
                 try FileManager.default.removeItem(at: url)
             case .trash:
-                // Trashing from this process, not a helper, is what makes macOS
-                // list Twan Clean under Full Disk Access when it is refused.
-                var location: NSURL?
-                try FileManager.default.trashItem(at: url, resultingItemURL: &location)
-                if let location { report.trashedLocations.append(location as URL) }
+                if let location = try trash(url) { report.trashedLocations.append(location) }
             }
             report.removed.append(request)
         } catch where Self.isPermissionError(error) {

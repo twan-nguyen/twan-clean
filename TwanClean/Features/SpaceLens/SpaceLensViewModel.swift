@@ -157,8 +157,11 @@ final class SpaceLensViewModel: ObservableObject {
         phase = .ready
     }
 
-    func retryWithAdministrator() async {
-        guard var current = outcome, !current.needsAdministrator.isEmpty, phase == .ready else { return }
+    /// Retries what permissions blocked, after the administrator prompt. The
+    /// outcome is passed in because its sheet is already closed by then.
+    func retryWithAdministrator(_ outcome: CleanupOutcome) async {
+        guard !outcome.needsAdministrator.isEmpty, phase == .ready else { return }
+        var current = outcome
         phase = .removing
         let remover = PrivilegedRemover(
             service: removal,
@@ -170,7 +173,7 @@ final class SpaceLensViewModel: ObservableObject {
         }
         selection.removeAll { gone.contains($0.url.path) }
         current.add(report)
-        outcome = current
+        self.outcome = current
         revision += 1
         phase = .ready
     }

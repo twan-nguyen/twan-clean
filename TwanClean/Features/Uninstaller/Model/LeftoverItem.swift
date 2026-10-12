@@ -35,6 +35,8 @@ struct LeftoverItem: Identifiable, Hashable, Sendable {
     /// Which rule matched; nil for the app itself and for containers found
     /// through their metadata.
     let tier: MatchTier?
+    /// Another installed app matches the name just as well.
+    let mayBelongToAnotherApp: Bool
     let requiresAdministrator: Bool
     let selectedByDefault: Bool
 

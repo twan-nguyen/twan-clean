@@ -6,12 +6,19 @@ struct InstalledAppIndex: Sendable {
     let roots: [URL]
     /// Apps are looked for this many folders deep, e.g. /Applications/Utilities.
     let maximumDepth: Int
+    /// Also list macOS's own apps, which cannot be uninstalled but whose
+    /// files must never be mistaken for orphans.
+    let includesProtectedApps: Bool
 
-    init(roots: [URL] = [URL(fileURLWithPath: "/Applications"),
-                         FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Applications")],
-         maximumDepth: Int = 3) {
+    static let userRoots = [URL(fileURLWithPath: "/Applications"),
+                            FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Applications")]
+    static let systemRoots = [URL(fileURLWithPath: "/System/Applications"),
+                              URL(fileURLWithPath: "/System/Library/CoreServices")]
+
+    init(roots: [URL] = InstalledAppIndex.userRoots, maximumDepth: Int = 3, includesProtectedApps: Bool = false) {
         self.roots = roots
         self.maximumDepth = maximumDepth
+        self.includesProtectedApps = includesProtectedApps
     }
 
     func apps() -> [InstalledApp] {
@@ -25,7 +32,8 @@ struct InstalledAppIndex: Sendable {
                     enumerator.skipDescendants()
                     continue
                 }
-                guard url.pathExtension.lowercased() == "app", let app = Self.app(at: url),
+                guard url.pathExtension.lowercased() == "app",
+                      let app = Self.app(at: url, includingProtected: includesProtectedApps),
                       found[app.bundleIdentifier.lowercased()] == nil else { continue }
                 found[app.bundleIdentifier.lowercased()] = app
             }
@@ -33,13 +41,14 @@ struct InstalledAppIndex: Sendable {
         return found.values.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
     }
 
-    /// The app at `url`, unless it is part of macOS or otherwise protected.
-    static func app(at url: URL) -> InstalledApp? {
+    /// The app at `url`, unless it is part of macOS or otherwise protected
+    /// (and `includingProtected` is false).
+    static func app(at url: URL, includingProtected: Bool = false) -> InstalledApp? {
         let path = url.resolvingSymlinksInPath().path
-        guard !path.hasPrefix("/System/"),
+        guard includingProtected || !path.hasPrefix("/System/"),
               let info = NSDictionary(contentsOf: url.appendingPathComponent("Contents/Info.plist")),
               let bundleIdentifier = info["CFBundleIdentifier"] as? String,
-              !bundleIdentifier.isEmpty, !ProtectedApps.contains(bundleIdentifier),
+              !bundleIdentifier.isEmpty, includingProtected || !ProtectedApps.contains(bundleIdentifier),
               let identity = FileIdentity.of(url) else { return nil }
         let name = (info["CFBundleDisplayName"] as? String).flatMap { $0.isEmpty ? nil : $0 }
             ?? (info["CFBundleName"] as? String).flatMap { $0.isEmpty ? nil : $0 }

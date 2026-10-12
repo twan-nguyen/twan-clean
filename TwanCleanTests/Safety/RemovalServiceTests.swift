@@ -9,7 +9,7 @@ final class RemovalServiceTests: XCTestCase {
     override func setUpWithError() throws {
         tree = try TemporaryTree()
         home = try FakeHome(tree: tree)
-        service = RemovalService(policy: home.policy)
+        service = try home.removalService()
     }
 
     override func tearDown() {
@@ -29,9 +29,8 @@ final class RemovalServiceTests: XCTestCase {
     }
 
     func testUserFileGoesToTheTrash() async throws {
-        let item = try tree.makeFile("home/Downloads/TwanCleanTest-\(UUID().uuidString).bin")
+        let item = try tree.makeFile("home/Downloads/movie.bin")
         let report = await service.remove([try home.request(item, .userFile)])
-        defer { report.trashedLocations.forEach { try? FileManager.default.removeItem(at: $0) } }
 
         XCTAssertEqual(report.removed.count, 1)
         XCTAssertFalse(tree.exists(item))
@@ -91,6 +90,14 @@ final class RemovalServiceTests: XCTestCase {
 
         XCTAssertEqual(report.alreadyGone.count, 1)
         XCTAssertEqual(report.freedBytes, 0)
+    }
+
+    func testTrashIsUsedOnlyForTrashPurposes() async throws {
+        let cache = try tree.makeFile("home/Library/Caches/blob")
+        let download = try tree.makeFile("home/Downloads/movie.bin")
+        let report = await service.remove([try home.request(cache, .regenerableCache), try home.request(download, .userFile)])
+        XCTAssertEqual(report.trashedLocations.map(\.lastPathComponent).filter { $0.hasSuffix("movie.bin") }.count, 1)
+        XCTAssertFalse(report.trashedLocations.contains { $0.lastPathComponent.hasSuffix("blob") })
     }
 
     func testPermissionFailureAsksForAdministrator() async throws {

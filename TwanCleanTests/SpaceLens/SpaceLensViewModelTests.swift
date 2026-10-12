@@ -6,14 +6,13 @@ final class SpaceLensViewModelTests: XCTestCase {
     private var tree: TemporaryTree!
     private var home: FakeHome!
     private var model: SpaceLensViewModel!
-    /// Unique, so cleanup can never touch the user's own items in the Trash.
-    private let movieName = "TwanCleanTest-\(UUID().uuidString).mov"
+    private let movieName = "movie.mov"
 
     override func setUpWithError() throws {
         tree = try TemporaryTree()
         home = try FakeHome(tree: tree)
         model = SpaceLensViewModel(builder: SizeTreeBuilder(minimumNodeBytes: 10_000),
-                                   removal: RemovalService(policy: home.policy), home: home.home,
+                                   removal: try home.removalService(), home: home.home,
                                    protectedLocations: { _ in nil })
         try tree.makeFile("home/Downloads/\(movieName)", bytes: 300_000)
         try tree.makeFile("home/Downloads/setup.dmg", bytes: 100_000)
@@ -51,7 +50,6 @@ final class SpaceLensViewModelTests: XCTestCase {
         model.toggle(movie)
 
         await model.trashSelection()
-        defer { cleanUpTrash() }
 
         XCTAssertFalse(tree.exists(home.url("Downloads/\(movieName)")))
         XCTAssertEqual(model.outcome?.removedCount, 1)
@@ -67,10 +65,4 @@ final class SpaceLensViewModelTests: XCTestCase {
         XCTAssertEqual(model.purpose(for: home.url("Library/Developer/Xcode/Archives/x.xcarchive")), .buildArchive)
     }
 
-    private func cleanUpTrash() {
-        let trashed = FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent(".Trash")
-            .appendingPathComponent(movieName)
-        try? FileManager.default.removeItem(at: trashed)
-    }
 }

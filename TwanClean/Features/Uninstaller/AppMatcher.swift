@@ -16,8 +16,6 @@ enum MatchTier: Int, Comparable, Sendable {
 
     static func < (lhs: MatchTier, rhs: MatchTier) -> Bool { lhs.rawValue < rhs.rawValue }
 
-    /// Strong enough to remove a system-level item without the user picking it.
-    var isExact: Bool { self == .bundleIdentifier || self == .displayName }
 }
 
 extension String {
@@ -41,6 +39,16 @@ struct AppMatcher: Sendable {
         let value: String
     }
 
+    /// How a name matched.
+    struct Match: Equatable, Sendable {
+        let tier: MatchTier
+        /// The name equals the token (ignoring case, separators, a known
+        /// extension and a group or team prefix), rather than containing it.
+        let isExact: Bool
+        /// Length of the matched token; a longer token is a more specific claim.
+        let length: Int
+    }
+
     static let minimumTokenLength = 5
 
     /// Name prefixes never treated as app files.
@@ -53,11 +61,15 @@ struct AppMatcher: Sendable {
     let tokens: [Token]
     let override: AppOverride?
     private let teamPrefix: String?
+    /// The bundle identifier as written, lowercased, for matching on
+    /// identifier boundaries.
+    private let bundleIdentifier: String
 
     init(app: InstalledApp, sensitivity: SearchSensitivity) {
         self.sensitivity = sensitivity
         override = AppOverride.matching(app.bundleIdentifier)
         teamPrefix = app.teamIdentifier.map { $0.lowercased() }
+        bundleIdentifier = app.bundleIdentifier.lowercased()
 
         var candidates: [(MatchTier, String)] = [
             (.bundleIdentifier, app.bundleIdentifier),
@@ -93,32 +105,53 @@ struct AppMatcher: Sendable {
     ]
 
     /// The strongest rule `name` matches, or nil.
-    func match(_ name: String) -> MatchTier? {
+    func match(_ name: String) -> Match? {
         let normalized = name.normalizedForMatching
         guard !normalized.isEmpty, !Self.ignoredPrefixes.contains(where: normalized.hasPrefix) else { return nil }
+        if let override, override.excludeTerms.contains(where: normalized.contains) { return nil }
 
-        if let override {
-            if override.excludeTerms.contains(where: normalized.contains) { return nil }
-            if override.includeTerms.contains(where: normalized.contains) { return .override }
-        }
-
-        let lowered = name.lowercased()
-        if let teamPrefix, sensitivity != .strict, lowered.hasPrefix(teamPrefix + ".") {
-            return .teamIdentifier
-        }
-
+        // Equal names first: the only kind strict mode accepts.
         let variants = Self.variants(of: name, teamPrefix: teamPrefix)
+        if let token = tokens.first(where: { variants.contains($0.value) }) {
+            return Match(tier: token.tier, isExact: true, length: token.value.count)
+        }
+        guard sensitivity != .strict else { return nil }
+
+        if let term = override?.includeTerms.first(where: normalized.contains) {
+            return Match(tier: .override, isExact: false, length: term.count)
+        }
+        let lowered = name.lowercased()
+        if let teamPrefix, lowered.hasPrefix(teamPrefix + ".") {
+            return Match(tier: .teamIdentifier, isExact: false, length: teamPrefix.count)
+        }
         for token in tokens {
-            let matched = sensitivity == .strict
-                ? variants.contains(token.value)
+            // The identifier must stand on its own: "com.google.chrome" is in
+            // "com.google.chrome.helper" but not in "com.google.chromebeta".
+            let contained = token.tier == .bundleIdentifier
+                ? Self.containsOnBoundary(lowered, bundleIdentifier)
                 : normalized.contains(token.value)
-            if matched { return token.tier }
+            if contained { return Match(tier: token.tier, isExact: false, length: token.value.count) }
         }
         return nil
     }
 
-    /// The forms of a name compared exactly in strict mode: as is, without a
-    /// known extension, and without a "group." or team identifier prefix.
+    private static func containsOnBoundary(_ text: String, _ word: String) -> Bool {
+        guard word.count >= minimumTokenLength else { return false }
+        var searchRange = text.startIndex..<text.endIndex
+        while let found = text.range(of: word, range: searchRange) {
+            let before = found.lowerBound == text.startIndex ? nil : text[text.index(before: found.lowerBound)]
+            let after = found.upperBound == text.endIndex ? nil : text[found.upperBound]
+            if !(before?.isLetter ?? false) && !(before?.isNumber ?? false)
+                && !(after?.isLetter ?? false) && !(after?.isNumber ?? false) {
+                return true
+            }
+            searchRange = text.index(after: found.lowerBound)..<text.endIndex
+        }
+        return false
+    }
+
+    /// The forms of a name compared exactly: as is, without a known
+    /// extension, and without a "group." or team identifier prefix.
     private static func variants(of name: String, teamPrefix: String?) -> Set<String> {
         var forms = [name]
         let ext = (name as NSString).pathExtension.lowercased()
@@ -168,12 +201,12 @@ struct AppOverride: Sendable {
         AppOverride("us.zoom.xos", include: ["zoom"]),
         AppOverride("com.microsoft.teams2", exclude: ["office"]),
         AppOverride("com.brave.browser", include: ["brave"]),
-        AppOverride("com.google.chrome", include: ["chrome"], exclude: ["iterm", "chromefeaturestate", "monochrome"]),
+        AppOverride("com.google.chrome", exclude: ["iterm", "chromefeaturestate", "monochrome"]),
         AppOverride("com.microsoft.edgemac", exclude: ["vscode", "rdc", "appcenter", "office", "oneauth"]),
         AppOverride("org.mozilla.firefox.nightly", include: ["firefox"], exclude: ["thunderbird"]),
         AppOverride("org.mozilla.firefox", include: ["firefox"], exclude: ["thunderbird"]),
         AppOverride("org.mozilla.thunderbird", exclude: ["firefox"]),
-        AppOverride("company.thebrowser.browser", include: ["firestore"],
+        AppOverride("company.thebrowser.browser",
                     extraFolders: ["Library/Application Support/Arc", "Library/Caches/Arc"]),
         AppOverride("com.microsoft.vscodeinsiders", include: ["vscodeinsiders"],
                     extraFolders: ["Library/Application Support/Code - Insiders"]),
@@ -181,7 +214,6 @@ struct AppOverride: Sendable {
                     extraFolders: ["Library/Application Support/Code"]),
         AppOverride("com.github.githubclient", include: ["comgithubelectron"]),
         AppOverride("jetbrains", include: ["jcef"]),
-        AppOverride("com.native-instruments.nativeaccess", include: ["comnative", "nativeinstruments"]),
         AppOverride("com.logi.optionsplus", include: ["logipluginservice", "logioptions"], exclude: ["login", "logic"]),
         AppOverride("com.1password.1password", include: ["sidekick"]),
         AppOverride("eu.exelban.stats", exclude: ["video"]),

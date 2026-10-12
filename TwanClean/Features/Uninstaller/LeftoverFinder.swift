@@ -43,25 +43,36 @@ struct LeftoverFinder: Sendable {
         self.systemFolders = systemFolders
     }
 
-    func find(for app: InstalledApp, sensitivity: SearchSensitivity) throws -> LeftoverScan {
-        let matcher = AppMatcher(app: app, sensitivity: sensitivity)
+    /// - Parameter otherApps: every other installed app. A file that one of
+    ///   them claims more specifically is left out, and one they claim just as
+    ///   strongly is listed but not selected.
+    func find(for app: InstalledApp, sensitivity: SearchSensitivity, otherApps: [InstalledApp] = []) throws -> LeftoverScan {
+        // Apple's own apps share support folders (GarageBand and Logic, for
+        // instance), so only files named exactly after them are considered.
+        let isAppleApp = app.bundleIdentifier.lowercased().hasPrefix("com.apple.")
+        let matcher = AppMatcher(app: app, sensitivity: isAppleApp ? .strict : sensitivity)
+        let others = otherApps.filter { $0.bundleIdentifier.caseInsensitiveCompare(app.bundleIdentifier) != .orderedSame }
+            .map { AppMatcher(app: $0, sensitivity: .enhanced) }
         var scan = LeftoverScan()
-        var matches: [URL: MatchTier?] = [:]
+        var matches: [URL: AppMatcher.Match] = [:]
+
+        func isLocked(_ folder: URL) -> Bool {
+            guard protected?.contains(folder) == true else { return false }
+            if FileIdentity.of(folder) != nil, !scan.lockedLocations.contains(folder) { scan.lockedLocations.append(folder) }
+            return true
+        }
 
         func consider(_ folder: URL, searchVendors: Bool) {
-            if protected?.contains(folder) == true {
-                if FileIdentity.of(folder) != nil { scan.lockedLocations.append(folder) }
-                return
-            }
-            guard let names = try? FileManager.default.contentsOfDirectory(atPath: folder.path) else { return }
+            guard !isLocked(folder),
+                  let names = try? FileManager.default.contentsOfDirectory(atPath: folder.path) else { return }
             for name in names {
                 let url = folder.appendingPathComponent(name)
-                if let tier = matcher.match(name) {
-                    if matches[url] == nil { matches[url] = tier }
-                } else if searchVendors, Self.isDirectory(url),
+                if let match = matcher.match(name) {
+                    if matches[url] == nil { matches[url] = match }
+                } else if searchVendors, Self.isDirectory(url), protected?.contains(url) != true,
                           let children = try? FileManager.default.contentsOfDirectory(atPath: url.path) {
                     for child in children {
-                        if let tier = matcher.match(child) { matches[url.appendingPathComponent(child)] = tier }
+                        if let match = matcher.match(child) { matches[url.appendingPathComponent(child)] = match }
                     }
                 }
             }
@@ -78,35 +89,44 @@ struct LeftoverFinder: Sendable {
         // Sandboxed apps often keep their data in a container named by UUID;
         // its metadata names the owner exactly.
         let containers = home.appendingPathComponent("Library/Containers")
-        if protected?.contains(containers) != true {
+        if !isLocked(containers) {
             for container in ContainerResolver.containers(in: containers, ownedBy: app.bundleIdentifier) {
-                matches[container] = .some(nil)
+                matches[container] = AppMatcher.Match(tier: .bundleIdentifier, isExact: true, length: .max)
             }
         }
         for folder in matcher.override?.extraFolders ?? [] {
             let url = home.appendingPathComponent(folder)
-            if FileIdentity.of(url) != nil, protected?.contains(url) != true { matches[url] = .override }
+            if FileIdentity.of(url) != nil, protected?.contains(url) != true {
+                matches[url] = AppMatcher.Match(tier: .override, isExact: true, length: .max)
+            }
         }
 
-        scan.items = try collect(matches, app: app)
+        scan.items = try collect(matches, app: app, others: others)
         return scan
     }
 
     /// Measures the matches the policy allows, keeping only the outermost of
-    /// nested paths, and decides what to preselect.
-    private func collect(_ matches: [URL: MatchTier?], app: InstalledApp) throws -> [LeftoverItem] {
+    /// nested paths and leaving out files another app claims, and decides
+    /// what to preselect.
+    private func collect(_ matches: [URL: AppMatcher.Match], app: InstalledApp, others: [AppMatcher]) throws -> [LeftoverItem] {
         var items: [LeftoverItem] = []
-        if let bundle = try item(app.url, purpose: .appBundle, tier: nil) { items.append(bundle) }
+        if let bundle = try item(app.url, purpose: .appBundle, match: nil, shared: false) { items.append(bundle) }
 
-        let allowed = matches.compactMap { url, tier -> (URL, MatchTier?)? in
+        let allowed = matches.compactMap { url, match -> (URL, AppMatcher.Match)? in
             guard case .allowed(let canonical) = policy.evaluate(url, purpose: .appLeftover) else { return nil }
-            return (canonical, tier)
+            return (canonical, match)
         }.sorted { $0.0.path.count < $1.0.path.count }
 
         var kept: [URL] = []
-        for (url, tier) in allowed where !kept.contains(where: { PathPolicy.isSame(url.path, $0.path) || PathPolicy.isInside(url.path, $0.path) }) {
+        for (url, match) in allowed where !kept.contains(where: { PathPolicy.isSame(url.path, $0.path) || PathPolicy.isInside(url.path, $0.path) }) {
             try Task.checkCancellation()
-            if let leftover = try item(url, purpose: .appLeftover, tier: tier) {
+            var shared = false
+            if match.length != .max {
+                let rivals = others.compactMap { $0.match(url.lastPathComponent) }
+                if rivals.contains(where: { $0.length > match.length || ($0.isExact && !match.isExact) }) { continue }
+                shared = rivals.contains { $0.length == match.length }
+            }
+            if let leftover = try item(url, purpose: .appLeftover, match: match, shared: shared) {
                 kept.append(url)
                 items.append(leftover)
             }
@@ -114,21 +134,24 @@ struct LeftoverFinder: Sendable {
         return items.sorted { ($0.group.rawValue, -$0.bytes) < ($1.group.rawValue, -$1.bytes) }
     }
 
-    private func item(_ url: URL, purpose: RemovalPurpose, tier: MatchTier?) throws -> LeftoverItem? {
+    private func item(_ url: URL, purpose: RemovalPurpose, match: AppMatcher.Match?, shared: Bool) throws -> LeftoverItem? {
         guard let identity = FileIdentity.of(url) else { return nil }
         let bytes = try AllocatedSizeCalculator().measure(url).bytes
         let needsAdministrator = RemovalService.needsAdministrator(url)
-        // The app itself and items matched exactly or through container
-        // metadata are selected for the user. Files tied only to the developer
-        // could belong to their other apps, and system-level items need an
-        // exact match.
-        let preselect: Bool = switch tier {
+        // Selected for the user: the app itself, and files named exactly after
+        // it or found through its container metadata. A file that only
+        // contains the app's name is selected too, unless it needs a password,
+        // may belong to another app, or was tied to the app only through its
+        // developer.
+        let preselect: Bool = switch match {
         case nil: true
-        case .some(let tier) where needsAdministrator: tier.isExact || tier == .override
-        case .some(let tier): tier != .developerName && tier != .teamIdentifier
+        case .some(let match) where shared: false
+        case .some(let match) where needsAdministrator: match.isExact
+        case .some(let match): match.tier != .developerName && match.tier != .teamIdentifier
         }
         return LeftoverItem(url: url, identity: identity, bytes: bytes, isDirectory: Self.isDirectory(url),
-                            purpose: purpose, group: LeftoverItem.group(for: url), tier: tier,
+                            purpose: purpose, group: LeftoverItem.group(for: url), tier: match?.tier,
+                            mayBelongToAnotherApp: shared,
                             requiresAdministrator: needsAdministrator, selectedByDefault: preselect)
     }
 

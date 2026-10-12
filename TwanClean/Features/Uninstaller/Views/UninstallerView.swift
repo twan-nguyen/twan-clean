@@ -7,6 +7,7 @@ struct UninstallerView: View {
         HSplitView {
             AppListView(model: model)
                 .frame(minWidth: 260, idealWidth: 300, maxWidth: 380)
+                .disabled(model.phase == .uninstalling)
             Group {
                 if let app = model.selectedApp {
                     AppDetailView(app: app, model: model)
@@ -40,7 +41,7 @@ struct UninstallerView: View {
         .onAppear { model.loadAppsIfNeeded() }
         .sheet(item: $model.outcome) { outcome in
             CleanupOutcomeView(outcome: outcome) {
-                Task { await model.retryWithAdministrator() }
+                Task { await model.retryWithAdministrator(outcome) }
             }
         }
     }

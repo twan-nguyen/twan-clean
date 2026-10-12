@@ -5,6 +5,8 @@ struct AppDetailView: View {
     @ObservedObject var model: UninstallerViewModel
     @State private var confirming = false
     @State private var askingToQuit = false
+    /// The selection the user confirmed, frozen before the app is asked to quit.
+    @State private var confirmedItems: [LeftoverItem] = []
 
     var body: some View {
         VStack(spacing: 0) {
@@ -19,7 +21,13 @@ struct AppDetailView: View {
                     FullDiskAccessBanner(unreadableCount: scan.lockedLocations.count)
                         .padding([.horizontal, .top], 12)
                 }
+                if let error = model.leftoverError {
+                    Label(error, systemImage: "exclamationmark.triangle")
+                        .foregroundStyle(.orange)
+                        .padding(12)
+                }
                 LeftoverGroupList(items: scan.items, model: model)
+                    .disabled(model.phase == .uninstalling)
                 Divider()
                 footer
             }
@@ -30,8 +38,10 @@ struct AppDetailView: View {
             Text("The selected items, \(model.selectedBytes.formattedBytes) in total, go to the Trash, where you can still restore them.")
         }
         .alert(Text("\(app.name) is running"), isPresented: $askingToQuit) {
-            Button("Quit and Uninstall") { Task { await model.uninstall() } }
-            Button("Force Quit and Uninstall", role: .destructive) { Task { await model.uninstall(forceQuit: true) } }
+            Button("Quit and Uninstall") { Task { await model.uninstall(confirmedItems, of: app) } }
+            Button("Force Quit and Uninstall", role: .destructive) {
+                Task { await model.uninstall(confirmedItems, of: app, forceQuit: true) }
+            }
             Button("Cancel", role: .cancel) {}
         } message: {
             Text("Twan Clean needs to quit it first. Unsaved changes in the app may be lost if you force it to quit.")
@@ -60,6 +70,7 @@ struct AppDetailView: View {
                 }
                 .pickerStyle(.segmented)
                 .labelsHidden()
+                .disabled(model.phase == .uninstalling)
                 .frame(width: 280)
                 Text(model.sensitivity.summary)
                     .font(.caption)
@@ -88,10 +99,11 @@ struct AppDetailView: View {
     }
 
     private func start() {
+        confirmedItems = model.selectedItems
         if model.isRunning(app) {
             askingToQuit = true
         } else {
-            Task { await model.uninstall() }
+            Task { await model.uninstall(confirmedItems, of: app) }
         }
     }
 }

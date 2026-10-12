@@ -21,7 +21,8 @@ final class OrphansViewModel: ObservableObject {
     private let ignoreStore: OrphanIgnoreStore
     private let removal: RemovalService
 
-    init(index: InstalledAppIndex = InstalledAppIndex(),
+    init(index: InstalledAppIndex = InstalledAppIndex(roots: InstalledAppIndex.userRoots + InstalledAppIndex.systemRoots,
+                                                      includesProtectedApps: true),
          makeFinder: @escaping @MainActor () -> OrphanFinder = { OrphanFinder(protected: ProtectedLocations.current()) },
          ignoreStore: OrphanIgnoreStore = OrphanIgnoreStore(),
          removal: RemovalService = RemovalService()) {
@@ -89,8 +90,11 @@ final class OrphansViewModel: ObservableObject {
         finish(report, into: CleanupOutcome(report))
     }
 
-    func retryWithAdministrator() async {
-        guard var current = outcome, !current.needsAdministrator.isEmpty, phase == .ready else { return }
+    /// Retries what permissions blocked, after the administrator prompt. The
+    /// outcome is passed in because its sheet is already closed by then.
+    func retryWithAdministrator(_ outcome: CleanupOutcome) async {
+        guard !outcome.needsAdministrator.isEmpty, phase == .ready else { return }
+        var current = outcome
         phase = .removing
         let remover = PrivilegedRemover(
             service: removal,

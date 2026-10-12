@@ -55,6 +55,7 @@ struct SafetyRules: Sendable {
             "\(home)/Library/Calendars",
             "\(home)/Library/Accounts",
             "\(home)/Library/Application Support/AddressBook",
+            "\(home)/Library/Application Support/MobileSync",
             "\(home)/Library/Application Support/com.apple.TCC",
         ] + highRiskHomeItems.map { "\(home)/\($0)" }
     }

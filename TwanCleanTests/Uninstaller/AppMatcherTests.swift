@@ -8,27 +8,27 @@ final class AppMatcherTests: XCTestCase {
 
     func testStrictMatchesExactNamesOnly() {
         let strict = matcher(.strict)
-        XCTAssertEqual(strict.match("com.example.photoeditor"), .bundleIdentifier)
-        XCTAssertEqual(strict.match("com.example.photoeditor.plist"), .bundleIdentifier)
-        XCTAssertEqual(strict.match("com.example.PhotoEditor.savedState"), .bundleIdentifier)
-        XCTAssertEqual(strict.match("Photo Editor"), .displayName)
-        XCTAssertEqual(strict.match("group.com.example.photoeditor"), .bundleIdentifier)
-        XCTAssertEqual(strict.match("ABCDE12345.com.example.photoeditor"), .bundleIdentifier)
+        XCTAssertEqual(strict.match("com.example.photoeditor")?.tier, .bundleIdentifier)
+        XCTAssertEqual(strict.match("com.example.photoeditor.plist")?.tier, .bundleIdentifier)
+        XCTAssertEqual(strict.match("com.example.PhotoEditor.savedState")?.tier, .bundleIdentifier)
+        XCTAssertEqual(strict.match("Photo Editor")?.tier, .displayName)
+        XCTAssertEqual(strict.match("group.com.example.photoeditor")?.tier, .bundleIdentifier)
+        XCTAssertEqual(strict.match("ABCDE12345.com.example.photoeditor")?.tier, .bundleIdentifier)
         XCTAssertNil(strict.match("PhotoEditorHelper"))
         XCTAssertNil(strict.match("ABCDE12345.com.example.shared"))
     }
 
     func testEnhancedMatchesContainedNamesAndTeamContainers() {
         let enhanced = matcher(.enhanced)
-        XCTAssertEqual(enhanced.match("PhotoEditorHelper"), .displayName)
-        XCTAssertEqual(enhanced.match("ABCDE12345.com.example.shared"), .teamIdentifier)
+        XCTAssertEqual(enhanced.match("PhotoEditorHelper")?.tier, .displayName)
+        XCTAssertEqual(enhanced.match("ABCDE12345.com.example.shared")?.tier, .teamIdentifier)
         XCTAssertNil(enhanced.match("com.other.app"))
     }
 
     func testDeveloperNameOnlyMatchesInDeepMode() {
         let app = makeApp(name: "Lightroom", bundleIdentifier: "com.adobe.lightroom", team: nil)
         XCTAssertNil(matcher(.enhanced, app: app).match("Adobe Common"))
-        XCTAssertEqual(matcher(.deep, app: app).match("Adobe Common"), .developerName)
+        XCTAssertEqual(matcher(.deep, app: app).match("Adobe Common")?.tier, .developerName)
     }
 
     func testShortNamesNeverMatch() {
@@ -41,17 +41,18 @@ final class AppMatcherTests: XCTestCase {
 
     func testHelperSuffixAndVersionAreStripped() {
         let helper = makeApp(name: "Sync 3", bundleIdentifier: "com.vendor.sync.agent.helper", team: nil)
-        XCTAssertEqual(matcher(.enhanced, app: helper).match("com.vendor.sync.agent.cache"), .baseBundleIdentifier)
+        XCTAssertEqual(matcher(.enhanced, app: helper).match("com.vendor.sync.agent.cache")?.tier, .baseBundleIdentifier)
         // "Studio 2 Pro 12": only the version-stripped "Studio 2 Pro" is in the name below.
         let versioned = makeApp(name: "Studio 2 Pro 12", bundleIdentifier: "com.vendor.s2p", team: nil)
-        XCTAssertEqual(matcher(.enhanced, app: versioned).match("Studio 2 Pro Settings"), .versionStrippedName)
+        XCTAssertEqual(matcher(.enhanced, app: versioned).match("Studio 2 Pro Settings")?.tier, .versionStrippedName)
     }
 
     func testOverrideExcludesAndIncludes() {
         let chrome = makeApp(name: "Google Chrome", bundleIdentifier: "com.google.Chrome", team: nil)
         let enhanced = matcher(.enhanced, app: chrome)
         XCTAssertNil(enhanced.match("com.googlecode.iterm2"))
-        XCTAssertEqual(enhanced.match("Chrome Remote Desktop"), .override)
+        // A separate app; Chrome no longer claims every name with "chrome" in it.
+        XCTAssertNil(enhanced.match("Chrome Remote Desktop"))
     }
 
     func testSingleWordOverrideMatchesAnyComponent() {
@@ -62,5 +63,34 @@ final class AppMatcherTests: XCTestCase {
     func testIgnoredPrefixesNeverMatch() {
         let app = makeApp(name: "Reminders Pro", bundleIdentifier: "com.example.reminderspro", team: nil)
         XCTAssertNil(matcher(.enhanced, app: app).match("Reminders Pro Data"))
+    }
+
+    func testStrictMatchesAreMarkedExactAndContainedOnesAreNot() {
+        XCTAssertEqual(matcher(.enhanced).match("com.example.photoeditor.plist")?.isExact, true)
+        XCTAssertEqual(matcher(.enhanced).match("PhotoEditorHelper")?.isExact, false)
+    }
+
+    func testBundleIdentifierMustStandOnItsOwn() {
+        let chrome = makeApp(name: "Google Chrome", bundleIdentifier: "com.google.Chrome", team: nil)
+        let enhanced = matcher(.enhanced, app: chrome)
+        XCTAssertEqual(enhanced.match("com.google.Chrome.helper")?.tier, .bundleIdentifier)
+        // Still caught by the looser name rules, but never as the identifier,
+        // and another installed app that claims it more specifically wins.
+        XCTAssertNotEqual(enhanced.match("com.google.ChromeBeta")?.tier, .bundleIdentifier)
+    }
+
+    func testBetaAppNeverClaimsTheStableAppsFiles() {
+        let beta = makeApp(name: "Google Chrome Beta", bundleIdentifier: "com.google.Chrome.beta", team: nil)
+        for sensitivity in SearchSensitivity.allCases {
+            let matcher = matcher(sensitivity, app: beta)
+            XCTAssertNil(matcher.match("Chrome"), "\(sensitivity)")
+            XCTAssertNil(matcher.match("com.google.Chrome.plist"), "\(sensitivity)")
+        }
+    }
+
+    func testOverrideTermsAreIgnoredInStrictMode() {
+        let zoom = makeApp(name: "zoom.us", bundleIdentifier: "us.zoom.xos", team: nil)
+        XCTAssertNil(matcher(.strict, app: zoom).match("ZoomOpener"))
+        XCTAssertEqual(matcher(.enhanced, app: zoom).match("ZoomOpener")?.tier, .override)
     }
 }

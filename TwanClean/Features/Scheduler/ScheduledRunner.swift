@@ -33,6 +33,9 @@ struct ScheduledRunner: Sendable {
                            protectedLocations: ProtectedLocations.current())
     }
 
+    /// A scheduled run taking longer than this is stopped.
+    static let timeLimit: TimeInterval = 30 * 60
+
     enum Outcome: Equatable {
         case notDue
         /// The app or another run is scanning right now.
@@ -42,7 +45,7 @@ struct ScheduledRunner: Sendable {
 
     @discardableResult
     func run(now: Date = Date()) async -> Outcome {
-        var settings = store.loadSettings()
+        let settings = store.loadSettings()
         guard settings.isDue(now: now) else { return .notDue }
         guard let lock = RunLock.acquire(at: lockFile) else { return .busy }
         defer { withExtendedLifetime(lock) {} }
@@ -64,8 +67,11 @@ struct ScheduledRunner: Sendable {
             date: now, foundBytes: found, cleanedBytes: report.freedBytes,
             failedCount: report.failed.count + report.refused.count + report.needsAdministrator.count,
             lockedCount: results.reduce(0) { $0 + $1.unreadableLocations.count })
-        settings.lastRun = now
-        try? store.save(settings)
+        // Reload before saving: the user may have changed the schedule while
+        // the scan ran, and only the time of this run is ours to record.
+        var latest = store.loadSettings()
+        latest.lastRun = now
+        try? store.save(latest)
         try? store.save(summary)
         await notify(summary, settings.action)
         return .ran(summary)

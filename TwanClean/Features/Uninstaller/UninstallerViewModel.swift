@@ -16,6 +16,7 @@ final class UninstallerViewModel: ObservableObject {
     @Published private(set) var selectedApp: InstalledApp?
     @Published private(set) var leftovers: LeftoverScan?
     @Published private(set) var isFindingLeftovers = false
+    @Published private(set) var leftoverError: String?
     @Published var selection: Set<String> = []
     @Published private(set) var phase: Phase = .idle
     @Published var outcome: CleanupOutcome?
@@ -89,23 +90,29 @@ final class UninstallerViewModel: ObservableObject {
     // MARK: - Selection and leftovers
 
     func select(_ app: InstalledApp?) {
-        guard app != selectedApp else { return }
+        guard app != selectedApp, phase == .idle else { return }
+        findTask?.cancel()
         selectedApp = app
         leftovers = nil
+        leftoverError = nil
         selection = []
+        isFindingLeftovers = false
         findLeftovers()
     }
 
-    /// Opens an app handed over from Finder's Services menu.
-    func selectApp(at url: URL) {
-        hasLoaded = true
-        if let known = apps.first(where: { PathPolicy.isSame($0.url.path, url.path) }) {
-            select(known)
-        } else if let app = InstalledAppIndex.app(at: url) {
+    /// Opens an app handed over from Finder's Services menu. Returns false
+    /// when it is not an app Twan Clean can uninstall.
+    @discardableResult
+    func selectApp(at url: URL) -> Bool {
+        guard let app = InstalledAppIndex.app(at: url) else { return false }
+        if !apps.contains(where: { $0.id == app.id }) {
             apps.append(app)
             apps.sort { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
-            select(app)
         }
+        select(apps.first { $0.id == app.id })
+        // The rest of the list still loads, as when the screen opens normally.
+        loadAppsIfNeeded()
+        return true
     }
 
     @discardableResult
@@ -115,11 +122,20 @@ final class UninstallerViewModel: ObservableObject {
         isFindingLeftovers = true
         let finder = makeFinder()
         let sensitivity = sensitivity
+        let others = apps
         findTask = Task {
-            let scan = await Task.detached { try? finder.find(for: app, sensitivity: sensitivity) }.value
+            let result = await Task.detached { () -> Result<LeftoverScan, Error> in
+                Result { try finder.find(for: app, sensitivity: sensitivity, otherApps: others) }
+            }.value
             guard !Task.isCancelled, self.selectedApp == app else { return }
-            self.leftovers = scan ?? LeftoverScan()
-            self.selection = Set((scan?.items ?? []).filter(\.selectedByDefault).map(\.id))
+            switch result {
+            case .success(let scan):
+                self.leftovers = scan
+                self.selection = Set(scan.items.filter(\.selectedByDefault).map(\.id))
+            case .failure(let error):
+                self.leftovers = LeftoverScan()
+                self.leftoverError = error.localizedDescription
+            }
             self.isFindingLeftovers = false
         }
         return findTask
@@ -143,10 +159,12 @@ final class UninstallerViewModel: ObservableObject {
         !NSRunningApplication.runningApplications(withBundleIdentifier: app.bundleIdentifier).isEmpty
     }
 
-    /// Quits the app if it is running, unloads its launch agents and moves the
-    /// selected items to the Trash.
-    func uninstall(forceQuit: Bool = false) async {
-        guard let app = selectedApp, !selectedItems.isEmpty, phase == .idle else { return }
+    /// Quits the app if it is running, unloads its launch agents and moves
+    /// `items`, the selection the user confirmed, to the Trash. The list is
+    /// locked meanwhile, so waiting for the app to quit cannot change what is
+    /// removed.
+    func uninstall(_ items: [LeftoverItem], of app: InstalledApp, forceQuit: Bool = false) async {
+        guard !items.isEmpty, phase == .idle, app == selectedApp else { return }
         phase = .uninstalling
         defer { phase = .idle }
 
@@ -156,13 +174,14 @@ final class UninstallerViewModel: ObservableObject {
             self.outcome = outcome
             return
         }
-        await unloadLaunchAgents(in: selectedItems)
-        let report = await removal.remove(selectedItems.map(\.removalRequest))
+        await unloadLaunchAgents(in: items)
+        let report = await removal.remove(items.map(\.removalRequest))
         finish(report, into: CleanupOutcome(report))
     }
 
-    func retryWithAdministrator() async {
-        guard var current = outcome, !current.needsAdministrator.isEmpty, phase == .idle else { return }
+    func retryWithAdministrator(_ outcome: CleanupOutcome) async {
+        guard !outcome.needsAdministrator.isEmpty, phase == .idle else { return }
+        var current = outcome
         phase = .uninstalling
         defer { phase = .idle }
         let remover = PrivilegedRemover(
@@ -198,10 +217,12 @@ final class UninstallerViewModel: ObservableObject {
     }
 
     /// Stops the user's launch agents being removed, so nothing keeps running
-    /// from the Trash. Agents that are not loaded are simply skipped.
+    /// from the Trash. Only agents the removal policy accepts are touched;
+    /// system-wide agents and daemons stop at the next restart.
     private func unloadLaunchAgents(in items: [LeftoverItem]) async {
-        let agents = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Library/LaunchAgents").path
-        for item in items where item.url.pathExtension == "plist" && PathPolicy.isInside(item.url.path, agents) {
+        let agents = "\(removal.policy.rules.home)/Library/LaunchAgents"
+        for item in items where item.url.pathExtension == "plist" && PathPolicy.isInside(item.url.path, agents)
+            && removal.policy.evaluate(item.url, purpose: item.purpose) == .allowed(item.url) {
             _ = await ProcessRunner.run(URL(fileURLWithPath: "/bin/launchctl"),
                                         ["bootout", "gui/\(getuid())", item.url.path], timeout: 10)
         }

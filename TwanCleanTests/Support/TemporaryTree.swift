@@ -79,6 +79,17 @@ struct FakeHome {
         home.appendingPathComponent(relative)
     }
 
+    /// A removal service whose Trash is a folder in this tree, so tests never
+    /// touch the user's real Trash.
+    func removalService() throws -> RemovalService {
+        let trashFolder = try tree.makeDirectory("trash")
+        return RemovalService(policy: policy) { url in
+            let destination = trashFolder.appendingPathComponent("\(UUID().uuidString)-\(url.lastPathComponent)")
+            try FileManager.default.moveItem(at: url, to: destination)
+            return destination
+        }
+    }
+
     func request(_ url: URL, _ purpose: RemovalPurpose, bytes: Int64 = 0) throws -> RemovalRequest {
         let identity = try XCTUnwrap(FileIdentity.of(url), "missing \(url.path)")
         return RemovalRequest(url: url, purpose: purpose, identity: identity, bytes: bytes)

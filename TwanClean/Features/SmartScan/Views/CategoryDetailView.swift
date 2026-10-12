@@ -38,7 +38,7 @@ struct CategoryDetailView: View {
         }
         .sheet(item: $model.outcome) { outcome in
             CleanupOutcomeView(outcome: outcome) {
-                Task { await model.retryWithAdministrator() }
+                Task { await model.retryWithAdministrator(outcome) }
             }
         }
     }

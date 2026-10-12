@@ -209,9 +209,11 @@ final class SmartScanViewModel: ObservableObject {
         withExtendedLifetime(runLock.lock) {}
     }
 
-    /// Retries what permissions blocked, after the administrator prompt.
-    func retryWithAdministrator() async {
-        guard var current = outcome, !current.needsAdministrator.isEmpty, phase == .ready else { return }
+    /// Retries what permissions blocked, after the administrator prompt. The
+    /// outcome is passed in because its sheet is already closed by then.
+    func retryWithAdministrator(_ outcome: CleanupOutcome) async {
+        guard !outcome.needsAdministrator.isEmpty, phase == .ready else { return }
+        var current = outcome
         phase = .cleaning
         let remover = PrivilegedRemover(
             service: removal,

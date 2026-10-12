@@ -33,9 +33,10 @@ final class LeftoverFinderTests: XCTestCase {
         tree = nil
     }
 
-    private func find(_ sensitivity: SearchSensitivity = .enhanced, protected: ProtectedLocations? = nil) throws -> LeftoverScan {
+    private func find(_ sensitivity: SearchSensitivity = .enhanced, protected: ProtectedLocations? = nil,
+                      for target: InstalledApp? = nil, others: [InstalledApp] = []) throws -> LeftoverScan {
         try LeftoverFinder(home: home.home, policy: home.policy, protected: protected, systemFolders: [])
-            .find(for: app, sensitivity: sensitivity)
+            .find(for: target ?? app, sensitivity: sensitivity, otherApps: others)
     }
 
     private func paths(_ scan: LeftoverScan) -> Set<String> {
@@ -85,5 +86,43 @@ final class LeftoverFinderTests: XCTestCase {
         let scan = try find(protected: ProtectedLocations(home: home.home))
         XCTAssertFalse(paths(scan).contains { $0.hasPrefix("~/Library/Containers") })
         XCTAssertTrue(scan.lockedLocations.contains { $0.lastPathComponent == "Containers" })
+    }
+
+    func testFilesOfAnotherInstalledAppWithALongerNameAreLeftOut() throws {
+        let notion = makeApp(name: "Notion", bundleIdentifier: "notion.id", team: nil)
+        let calendar = makeApp(name: "Notion Calendar", bundleIdentifier: "com.cron.electron", team: nil)
+        try tree.makeFile("home/Library/Application Support/Notion/state")
+        try tree.makeFile("home/Library/Application Support/Notion Calendar/state")
+
+        let found = paths(try find(for: notion, others: [notion, calendar]))
+
+        XCTAssertTrue(found.contains("~/Library/Application Support/Notion"))
+        XCTAssertFalse(found.contains("~/Library/Application Support/Notion Calendar"))
+    }
+
+    func testFilesClaimedEquallyByAnotherAppAreListedButNotSelected() throws {
+        // Another app with the same name from a different developer.
+        let twin = makeApp(name: "Photo Editor", bundleIdentifier: "com.other.editor", team: nil)
+        try tree.makeFile("home/Library/Caches/PhotoEditorShared/blob")
+
+        let item = try find(others: [twin]).items.first { $0.name == "PhotoEditorShared" }
+
+        XCTAssertEqual(item?.mayBelongToAnotherApp, true)
+        XCTAssertEqual(item?.selectedByDefault, false)
+    }
+
+    func testAppleAppsOnlyGetExactMatches() throws {
+        let garageBand = makeApp(name: "GarageBand", bundleIdentifier: "com.apple.garageband10", team: nil)
+        try tree.makeFile("home/Library/Application Support/GarageBand Loops/loop.caf")
+
+        let found = paths(try find(.deep, for: garageBand))
+
+        XCTAssertFalse(found.contains("~/Library/Application Support/GarageBand Loops"))
+    }
+
+    func testProtectedFoldersInsideApplicationSupportAreNotListed() throws {
+        try tree.makeFile("home/Library/Application Support/AddressBook/Photo Editor contact.abcdp")
+        let found = paths(try find(.deep, protected: ProtectedLocations(home: home.home)))
+        XCTAssertFalse(found.contains { $0.contains("AddressBook") })
     }
 }

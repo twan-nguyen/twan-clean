@@ -34,6 +34,19 @@ final class ProtectedLocationsTests: XCTestCase {
         XCTAssertTrue(chosen.contains(home.url("Downloads")))
     }
 
+    func testChoosingTheHomeFolderDoesNotOpenUpProtectedFoldersBelowIt() {
+        let home = ProtectedLocations(home: self.home.home, consentedFolder: self.home.home)
+        XCTAssertTrue(home.contains(self.home.url("Documents")))
+        XCTAssertTrue(home.contains(self.home.url("Library/Containers/com.example")))
+        XCTAssertFalse(home.contains(self.home.url("Projects")))
+    }
+
+    func testChoosingAFolderInsideAProtectedOneOpensOnlyThatFolder() {
+        let chosen = ProtectedLocations(home: home.home, consentedFolder: home.url("Documents/Work"))
+        XCTAssertFalse(chosen.contains(home.url("Documents/Work/report.pdf")))
+        XCTAssertTrue(chosen.contains(home.url("Documents/Personal")))
+    }
+
     func testLargeFileScanSkipsProtectedFoldersAndReportsThem() async throws {
         try tree.makeFile("home/Downloads/huge.iso", bytes: 300_000)
         var settings = ScanSettings()

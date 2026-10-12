@@ -41,7 +41,7 @@ struct SmartScanView: View {
         }
         .sheet(item: $model.outcome, onDismiss: { disk = DiskSpace.current() }) { outcome in
             CleanupOutcomeView(outcome: outcome) {
-                Task { await model.retryWithAdministrator() }
+                Task { await model.retryWithAdministrator(outcome) }
             }
         }
         .onAppear { disk = DiskSpace.current() }

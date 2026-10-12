@@ -33,6 +33,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             error.pointee = String(localized: "Choose an application to uninstall.") as NSString
             return
         }
+        // Only installed apps: not one on a disk image, nor a helper inside
+        // another app.
+        guard case .allowed = PathPolicy().evaluate(app, purpose: .appBundle), InstalledAppIndex.app(at: app) != nil else {
+            error.pointee = String(localized: "Twan Clean can only uninstall apps in the Applications folder.") as NSString
+            return
+        }
         pendingUninstall = app
         deliverPendingUninstall()
         NSApp.activate(ignoringOtherApps: true)
@@ -42,6 +48,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         guard let model, let url = pendingUninstall else { return }
         pendingUninstall = nil
         model.uninstaller.selectApp(at: url)
-        model.route = .uninstaller
+        model.showMainWindow(.uninstaller)
     }
 }

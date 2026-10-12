@@ -7,7 +7,7 @@ import Foundation
 struct ProtectedLocations: Sendable {
     let roots: [String]
     /// A folder the user picked in an Open panel. macOS treats that choice as
-    /// consent, so it and everything inside it stay readable.
+    /// consent to read that folder, but not other protected folders below it.
     let consentedFolder: String?
 
     init(home: URL = FileManager.default.homeDirectoryForCurrentUser, consentedFolder: URL? = nil) {
@@ -28,10 +28,16 @@ struct ProtectedLocations: Sendable {
     /// Whether reading `url` could make macOS ask for permission.
     func contains(_ url: URL) -> Bool {
         let path = url.path
-        if let consentedFolder, PathPolicy.isSame(path, consentedFolder) || PathPolicy.isInside(path, consentedFolder) {
-            return false
+        return roots.contains { root in
+            guard PathPolicy.isSame(path, root) || PathPolicy.isInside(path, root) else { return false }
+            // Consent covers a protected folder only when the chosen folder is
+            // that folder or inside it. Choosing the home folder does not open
+            // up Documents or other apps' data below it.
+            guard let consentedFolder else { return true }
+            let consentCoversRoot = PathPolicy.isSame(consentedFolder, root) || PathPolicy.isInside(consentedFolder, root)
+            let pathIsInConsent = PathPolicy.isSame(path, consentedFolder) || PathPolicy.isInside(path, consentedFolder)
+            return !(consentCoversRoot && pathIsInConsent)
         }
-        return roots.contains { PathPolicy.isSame(path, $0) || PathPolicy.isInside(path, $0) }
     }
 
     /// The locations to avoid right now: none once Full Disk Access is
