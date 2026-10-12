@@ -33,6 +33,18 @@
 - **Quản lý ứng dụng:** macOS 13 trở lên cần quyền này để chuyển một app ra khỏi /Applications. Nếu bị chặn, app sẽ chỉ chỗ bật quyền.
 - **Thông báo:** không bắt buộc, chỉ dùng để báo kết quả dọn theo lịch.
 
+## Cài bằng Homebrew
+
+```bash
+brew install --cask twan-nguyen/tap/twan-clean
+```
+
+- Sau khi cài, cấp quyền Full Disk Access cho Twan Clean trong System Settings › Privacy & Security › Full Disk Access.
+- Cập nhật: `brew upgrade --cask twan-clean`. Gỡ: `brew uninstall --cask twan-clean`, thêm `--zap` để xoá cả cài đặt và dữ liệu của app.
+- App được ký bằng chứng chỉ tự cấp và chưa notarize. Cask tự gỡ cờ quarantine để macOS cho mở app.
+
+Cách phát hành bản mới: xem [docs/releasing.md](docs/releasing.md).
+
 ## Build và test
 
 ```bash
@@ -50,7 +62,7 @@ scripts/install.sh
 
 Script build bản Release, ký lại, chép vào `/Applications/TwanClean.app` rồi mở app. Lệnh `scripts/package-local.sh` thì đóng gói thành `dist/TwanClean-<version>.zip` để mang sang máy khác. App chưa được notarize, nên lần đầu mở trên máy khác phải Control-click › Mở.
 
-Bản ký ad-hoc bị macOS coi là app mới sau mỗi lần cài, nên quyền Full Disk Access sẽ mất. Để macOS nhớ quyền, tạo một chứng chỉ ký tự cấp (chỉ làm một lần), giống Twanotch:
+Bản ký ad-hoc bị macOS coi là app mới sau mỗi lần cài, nên quyền Full Disk Access sẽ mất. Để macOS nhớ quyền, tạo chứng chỉ ký tự cấp một lần bằng `scripts/setup-release-secrets.sh` (xem [docs/releasing.md](docs/releasing.md)). Nếu chỉ build trên máy mà không phát hành, dùng hai script con:
 
 ```bash
 scripts/create-signing-identity.sh ~/twanclean-signing.p12
