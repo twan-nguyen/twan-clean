@@ -10,23 +10,13 @@ struct CategoryDetailView: View {
     private var isScanningThis: Bool { model.isScanning && model.scanningCategories.contains(category) }
 
     var body: some View {
-        VStack(spacing: 0) {
+        VStack(alignment: .leading, spacing: 14) {
             header
-                .padding(20)
-            Divider()
             content
         }
+        .padding(.horizontal, 24)
+        .padding(.top, 20)
         .navigationTitle(Text(category.title))
-        .toolbar {
-            ToolbarItem {
-                Button {
-                    model.scan([category])
-                } label: {
-                    Label("Scan", systemImage: "arrow.clockwise")
-                }
-                .disabled(model.isScanning || model.phase == .cleaning)
-            }
-        }
         .sheet(isPresented: $confirming) {
             CleanConfirmView(items: model.selectedItems(in: [category])) {
                 Task { await model.clean([category]) }
@@ -44,21 +34,35 @@ struct CategoryDetailView: View {
     }
 
     private var header: some View {
-        HStack(alignment: .top, spacing: 14) {
-            Image(systemName: category.systemImage)
-                .font(.system(size: 30))
-                .foregroundStyle(.tint)
-                .frame(width: 40)
-            VStack(alignment: .leading, spacing: 4) {
-                Text(category.title).font(.title2.bold())
-                Text(category.summary)
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-            Spacer()
-            if let result {
-                Text(result.totalBytes.formattedBytes)
-                    .font(.title2.monospacedDigit())
+        CardSurface(padding: 18, raised: true) {
+            HStack(alignment: .center, spacing: 16) {
+                IconTile(systemName: category.systemImage, tint: category.tint, size: 52, corner: 14, glow: true)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(category.title).font(.system(size: 20, weight: .bold))
+                    Text(category.summary)
+                        .font(.system(size: 12.5))
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Spacer()
+                if let result {
+                    VStack(alignment: .trailing, spacing: 2) {
+                        Text(result.totalBytes.formattedBytes)
+                            .font(.system(size: 22, weight: .semibold))
+                            .monospacedDigit()
+                        Text("\(result.items.count) items")
+                            .font(.system(size: 11.5))
+                            .foregroundStyle(.secondary)
+                            .monospacedDigit()
+                    }
+                }
+                Button {
+                    model.scan([category])
+                } label: {
+                    Label("Scan", systemImage: "arrow.clockwise")
+                }
+                .buttonStyle(PillButtonStyle())
+                .disabled(model.isScanning || model.phase == .cleaning)
             }
         }
     }
@@ -68,55 +72,40 @@ struct CategoryDetailView: View {
         if isScanningThis {
             ScanProgressView(finished: model.finishedCount, total: model.scanningCategories.count,
                              reporter: model.progress) { model.cancelScan() }
+            Spacer()
         } else if let result {
-            VStack(spacing: 0) {
-                notices(for: result)
-                if result.items.isEmpty {
-                    emptyState
-                } else {
-                    itemList(result.items)
-                    Divider()
-                    footer
-                }
+            notices(for: result)
+            if result.items.isEmpty {
+                EmptyStateCard(systemImage: "checkmark.seal.fill", title: "Nothing to clean here")
+            } else {
+                itemList(result.items)
+                footer
+                    .padding(.horizontal, -24)
             }
         } else {
-            VStack(spacing: 14) {
-                Text("Not scanned yet")
-                    .foregroundStyle(.secondary)
-                Button("Scan \(String(localized: category.title))") { model.scan([category]) }
-                    .controlSize(.large)
-                    .disabled(model.isScanning)
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            EmptyStateCard(systemImage: category.systemImage, tint: category.tint, title: "Not scanned yet")
+                .overlay(alignment: .bottom) {
+                    Button("Scan \(String(localized: category.title))") { model.scan([category]) }
+                        .buttonStyle(GlowButtonStyle())
+                        .disabled(model.isScanning)
+                        .padding(.bottom, 60)
+                }
         }
     }
 
     @ViewBuilder
     private func notices(for result: CategoryResult) -> some View {
-        VStack(spacing: 8) {
-            if !result.unreadableLocations.isEmpty {
-                FullDiskAccessBanner(unreadableCount: result.unreadableLocations.count)
-            }
-            if let reclaimable = result.dockerReclaimableBytes, reclaimable > 0 {
-                Label("Docker reports \(reclaimable.formattedBytes) of unused images, containers and build cache. Free it with “docker system prune” so Docker stays consistent.",
-                      systemImage: "info.circle")
-                    .font(.callout)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-            }
+        if !result.unreadableLocations.isEmpty {
+            FullDiskAccessBanner(unreadableCount: result.unreadableLocations.count)
         }
-        .padding(.horizontal, 20)
-        .padding(.vertical, result.unreadableLocations.isEmpty && (result.dockerReclaimableBytes ?? 0) == 0 ? 0 : 12)
-    }
-
-    private var emptyState: some View {
-        VStack(spacing: 8) {
-            Image(systemName: "checkmark.seal")
-                .font(.system(size: 40))
-                .foregroundStyle(.green)
-            Text("Nothing to clean here")
-                .font(.headline)
+        if let reclaimable = result.dockerReclaimableBytes, reclaimable > 0 {
+            Label("Docker reports \(reclaimable.formattedBytes) of unused images, containers and build cache. Free it with “docker system prune” so Docker stays consistent.",
+                  systemImage: "info.circle")
+                .font(.callout)
+                .padding(12)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Tint.blue.opacity(0.08), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private func itemList(_ items: [CleanableItem]) -> some View {
@@ -126,20 +115,24 @@ struct CategoryDetailView: View {
                 set: { model.setSelected(item, $0) }))
         }
         .listStyle(.inset)
+        .cardList()
     }
 
     private var footer: some View {
-        HStack {
+        SelectionFooter(selectedBytes: model.selectedBytes(in: [category]), isBusy: model.phase == .cleaning) {
             Button("Select All") { model.setAllSelected(in: category, true) }
+                .buttonStyle(PillButtonStyle())
             Button("Select None") { model.setAllSelected(in: category, false) }
-            Spacer()
-            Text("Selected: \(model.selectedBytes(in: [category]).formattedBytes)")
-                .monospacedDigit()
-                .foregroundStyle(.secondary)
-            Button("Clean…") { confirming = true }
-                .keyboardShortcut(.defaultAction)
-                .disabled(model.selectedItems(in: [category]).isEmpty || model.phase != .ready)
+                .buttonStyle(PillButtonStyle())
+        } action: {
+            Button {
+                confirming = true
+            } label: {
+                Label("Clean…", systemImage: "sparkles")
+            }
+            .buttonStyle(GlowButtonStyle())
+            .keyboardShortcut(.defaultAction)
+            .disabled(model.selectedItems(in: [category]).isEmpty || model.phase != .ready)
         }
-        .padding(12)
     }
 }

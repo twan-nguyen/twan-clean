@@ -9,27 +9,34 @@ struct AppDetailView: View {
     @State private var confirmedItems: [LeftoverItem] = []
 
     var body: some View {
-        VStack(spacing: 0) {
+        VStack(alignment: .leading, spacing: 12) {
             header
-                .padding(20)
-            Divider()
+                .padding(.horizontal, 16)
+                .padding(.top, 14)
             if model.isFindingLeftovers {
-                ProgressView("Looking for the app's files…")
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                WorkingCard(tint: Tint.purple, gaugeLabel: "SEARCHING", systemImage: "square.grid.2x2.fill",
+                            title: "Looking for the app's files…") {
+                    EmptyView()
+                }
+                .padding(.horizontal, 16)
+                Spacer()
             } else if let scan = model.leftovers {
-                if !scan.lockedLocations.isEmpty {
-                    FullDiskAccessBanner(unreadableCount: scan.lockedLocations.count)
-                        .padding([.horizontal, .top], 12)
+                Group {
+                    if !scan.lockedLocations.isEmpty {
+                        FullDiskAccessBanner(unreadableCount: scan.lockedLocations.count)
+                    }
+                    if let error = model.leftoverError {
+                        Label(error, systemImage: "exclamationmark.triangle.fill")
+                            .foregroundStyle(Tint.orange)
+                    }
+                    LeftoverGroupList(items: scan.items, model: model)
+                        .cardList()
+                        .disabled(model.phase == .uninstalling)
                 }
-                if let error = model.leftoverError {
-                    Label(error, systemImage: "exclamationmark.triangle")
-                        .foregroundStyle(.orange)
-                        .padding(12)
-                }
-                LeftoverGroupList(items: scan.items, model: model)
-                    .disabled(model.phase == .uninstalling)
-                Divider()
+                .padding(.horizontal, 16)
                 footer
+            } else {
+                Spacer()
             }
         }
         .confirmationDialog(Text("Uninstall \(app.name)?"), isPresented: $confirming) {
@@ -49,53 +56,62 @@ struct AppDetailView: View {
     }
 
     private var header: some View {
-        HStack(alignment: .top, spacing: 14) {
-            AppIconView(url: app.url, size: 56)
-            VStack(alignment: .leading, spacing: 4) {
-                Text(app.name).font(.title2.bold())
-                Text(app.bundleIdentifier)
-                    .font(.callout.monospaced())
-                    .foregroundStyle(.secondary)
-                    .textSelection(.enabled)
-                Text(app.url.deletingLastPathComponent().path)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-            Spacer()
-            VStack(alignment: .trailing, spacing: 6) {
-                Picker("Search", selection: $model.sensitivity) {
-                    ForEach(SearchSensitivity.allCases) { level in
-                        Text(level.title).tag(level)
+        CardSurface(padding: 18, raised: true) {
+            VStack(alignment: .leading, spacing: 14) {
+                HStack(alignment: .center, spacing: 14) {
+                    AppIconView(url: app.url, size: 56)
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(app.name).font(.system(size: 20, weight: .bold))
+                        Text(app.bundleIdentifier)
+                            .font(.system(size: 11.5, design: .monospaced))
+                            .foregroundStyle(.secondary)
+                            .textSelection(.enabled)
+                        Text(app.url.deletingLastPathComponent().path)
+                            .font(.caption)
+                            .foregroundStyle(.tertiary)
+                    }
+                    Spacer()
+                    if let scan = model.leftovers {
+                        VStack(alignment: .trailing, spacing: 2) {
+                            Text(scan.items.reduce(0) { $0 + $1.bytes }.formattedBytes)
+                                .font(.system(size: 22, weight: .semibold))
+                                .monospacedDigit()
+                            Text("\(scan.items.count) items")
+                                .font(.system(size: 11.5))
+                                .foregroundStyle(.secondary)
+                                .monospacedDigit()
+                        }
                     }
                 }
-                .pickerStyle(.segmented)
-                .labelsHidden()
-                .disabled(model.phase == .uninstalling)
-                .frame(width: 280)
-                Text(model.sensitivity.summary)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.trailing)
-                    .frame(width: 280, alignment: .trailing)
-                    .fixedSize(horizontal: false, vertical: true)
+                HStack(spacing: 12) {
+                    Picker("Search", selection: $model.sensitivity) {
+                        ForEach(SearchSensitivity.allCases) { level in
+                            Text(level.title).tag(level)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    .labelsHidden()
+                    .disabled(model.phase == .uninstalling)
+                    .frame(width: 260)
+                    Text(model.sensitivity.summary)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
             }
         }
     }
 
     private var footer: some View {
-        HStack {
-            Text("Selected: \(model.selectedBytes.formattedBytes)")
-                .monospacedDigit()
-                .foregroundStyle(.secondary)
-            Spacer()
-            if model.phase == .uninstalling {
-                ProgressView().controlSize(.small)
+        SelectionFooter(selectedBytes: model.selectedBytes, isBusy: model.phase == .uninstalling) {
+            Button {
+                confirming = true
+            } label: {
+                Label("Uninstall…", systemImage: "trash")
             }
-            Button("Uninstall…") { confirming = true }
-                .buttonStyle(.borderedProminent)
-                .disabled(model.selectedItems.isEmpty || model.phase != .idle)
+            .buttonStyle(GlowButtonStyle.destructive)
+            .disabled(model.selectedItems.isEmpty || model.phase != .idle)
         }
-        .padding(12)
     }
 
     private func start() {

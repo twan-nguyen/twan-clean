@@ -27,16 +27,6 @@
         }
       }
     },
-    "%@ selected" : {
-      "localizations" : {
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Đã chọn %@"
-          }
-        }
-      }
-    },
     "%@: found %@" : {
       "localizations" : {
         "en" : {
@@ -53,12 +43,32 @@
         }
       }
     },
+    "%lld apps" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld ứng dụng"
+          }
+        }
+      }
+    },
     "%lld caches, logs and temporary items. Apps recreate them when needed." : {
       "localizations" : {
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%lld mục cache, log và tệp tạm. Ứng dụng sẽ tự tạo lại khi cần."
+          }
+        }
+      }
+    },
+    "%lld items" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld mục"
           }
         }
       }
@@ -83,6 +93,16 @@
         }
       }
     },
+    "%lld items from apps that are no longer installed" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld mục của các ứng dụng không còn được cài"
+          }
+        }
+      }
+    },
     "%lld items need your password" : {
       "localizations" : {
         "vi" : {
@@ -103,6 +123,16 @@
         }
       }
     },
+    "%lld items selected" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đã chọn %lld mục"
+          }
+        }
+      }
+    },
     "%lld items you can still restore from the Trash. Space is freed when you empty it." : {
       "localizations" : {
         "vi" : {
@@ -113,12 +143,44 @@
         }
       }
     },
+    "%lld items · %lld selected" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld items · %2$lld selected"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld mục · đã chọn %lld"
+          }
+        }
+      }
+    },
     "%lld months" : {
       "localizations" : {
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%lld tháng"
+          }
+        }
+      }
+    },
+    "%lld of %lld categories done" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld of %2$lld categories done"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đã xong %lld/%lld hạng mục"
           }
         }
       }
@@ -273,6 +335,16 @@
         }
       }
     },
+    "Appearance" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Giao diện"
+          }
+        }
+      }
+    },
     "Application" : {
       "localizations" : {
         "vi" : {
@@ -343,6 +415,16 @@
         }
       }
     },
+    "By category" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Theo hạng mục"
+          }
+        }
+      }
+    },
     "Cached data apps rebuild when they need it." : {
       "localizations" : {
         "vi" : {
@@ -369,6 +451,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Huỷ"
+          }
+        }
+      }
+    },
+    "Category" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hạng mục"
           }
         }
       }
@@ -409,6 +501,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dọn dẹp"
+          }
+        }
+      }
+    },
+    "Clean %@" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dọn %@"
           }
         }
       }
@@ -499,6 +601,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tiếp tục"
+          }
+        }
+      }
+    },
+    "Dark" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tối"
           }
         }
       }
@@ -673,6 +785,16 @@
         }
       }
     },
+    "Fix" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sửa"
+          }
+        }
+      }
+    },
     "Folders to Skip" : {
       "localizations" : {
         "vi" : {
@@ -703,22 +825,22 @@
         }
       }
     },
-    "Found %@" : {
-      "localizations" : {
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tìm thấy %@"
-          }
-        }
-      }
-    },
     "Found %@ you can clean. Open Twan Clean to review it." : {
       "localizations" : {
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tìm thấy %@ có thể dọn. Mở Twan Clean để xem."
+          }
+        }
+      }
+    },
+    "Free" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Còn trống"
           }
         }
       }
@@ -755,6 +877,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Từ"
+          }
+        }
+      }
+    },
+    "Full Disk Access applies after a relaunch" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quyền truy cập toàn ổ đĩa có hiệu lực sau khi mở lại"
+          }
+        }
+      }
+    },
+    "Full Disk Access granted" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đã có quyền truy cập toàn ổ đĩa"
           }
         }
       }
@@ -979,6 +1121,36 @@
         }
       }
     },
+    "Light" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sáng"
+          }
+        }
+      }
+    },
+    "Limited access" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quyền truy cập hạn chế"
+          }
+        }
+      }
+    },
+    "Locked" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bị khoá"
+          }
+        }
+      }
+    },
     "Logs" : {
       "localizations" : {
         "vi" : {
@@ -1015,6 +1187,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Đang tìm các tệp của app…"
+          }
+        }
+      }
+    },
+    "Low space" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sắp đầy"
+          }
+        }
+      }
+    },
+    "MEASURING" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ĐANG ĐO"
           }
         }
       }
@@ -1449,6 +1641,26 @@
         }
       }
     },
+    "Protected folders are skipped" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bỏ qua các thư mục được bảo vệ"
+          }
+        }
+      }
+    },
+    "Purgeable" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Có thể giải phóng"
+          }
+        }
+      }
+    },
     "Quit Twan Clean" : {
       "localizations" : {
         "vi" : {
@@ -1465,6 +1677,36 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Thoát và gỡ"
+          }
+        }
+      }
+    },
+    "Ready to clean" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sẵn sàng dọn"
+          }
+        }
+      }
+    },
+    "Relaunch" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mở lại"
+          }
+        }
+      }
+    },
+    "Relaunch to finish" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mở lại để hoàn tất"
           }
         }
       }
@@ -1519,6 +1761,16 @@
         }
       }
     },
+    "Review first" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cần xem trước"
+          }
+        }
+      }
+    },
     "Run automatically" : {
       "localizations" : {
         "vi" : {
@@ -1535,6 +1787,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Chạy nền kể cả khi Twan Clean đã đóng. Nếu lúc đó máy đang ngủ, lượt chạy sẽ diễn ra ngay sau khi máy thức dậy."
+          }
+        }
+      }
+    },
+    "SCANNING" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ĐANG QUÉT"
+          }
+        }
+      }
+    },
+    "SEARCHING" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ĐANG TÌM"
           }
         }
       }
@@ -1629,18 +1901,12 @@
         }
       }
     },
-    "Scanning… %lld of %lld categories" : {
+    "Scanning your Mac" : {
       "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Scanning… %1$lld of %2$lld categories"
-          }
-        },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Đang quét… %lld/%lld hạng mục"
+            "value" : "Đang quét máy Mac"
           }
         }
       }
@@ -1725,12 +1991,22 @@
         }
       }
     },
-    "Selected: %@" : {
+    "Select all in this category" : {
       "localizations" : {
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Đã chọn: %@"
+            "value" : "Chọn tất cả trong hạng mục này"
+          }
+        }
+      }
+    },
+    "Selected" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đã chọn"
           }
         }
       }
@@ -1901,6 +2177,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tệp hỗ trợ"
+          }
+        }
+      }
+    },
+    "System" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Theo hệ thống"
           }
         }
       }
@@ -2155,6 +2441,16 @@
         }
       }
     },
+    "USED" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ĐÃ DÙNG"
+          }
+        }
+      }
+    },
     "Uninstall %@?" : {
       "localizations" : {
         "vi" : {
@@ -2171,6 +2467,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Gỡ cài đặt…"
+          }
+        }
+      }
+    },
+    "Used" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đã dùng"
           }
         }
       }
@@ -2225,6 +2531,16 @@
         }
       }
     },
+    "What Smart Scan checks" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quét thông minh kiểm tra những gì"
+          }
+        }
+      }
+    },
     "When" : {
       "localizations" : {
         "vi" : {
@@ -2255,6 +2571,16 @@
         }
       }
     },
+    "Your Mac is clean" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Máy Mac đã sạch"
+          }
+        }
+      }
+    },
     "Your data stays on this Mac" : {
       "localizations" : {
         "vi" : {
@@ -2271,6 +2597,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tệp của bạn vào Thùng rác"
+          }
+        }
+      }
+    },
+    "found" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "tìm thấy"
+          }
+        }
+      }
+    },
+    "free of %@" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "còn trống trên %@"
           }
         }
       }

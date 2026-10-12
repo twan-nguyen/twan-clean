@@ -11,40 +11,26 @@ struct OrphansView: View {
             case .idle:
                 start
             case .scanning:
-                ProgressView("Comparing Library folders with your installed apps…")
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                ScrollView {
+                    WorkingCard(tint: Tint.pink, systemImage: "questionmark.folder.fill",
+                                title: "Comparing Library folders with your installed apps…") {
+                        EmptyView()
+                    }
+                    .padding(.horizontal, 28)
+                    .padding(.vertical, 24)
+                    .frame(maxWidth: 920)
+                    .frame(maxWidth: .infinity)
+                }
             case .ready, .removing:
                 if model.items.isEmpty {
-                    VStack(spacing: 8) {
-                        Image(systemName: "checkmark.seal")
-                            .font(.system(size: 40))
-                            .foregroundStyle(.green)
-                        Text("No orphaned files found")
-                            .font(.headline)
-                    }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    EmptyStateCard(systemImage: "checkmark.seal.fill", title: "No orphaned files found")
+                        .overlay(alignment: .topTrailing) { toolbarButtons.padding(16) }
                 } else {
                     results
                 }
             }
         }
         .navigationTitle("Orphaned Files")
-        .toolbar {
-            ToolbarItemGroup {
-                Button {
-                    showingIgnored = true
-                } label: {
-                    Label("Ignored (\(model.ignored.count))", systemImage: "eye.slash")
-                }
-                .disabled(model.ignored.isEmpty)
-                Button {
-                    model.scan()
-                } label: {
-                    Label("Scan Again", systemImage: "arrow.clockwise")
-                }
-                .disabled(model.phase == .scanning || model.phase == .removing)
-            }
-        }
         .confirmationDialog(Text("Move \(model.selectedItems.count) items to the Trash?"), isPresented: $confirming) {
             Button("Move to Trash (\(model.selectedBytes.formattedBytes))", role: .destructive) {
                 Task { await model.trashSelection() }
@@ -63,27 +49,67 @@ struct OrphansView: View {
     }
 
     private var start: some View {
-        VStack(spacing: 14) {
-            Image(systemName: "questionmark.folder")
-                .font(.system(size: 52))
-                .foregroundStyle(.tint)
-            Text("Find files left by deleted apps")
-                .font(.title2.bold())
-            Text("Twan Clean compares caches, logs and saved states with the apps installed now. Nothing is selected for you, and removed files go to the Trash.")
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-                .frame(maxWidth: 440)
-            Button("Scan") { model.scan() }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.large)
-                .keyboardShortcut(.defaultAction)
+        ScrollView {
+            ToolIntroCard(systemImage: "questionmark.folder.fill", tint: Tint.pink,
+                          title: "Find files left by deleted apps",
+                          message: "Twan Clean compares caches, logs and saved states with the apps installed now. Nothing is selected for you, and removed files go to the Trash.") {
+                Button { model.scan() } label: { Label("Scan", systemImage: "magnifyingglass") }
+                    .buttonStyle(GlowButtonStyle(tint: Tint.pink, gradient: TintGradient.of(Tint.pink)))
+                    .keyboardShortcut(.defaultAction)
+                if !model.ignored.isEmpty {
+                    Button { showingIgnored = true } label: {
+                        Label("Ignored (\(model.ignored.count))", systemImage: "eye.slash")
+                    }
+                    .buttonStyle(PillButtonStyle())
+                }
+            }
+            .padding(.horizontal, 28)
+            .padding(.vertical, 24)
+            .frame(maxWidth: 920)
+            .frame(maxWidth: .infinity)
         }
-        .padding(40)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    @ViewBuilder
+    private var toolbarButtons: some View {
+        HStack(spacing: 8) {
+            Button {
+                showingIgnored = true
+            } label: {
+                Label("Ignored (\(model.ignored.count))", systemImage: "eye.slash")
+            }
+            .buttonStyle(PillButtonStyle())
+            .disabled(model.ignored.isEmpty)
+            Button {
+                model.scan()
+            } label: {
+                Label("Scan Again", systemImage: "arrow.clockwise")
+            }
+            .buttonStyle(PillButtonStyle())
+            .disabled(model.phase == .scanning || model.phase == .removing)
+        }
     }
 
     private var results: some View {
-        VStack(spacing: 0) {
+        VStack(alignment: .leading, spacing: 12) {
+            CardSurface(padding: 18, raised: true) {
+                HStack(spacing: 14) {
+                    IconTile(systemName: "questionmark.folder.fill", tint: Tint.pink, size: 44, corner: 12, glow: true)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(model.items.reduce(0) { $0 + $1.bytes }.formattedBytes)
+                            .font(.system(size: 24, weight: .semibold))
+                            .monospacedDigit()
+                        Text("\(model.items.count) items from apps that are no longer installed")
+                            .font(.system(size: 12))
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    toolbarButtons
+                }
+            }
+            .padding(.horizontal, 20)
+            .padding(.top, 16)
+
             List {
                 ForEach(model.groups, id: \.location) { group in
                     Section {
@@ -91,47 +117,51 @@ struct OrphansView: View {
                             row(item)
                         }
                     } header: {
-                        Text(group.location.path)
-                            .lineLimit(1)
-                            .truncationMode(.middle)
+                        HStack(spacing: 8) {
+                            IconTile(systemName: "folder.fill", tint: Tint.pink, size: 20, corner: 5)
+                            Text(verbatim: (group.location.path as NSString).abbreviatingWithTildeInPath)
+                                .font(.system(size: 12, weight: .semibold))
+                                .lineLimit(1)
+                                .truncationMode(.middle)
+                            Spacer()
+                            Text(group.items.reduce(0) { $0 + $1.bytes }.formattedBytes)
+                                .font(.system(size: 11.5, weight: .semibold))
+                                .monospacedDigit()
+                        }
                     }
                 }
             }
             .listStyle(.inset)
-            Divider()
-            HStack {
-                Text("Selected: \(model.selectedBytes.formattedBytes)")
-                    .monospacedDigit()
-                    .foregroundStyle(.secondary)
-                Spacer()
-                if model.phase == .removing {
-                    ProgressView().controlSize(.small)
+            .cardList()
+            .padding(.horizontal, 20)
+
+            SelectionFooter(selectedBytes: model.selectedBytes, isBusy: model.phase == .removing) {
+                Button {
+                    confirming = true
+                } label: {
+                    Label("Move to Trash…", systemImage: "trash")
                 }
-                Button("Move to Trash…") { confirming = true }
-                    .disabled(model.selectedItems.isEmpty || model.phase != .ready)
+                .buttonStyle(GlowButtonStyle.destructive)
+                .disabled(model.selectedItems.isEmpty || model.phase != .ready)
             }
-            .padding(12)
         }
     }
 
     private func row(_ item: OrphanItem) -> some View {
         HStack(spacing: 8) {
-            Toggle(item.name, isOn: Binding(get: { model.selection.contains(item.id) },
-                                            set: { model.setSelected(item, $0) }))
-                .toggleStyle(.checkbox)
-                .labelsHidden()
-            Image(systemName: item.isDirectory ? "folder" : "doc")
-                .foregroundStyle(.secondary)
-                .frame(width: 16)
+            Toggle(isOn: Binding(get: { model.selection.contains(item.id) },
+                                 set: { model.setSelected(item, $0) })) {
+                EmptyView()
+            }
+            .toggleStyle(.tintedCheckbox(Tint.pink))
+            .accessibilityLabel(Text(item.name))
+            IconTile(systemName: item.isDirectory ? "folder.fill" : "doc.fill", tint: Tint.pink, size: 22, corner: 6)
             Text(item.name)
+                .font(.system(size: 13, weight: .medium))
                 .lineLimit(1)
                 .truncationMode(.middle)
             if item.requiresAdministrator {
-                Text("Needs password")
-                    .font(.caption2)
-                    .padding(.horizontal, 5)
-                    .padding(.vertical, 1)
-                    .background(.quaternary, in: Capsule())
+                StatusChip(label: String(localized: "Needs password"), tint: Tint.orange)
             }
             Spacer()
             if let date = item.lastModified {
@@ -140,9 +170,12 @@ struct OrphansView: View {
                     .foregroundStyle(.secondary)
             }
             Text(item.bytes.formattedBytes)
+                .font(.system(size: 12, weight: .semibold))
                 .monospacedDigit()
+                .foregroundStyle(.secondary)
                 .frame(minWidth: 72, alignment: .trailing)
         }
+        .padding(.vertical, 1)
         .contextMenu {
             Button("Always Ignore") { model.ignore(item) }
             Button("Show in Finder") { Finder.reveal([item.url]) }

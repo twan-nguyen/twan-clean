@@ -6,23 +6,20 @@ struct CleanableItemRow: View {
 
     var body: some View {
         HStack(spacing: 10) {
-            Toggle(item.name, isOn: $isSelected)
-                .toggleStyle(.checkbox)
-                .labelsHidden()
-            Image(systemName: item.isDirectory ? "folder" : "doc")
-                .foregroundStyle(.secondary)
-                .frame(width: 18)
+            Toggle(isOn: $isSelected) { EmptyView() }
+                .toggleStyle(.tintedCheckbox(item.category.tint))
+                .accessibilityLabel(Text(item.name))
+            IconTile(systemName: item.isDirectory ? "folder.fill" : "doc.fill",
+                     tint: item.category.tint, size: 24, corner: 6)
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 6) {
                     Text(item.name)
+                        .font(.system(size: 13, weight: .medium))
                         .lineLimit(1)
                         .truncationMode(.middle)
-                    ForEach(badges, id: \.self) { badge in
-                        Text(badge)
-                            .font(.caption2)
-                            .padding(.horizontal, 5)
-                            .padding(.vertical, 1)
-                            .background(.quaternary, in: Capsule())
+                    let chips = badges
+                    ForEach(chips.indices, id: \.self) { index in
+                        StatusChip(label: chips[index].text, tint: chips[index].tint)
                     }
                 }
                 Text(item.url.deletingLastPathComponent().path)
@@ -38,22 +35,25 @@ struct CleanableItemRow: View {
                     .foregroundStyle(.secondary)
             }
             Text(item.bytes.formattedBytes)
+                .font(.system(size: 12.5, weight: .semibold))
                 .monospacedDigit()
+                .foregroundStyle(.secondary)
                 .frame(minWidth: 72, alignment: .trailing)
         }
+        .padding(.vertical, 2)
         .contextMenu {
             Button("Show in Finder") { Finder.reveal([item.url]) }
         }
     }
 
-    private var badges: [String] {
-        var badges: [String] = []
-        if item.requiresAdministrator { badges.append(String(localized: "Needs password")) }
-        if item.notes.contains(.appIsRunning) { badges.append(String(localized: "App is running")) }
-        if item.notes.contains(.usedByMacOS) { badges.append(String(localized: "Used by macOS")) }
-        if item.notes.contains(.personalData) { badges.append(String(localized: "Personal data")) }
-        if item.notes.contains(.mayBeNeeded) { badges.append(String(localized: "May be needed")) }
-        if item.notes.contains(.partlyUnreadable) { badges.append(String(localized: "Partly unreadable")) }
+    private var badges: [(text: String, tint: Color)] {
+        var badges: [(text: String, tint: Color)] = []
+        if item.requiresAdministrator { badges.append((String(localized: "Needs password"), Tint.orange)) }
+        if item.notes.contains(.appIsRunning) { badges.append((String(localized: "App is running"), Tint.blue)) }
+        if item.notes.contains(.usedByMacOS) { badges.append((String(localized: "Used by macOS"), Tint.purple)) }
+        if item.notes.contains(.personalData) { badges.append((String(localized: "Personal data"), Tint.red)) }
+        if item.notes.contains(.mayBeNeeded) { badges.append((String(localized: "May be needed"), Tint.yellow)) }
+        if item.notes.contains(.partlyUnreadable) { badges.append((String(localized: "Partly unreadable"), Tint.orange)) }
         return badges
     }
 }

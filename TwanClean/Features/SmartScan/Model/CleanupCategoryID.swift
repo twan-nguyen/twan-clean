@@ -1,4 +1,4 @@
-import Foundation
+import SwiftUI
 
 /// The kinds of junk Smart Scan looks for.
 enum CleanupCategoryID: String, CaseIterable, Identifiable, Codable, Sendable {
@@ -47,16 +47,32 @@ enum CleanupCategoryID: String, CaseIterable, Identifiable, Codable, Sendable {
 
     var systemImage: String {
         switch self {
-        case .systemJunk: "gearshape.2"
-        case .userCache: "internaldrive"
+        case .systemJunk: "gearshape.2.fill"
+        case .userCache: "internaldrive.fill"
         case .aiApps: "brain"
-        case .mail: "envelope"
-        case .trash: "trash"
+        case .mail: "envelope.fill"
+        case .trash: "trash.fill"
         case .largeOld: "doc.badge.clock"
-        case .xcode: "hammer"
-        case .brew: "mug"
-        case .node: "shippingbox"
-        case .docker: "cube.box"
+        case .xcode: "hammer.fill"
+        case .brew: "mug.fill"
+        case .node: "shippingbox.fill"
+        case .docker: "cube.box.fill"
+        }
+    }
+
+    /// Each category keeps one colour across the sidebar, charts and lists.
+    var tint: Color {
+        switch self {
+        case .systemJunk: Tint.purple
+        case .userCache: Tint.blue
+        case .aiApps: Tint.teal
+        case .mail: Tint.orange
+        case .trash: Tint.red
+        case .largeOld: Tint.yellow
+        case .xcode: Tint.cyan
+        case .brew: Tint.brown
+        case .node: Tint.pink
+        case .docker: Tint.indigo
         }
     }
 

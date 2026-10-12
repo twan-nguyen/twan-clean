@@ -13,31 +13,14 @@ struct UninstallerView: View {
                     AppDetailView(app: app, model: model)
                         .id(app.id)
                 } else {
-                    VStack(spacing: 10) {
-                        Image(systemName: "trash.square")
-                            .font(.system(size: 48))
-                            .foregroundStyle(.secondary)
-                        Text("Choose an app to see everything it installed")
-                            .foregroundStyle(.secondary)
-                        Text("Tip: in Finder, Control-click an app and choose Services › Uninstall with Twan Clean.")
-                            .font(.caption)
-                            .foregroundStyle(.tertiary)
-                    }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    EmptyStateCard(systemImage: "square.grid.2x2.fill", tint: Tint.purple,
+                                   title: "Choose an app to see everything it installed",
+                                   message: "Tip: in Finder, Control-click an app and choose Services › Uninstall with Twan Clean.")
                 }
             }
             .frame(minWidth: 460)
         }
         .navigationTitle("App Uninstaller")
-        .toolbar {
-            ToolbarItem {
-                Button {
-                    model.reloadApps()
-                } label: {
-                    Label("Reload", systemImage: "arrow.clockwise")
-                }
-            }
-        }
         .onAppear { model.loadAppsIfNeeded() }
         .sheet(item: $model.outcome) { outcome in
             CleanupOutcomeView(outcome: outcome) {

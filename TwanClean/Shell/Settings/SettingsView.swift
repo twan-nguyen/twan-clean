@@ -16,6 +16,7 @@ struct SettingsView: View {
 
 private struct GeneralSettingsTab: View {
     @AppStorage(MenuBarSettings.showKey) private var showInMenuBar = true
+    @AppStorage(AppearanceMode.storageKey) private var appearance: AppearanceMode = .system
     @State private var openAtLogin = LoginItem.isEnabled
     @State private var loginError: String?
     @State private var language = AppLanguage.current
@@ -32,6 +33,10 @@ private struct GeneralSettingsTab: View {
     var body: some View {
         Form {
             Section {
+                Picker("Appearance", selection: $appearance) {
+                    ForEach(AppearanceMode.allCases) { Text($0.title).tag($0) }
+                }
+                .onChange(of: appearance) { $0.apply() }
                 Picker("Language", selection: $language) {
                     ForEach(AppLanguage.allCases) { Text($0.title).tag($0) }
                 }

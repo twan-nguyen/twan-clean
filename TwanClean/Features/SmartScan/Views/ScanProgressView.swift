@@ -1,29 +1,23 @@
 import SwiftUI
 
+/// Card shown while Smart Scan runs.
 struct ScanProgressView: View {
     let finished: Int
     let total: Int
     let reporter: ScanProgressReporter
     let onCancel: () -> Void
 
+    private var progress: Double { Double(finished) / Double(max(total, 1)) }
+
     var body: some View {
-        VStack(spacing: 16) {
-            ProgressView(value: Double(finished), total: Double(max(total, 1)))
-                .frame(maxWidth: 360)
-            Text("Scanning… \(finished) of \(total) categories")
-                .font(.headline)
+        WorkingCard(progress: progress, title: "Scanning your Mac", onCancel: onCancel) {
+            Text("\(finished) of \(total) categories done")
+                .font(.system(size: 13))
+                .foregroundStyle(.secondary)
                 .monospacedDigit()
-            TimelineView(.periodic(from: .now, by: 0.1)) { _ in
-                Text(reporter.currentPath ?? " ")
-                    .font(.caption.monospaced())
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-                    .truncationMode(.middle)
-                    .frame(maxWidth: 520)
-            }
-            Button("Cancel", role: .cancel, action: onCancel)
+            GradientProgressBar(progress: progress)
+                .frame(maxWidth: 340)
+            LivePathTicker { reporter.currentPath }
         }
-        .padding(40)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }

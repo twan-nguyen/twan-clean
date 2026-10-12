@@ -20,30 +20,6 @@ struct SpaceLensView: View {
             }
         }
         .navigationTitle("Space Lens")
-        .toolbar {
-            ToolbarItemGroup {
-                if model.phase == .ready, (model.path.count) > 1 {
-                    Button {
-                        model.goUp()
-                    } label: {
-                        Label("Back", systemImage: "chevron.left")
-                    }
-                }
-                Button {
-                    chooseFolder()
-                } label: {
-                    Label("Choose Folder…", systemImage: "folder")
-                }
-                .disabled(model.phase == .scanning || model.phase == .removing)
-                if model.root != nil, model.phase == .ready {
-                    Button {
-                        model.rescan()
-                    } label: {
-                        Label("Scan Again", systemImage: "arrow.clockwise")
-                    }
-                }
-            }
-        }
         .confirmationDialog(Text("Move \(model.selection.count) items to the Trash?"), isPresented: $confirming) {
             Button("Move to Trash (\(model.selectedBytes.formattedBytes))", role: .destructive) {
                 Task { await model.trashSelection() }
@@ -59,96 +35,104 @@ struct SpaceLensView: View {
     }
 
     private var start: some View {
-        VStack(spacing: 14) {
-            Image(systemName: "circle.hexagongrid")
-                .font(.system(size: 52))
-                .foregroundStyle(.tint)
-            Text("See what takes up space")
-                .font(.title2.bold())
-            Text("Space Lens measures every folder and shows it as bubbles sized by the space it really uses.")
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-                .frame(maxWidth: 420)
-            HStack {
-                Button("Scan Home Folder") { model.scanHome() }
-                    .buttonStyle(.borderedProminent)
+        ScrollView {
+            ToolIntroCard(systemImage: "circle.hexagongrid.fill", tint: Tint.cyan,
+                          title: "See what takes up space",
+                          message: "Space Lens measures every folder and shows it as bubbles sized by the space it really uses.") {
+                Button { model.scanHome() } label: { Label("Scan Home Folder", systemImage: "house.fill") }
+                    .buttonStyle(GlowButtonStyle(tint: Tint.cyan, gradient: TintGradient.of(Tint.cyan)))
                     .keyboardShortcut(.defaultAction)
-                Button("Choose Folder…") { chooseFolder() }
+                Button { chooseFolder() } label: { Label("Choose Folder…", systemImage: "folder") }
+                    .buttonStyle(PillButtonStyle())
             }
-            .controlSize(.large)
-            .padding(.top, 6)
+            .padding(.horizontal, 28)
+            .padding(.vertical, 24)
+            .frame(maxWidth: 920)
+            .frame(maxWidth: .infinity)
         }
-        .padding(40)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private var scanning: some View {
-        VStack(spacing: 14) {
-            ProgressView()
-                .controlSize(.large)
-            Text("Measuring…")
-                .font(.headline)
-            TimelineView(.periodic(from: .now, by: 0.1)) { _ in
-                VStack(spacing: 6) {
-                    Text(model.progress.currentPath ?? " ")
-                        .font(.caption.monospaced())
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
-                        .truncationMode(.middle)
-                        .frame(maxWidth: 520)
+        ScrollView {
+            WorkingCard(tint: Tint.cyan, gaugeLabel: "MEASURING", systemImage: "circle.hexagongrid.fill",
+                        title: "Measuring…", onCancel: { model.cancelScan() }) {
+                TimelineView(.periodic(from: .now, by: 0.5)) { _ in
                     if let started = model.scanStarted {
-                        Text(Duration.seconds(Date().timeIntervalSince(started)),
-                             format: .time(pattern: .minuteSecond))
+                        Text(Duration.seconds(Date().timeIntervalSince(started)), format: .time(pattern: .minuteSecond))
+                            .font(.system(size: 13))
                             .monospacedDigit()
                             .foregroundStyle(.secondary)
                     }
                 }
+                LivePathTicker { model.progress.currentPath }
             }
-            Button("Cancel", role: .cancel) { model.cancelScan() }
+            .padding(.horizontal, 28)
+            .padding(.vertical, 24)
+            .frame(maxWidth: 920)
+            .frame(maxWidth: .infinity)
         }
-        .padding(40)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private func browser(_ folder: SizeNode) -> some View {
-        HSplitView {
-            VStack(alignment: .leading, spacing: 0) {
-                HStack {
-                    BreadcrumbBar(path: model.path) { model.goBack(to: $0) }
-                    Spacer()
-                    Text(folder.bytes.formattedBytes)
-                        .font(.headline.monospacedDigit())
+        VStack(spacing: 0) {
+            HStack(spacing: 10) {
+                if model.path.count > 1 {
+                    Button { model.goUp() } label: { Image(systemName: "chevron.left") }
+                        .buttonStyle(PillButtonStyle())
+                        .help(Text("Back"))
                 }
-                .padding(12)
-                if folder.isAccessDenied, folder.children.isEmpty {
-                    FullDiskAccessBanner(unreadableCount: 1)
-                        .padding(12)
-                }
-                BubbleCanvas(folder: folder, revision: model.revision,
-                             isSelected: { model.isSelected($0) },
-                             onOpen: { model.open($0) },
-                             onToggle: { model.toggle($0) })
-                    .id(ObjectIdentifier(folder))
+                BreadcrumbBar(path: model.path) { model.goBack(to: $0) }
+                Spacer()
+                Text(folder.bytes.formattedBytes)
+                    .font(.system(size: 17, weight: .semibold))
+                    .monospacedDigit()
+                Button { chooseFolder() } label: { Label("Choose Folder…", systemImage: "folder") }
+                    .buttonStyle(PillButtonStyle())
+                    .disabled(model.phase == .removing)
+                Button { model.rescan() } label: { Label("Scan Again", systemImage: "arrow.clockwise") }
+                    .buttonStyle(PillButtonStyle())
+                    .disabled(model.phase != .ready)
             }
-            .frame(minWidth: 420)
+            .padding(.horizontal, 20)
+            .padding(.vertical, 12)
 
-            VStack(spacing: 0) {
-                FolderContentsList(folder: folder, revision: model.revision, model: model)
-                Divider()
-                HStack {
-                    Text("Selected: \(model.selectedBytes.formattedBytes)")
-                        .monospacedDigit()
-                        .foregroundStyle(.secondary)
-                    Spacer()
-                    if model.phase == .removing {
-                        ProgressView().controlSize(.small)
-                    }
-                    Button("Move to Trash…") { confirming = true }
-                        .disabled(model.selection.isEmpty || model.phase != .ready)
-                }
-                .padding(12)
+            if folder.isAccessDenied, folder.children.isEmpty {
+                FullDiskAccessBanner(unreadableCount: 1)
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 8)
             }
-            .frame(minWidth: 260, idealWidth: 300, maxWidth: 420)
+
+            HSplitView {
+                CardSurface(padding: 8) {
+                    BubbleCanvas(folder: folder, revision: model.revision,
+                                 isSelected: { model.isSelected($0) },
+                                 onOpen: { model.open($0) },
+                                 onToggle: { model.toggle($0) })
+                        .id(ObjectIdentifier(folder))
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
+                .padding(.leading, 20)
+                .padding(.trailing, 6)
+                .padding(.bottom, 12)
+                .frame(minWidth: 420)
+
+                FolderContentsList(folder: folder, revision: model.revision, model: model)
+                    .cardList()
+                    .padding(.leading, 6)
+                    .padding(.trailing, 20)
+                    .padding(.bottom, 12)
+                    .frame(minWidth: 280, idealWidth: 320, maxWidth: 440)
+            }
+
+            SelectionFooter(selectedBytes: model.selectedBytes, isBusy: model.phase == .removing) {
+                Button {
+                    confirming = true
+                } label: {
+                    Label("Move to Trash…", systemImage: "trash")
+                }
+                .buttonStyle(GlowButtonStyle.destructive)
+                .disabled(model.selection.isEmpty || model.phase != .ready)
+            }
         }
     }
 

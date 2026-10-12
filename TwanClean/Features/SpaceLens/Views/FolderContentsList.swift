@@ -10,20 +10,23 @@ struct FolderContentsList: View {
         List {
             ForEach(folder.children) { node in
                 HStack(spacing: 8) {
-                    Toggle(node.name, isOn: Binding(get: { model.isSelected(node) }, set: { _ in model.toggle(node) }))
-                        .toggleStyle(.checkbox)
-                        .labelsHidden()
-                    Image(systemName: icon(for: node))
-                        .foregroundStyle(node.isAccessDenied ? .orange : .secondary)
-                        .frame(width: 16)
+                    Toggle(isOn: Binding(get: { model.isSelected(node) }, set: { _ in model.toggle(node) })) {
+                        EmptyView()
+                    }
+                    .toggleStyle(.tintedCheckbox(Tint.cyan))
+                    .accessibilityLabel(Text(node.name))
+                    IconTile(systemName: icon(for: node), tint: node.isAccessDenied ? Tint.orange : Tint.cyan,
+                             size: 22, corner: 6)
                     Text(node.name)
                         .lineLimit(1)
                         .truncationMode(.middle)
                     Spacer()
                     Text(node.bytes.formattedBytes)
+                        .font(.system(size: 12, weight: .semibold))
                         .monospacedDigit()
                         .foregroundStyle(.secondary)
                 }
+                .padding(.vertical, 1)
                 .contentShape(Rectangle())
                 .onTapGesture(count: 2) { model.open(node) }
                 .contextMenu {
@@ -50,9 +53,9 @@ struct FolderContentsList: View {
     private func icon(for node: SizeNode) -> String {
         if node.isAccessDenied { return "lock.fill" }
         switch node.kind {
-        case .folder: return "folder"
-        case .package: return "shippingbox"
-        case .file: return "doc"
+        case .folder: return "folder.fill"
+        case .package: return "shippingbox.fill"
+        case .file: return "doc.fill"
         case .symlink: return "arrow.turn.up.right"
         }
     }

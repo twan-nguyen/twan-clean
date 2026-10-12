@@ -89,9 +89,13 @@ struct BubbleCanvas: View {
     private func draw(_ bubble: Bubble, in context: inout GraphicsContext, highlighted: Bool) {
         let circle = Path(ellipseIn: bubble.frame)
         let color = fill(for: bubble)
-        context.fill(circle, with: .color(color.opacity(highlighted ? 0.55 : 0.35)))
+        context.fill(circle, with: .radialGradient(
+            Gradient(colors: [color.opacity(highlighted ? 0.35 : 0.18), color.opacity(highlighted ? 0.6 : 0.42)]),
+            center: CGPoint(x: bubble.frame.midX, y: bubble.frame.midY - bubble.frame.height * 0.2),
+            startRadius: 0, endRadius: bubble.frame.width * 0.7))
         let selected: Bool = if case .node(let node) = bubble.content { isSelected(node) } else { false }
-        context.stroke(circle, with: .color(selected ? .accentColor : color), lineWidth: selected ? 3 : 1)
+        context.stroke(circle, with: .color(selected ? Tint.blue : color.opacity(highlighted ? 1 : 0.7)),
+                       lineWidth: selected ? 3 : 1)
 
         guard bubble.frame.width > 56 else { return }
         let title: String = switch bubble.content {
@@ -99,18 +103,22 @@ struct BubbleCanvas: View {
         case .others: String(localized: "Other")
         }
         let label = Text(verbatim: "\(title)\n\(bubble.bytes.formattedBytes)")
-            .font(.system(size: min(13, bubble.frame.width / 9)))
+            .font(.system(size: min(13, bubble.frame.width / 9), weight: .medium))
         context.draw(context.resolve(label), in: bubble.frame.insetBy(dx: bubble.frame.width * 0.18,
                                                                      dy: bubble.frame.height * 0.3))
     }
 
+    /// Folders cycle through the palette so neighbours stand apart; files
+    /// stay grey and unreadable folders orange.
+    private static let palette = [Tint.cyan, Tint.blue, Tint.purple, Tint.pink, Tint.orange,
+                                  Tint.yellow, Tint.green, Tint.teal, Tint.indigo, Tint.mint]
+
     private func fill(for bubble: Bubble) -> Color {
         guard case .node(let node) = bubble.content else { return .gray }
-        if node.isAccessDenied { return .orange }
+        if node.isAccessDenied { return Tint.orange }
         switch node.kind {
-        case .folder: return .accentColor
-        case .package: return .purple
-        case .file, .symlink: return .teal
+        case .folder, .package: return Self.palette[bubble.id % Self.palette.count]
+        case .file, .symlink: return .gray
         }
     }
 }

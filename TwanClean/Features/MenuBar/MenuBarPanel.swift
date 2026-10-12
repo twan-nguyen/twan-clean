@@ -20,14 +20,21 @@ struct MenuBarPanel: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Twan Clean")
-                .font(.headline)
+            HStack(spacing: 10) {
+                Image(nsImage: NSApplication.shared.applicationIconImage)
+                    .resizable()
+                    .frame(width: 28, height: 28)
+                Text("Twan Clean")
+                    .font(.system(size: 14, weight: .bold))
+            }
             if let disk {
-                VStack(alignment: .leading, spacing: 4) {
-                    ProgressView(value: Double(disk.usedBytes), total: Double(max(disk.totalBytes, 1)))
+                VStack(alignment: .leading, spacing: 6) {
+                    let used = Double(disk.usedBytes) / Double(max(disk.totalBytes, 1))
+                    GradientProgressBar(progress: used, tint: used >= 0.85 ? Tint.orange : Tint.teal)
                     Text("\(disk.availableBytes.formattedBytes) available of \(disk.totalBytes.formattedBytes)")
                         .font(.caption)
                         .foregroundStyle(.secondary)
+                        .monospacedDigit()
                 }
             }
             Divider()
@@ -55,7 +62,9 @@ struct MenuBarPanel: View {
                 appModel.smartScan.scan()
             } label: {
                 Label("Smart Scan", systemImage: "sparkles")
+                    .frame(maxWidth: .infinity)
             }
+            .buttonStyle(GlowButtonStyle())
             Button {
                 dismiss()
                 appModel.showMainWindow()

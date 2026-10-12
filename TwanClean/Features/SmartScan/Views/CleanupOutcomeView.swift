@@ -9,14 +9,14 @@ struct CleanupOutcomeView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            HStack(spacing: 12) {
-                Image(systemName: outcome.failures.isEmpty && outcome.needsAdministrator.isEmpty
-                      ? "checkmark.circle.fill" : "exclamationmark.circle.fill")
-                    .font(.largeTitle)
-                    .foregroundStyle(outcome.failures.isEmpty && outcome.needsAdministrator.isEmpty ? .green : .orange)
-                VStack(alignment: .leading) {
+            HStack(spacing: 14) {
+                let complete = outcome.failures.isEmpty && outcome.needsAdministrator.isEmpty
+                IconTile(systemName: complete ? "checkmark" : "exclamationmark",
+                         tint: complete ? Tint.green : Tint.orange, size: 52, corner: 26, glow: true)
+                VStack(alignment: .leading, spacing: 2) {
                     Text("Freed \(outcome.freedBytes.formattedBytes)")
-                        .font(.title2.bold())
+                        .font(.system(size: 22, weight: .bold))
+                        .monospacedDigit()
                     Text("\(outcome.removedCount) items removed")
                         .foregroundStyle(.secondary)
                 }
@@ -33,12 +33,14 @@ struct CleanupOutcomeView: View {
                             dismiss()
                             onRetryWithAdministrator()
                         }
+                        .buttonStyle(PillButtonStyle())
                     } else {
                         Text("Give Twan Clean Full Disk Access first; many of these items only need that. Then clean again.")
                             .foregroundStyle(.secondary)
                         Button("Open Full Disk Access Settings") {
                             FullDiskAccess.openSystemSettings()
                         }
+                        .buttonStyle(PillButtonStyle())
                     }
                 }
                 .fixedSize(horizontal: false, vertical: true)
@@ -64,6 +66,7 @@ struct CleanupOutcomeView: View {
             HStack {
                 Spacer()
                 Button("Done") { dismiss() }
+                    .buttonStyle(GlowButtonStyle(tint: Tint.green, gradient: TintGradient.of(Tint.green)))
                     .keyboardShortcut(.defaultAction)
             }
         }
