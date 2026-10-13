@@ -8,7 +8,7 @@
 - **Space Lens:** đo một thư mục và hiển thị thành bản đồ bong bóng có kích thước theo dung lượng thật. Bấm vào để đi sâu, chọn mục rồi chuyển vào Thùng rác.
 - **Gỡ ứng dụng:** tìm mọi tệp một app đã rải trong các thư mục Library, theo 3 mức Nghiêm ngặt, Nâng cao và Sâu. Trong Finder, Control-click vào app rồi chọn Dịch vụ › Gỡ bằng Twan Clean.
 - **Tệp mồ côi:** cache, log và trạng thái đã lưu của những app đã bị xoá. Mục nào không muốn thấy nữa thì đánh dấu "Luôn bỏ qua".
-- **Dọn theo lịch:** chạy nền kể cả khi app đã đóng. Có thể chỉ quét rồi báo, hoặc tự dọn các mục an toàn. Icon trên menu bar cho xem nhanh dung lượng đĩa và kết quả lần chạy gần nhất.
+- **Dọn theo lịch:** chạy nền kể cả khi app đã đóng. Có thể chỉ quét rồi báo, hoặc tự dọn cache tự tạo lại được. Thùng rác, tệp đính kèm Mail và tệp lớn không bao giờ bị dọn tự động. Icon trên menu bar cho xem nhanh dung lượng đĩa và kết quả lần chạy gần nhất.
 
 ## Cam kết an toàn
 
@@ -60,7 +60,7 @@ Test chỉ chạy trên thư mục tạm, không bao giờ đọc dữ liệu th
 scripts/install.sh
 ```
 
-Script build bản Release, ký lại, chép vào `/Applications/TwanClean.app` rồi mở app. Lệnh `scripts/package-local.sh` thì đóng gói thành `dist/TwanClean-<version>.zip` để mang sang máy khác. App chưa được notarize, nên lần đầu mở trên máy khác phải Control-click › Mở.
+Script build bản Release, ký lại, chép vào `/Applications/TwanClean.app` rồi mở app. Lệnh `scripts/package-local.sh` thì đóng gói thành `dist/TwanClean-<version>.zip` để mang sang máy khác. App chưa được notarize, nên lần đầu mở trên máy khác sẽ bị macOS chặn. Hãy vào System Settings › Privacy & Security rồi bấm "Open Anyway". Từ macOS 15, Control-click › Mở không còn bỏ qua được bước này.
 
 Bản ký ad-hoc bị macOS coi là app mới sau mỗi lần cài, nên quyền Full Disk Access sẽ mất. Để macOS nhớ quyền, tạo chứng chỉ ký tự cấp một lần bằng `scripts/setup-release-secrets.sh` (xem [docs/releasing.md](docs/releasing.md)). Nếu chỉ build trên máy mà không phát hành, dùng hai script con:
 

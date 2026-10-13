@@ -30,17 +30,23 @@ TwanClean/
 Tính năng ──RemovalRequest(url, purpose, identity)──▶ RemovalService
                                                       1. PathPolicy.evaluate(url, purpose)
                                                       2. So identity (dev:inode) với lúc quét
-                                                      3. purpose.mode: xoá hẳn hoặc vào Thùng rác
-   bị chặn vì thiếu quyền ──(người dùng đồng ý)──▶ PrivilegedRemover (staging + SHA-256 + rm -x)
+                                                      3. purpose.mode: xoá hẳn (DescriptorRemover) hoặc vào Thùng rác
+   bị chặn vì thiếu quyền ──(người dùng đồng ý)──▶ PrivilegedRemover (staging + SHA-256 + cd -P + rm -x)
 ```
 
-- Chỉ `Core/Safety` được gọi `removeItem`, `trashItem`, `recycle` và lệnh xoá với quyền root. Các tính năng chỉ gửi `RemovalRequest`.
+- Chỉ `Core/Safety` được xoá dữ liệu người dùng (`DescriptorRemover`, `trashItem`, `recycle`, lệnh xoá với quyền root). Các tính năng chỉ gửi `RemovalRequest`. Ngoại lệ duy nhất là `ProcessRunner` dọn thư mục tạm của chính nó.
+- Xoá hẳn đi theo descriptor (`openat` với `O_NOFOLLOW`, `unlinkat`), kiểm tra identity của thư mục cha và của mục, không đi qua ổ khác, nên không bị symlink chèn vào giữa chừng dẫn sang chỗ khác.
+- Lệnh root chạy dưới `env -i` với `PATH` hệ thống, kiểm tra danh sách bằng `openssl dgst -sha256`, rồi `cd -P` vào thư mục cha đã xác minh identity và xoá theo tên tương đối.
 - `RemovalPurpose` quyết định cả vùng được phép xoá lẫn cách xoá. Chỉ `.regenerableCache` và `.trashContents` bị xoá hẳn; mọi purpose khác đều vào Thùng rác.
 - `PathPolicy`:
   - Chuẩn hoá thư mục cha bằng `realpath`, không đi theo symlink ở thành phần cuối.
-  - So sánh theo Unicode đã chuẩn hoá và không phân biệt hoa thường.
+  - So sánh tên giống APFS: chuẩn hoá Unicode và case folding đầy đủ (ví dụ `ſ` khớp `s`), không bỏ dấu.
   - Từ chối root được bảo vệ, cây hệ thống, khoá và cấu hình trong home, thư mục chuẩn của Library, dữ liệu Apple, app lồng trong app, và mount point.
 - Muốn thêm vùng được phép xoá thì sửa `SafetyRules` và thêm test trong `TwanCleanTests/Safety`.
+
+## Giới hạn đã biết
+
+- `CommandRunner` từ chối công cụ ngoài (brew, npm, yarn, pnpm, docker) nếu group hoặc others ghi được, hoặc chủ sở hữu không phải user hay root. Một công cụ do chính user sở hữu vẫn được chạy, và nó thừa hưởng Full Disk Access của app. Mã độc chạy cùng user vì vậy vẫn có thể giả làm `npm` trong `~/.nvm`.
 
 ## Quyền truy cập
 
@@ -53,7 +59,7 @@ Tính năng ──RemovalRequest(url, purpose, identity)──▶ RemovalService
 - LaunchAgent `Contents/Library/LaunchAgents/com.twan.twanclean.scheduler.plist` được đăng ký qua `SMAppService.agent`.
 - Agent chạy `TwanClean --scheduled-run` mỗi giờ. `ScheduledRunner` tự kiểm tra lịch; chưa đến hạn thì thoát ngay.
 - `RunLock` (flock trên `~/Library/Application Support/TwanClean/scan.lock`) ngăn lượt chạy nền và Quét thông minh trong app chạy cùng lúc.
-- Tự dọn chỉ áp dụng cho mục được chọn sẵn, không cần mật khẩu, và có purpose `.regenerableCache` hoặc `.trashContents`. Tệp lớn và cũ không bao giờ được đưa vào lịch.
+- Tự dọn chỉ áp dụng cho mục được chọn sẵn, không cần mật khẩu, và có purpose `.regenerableCache`. Thùng rác (`.trashContents`), tệp đính kèm Mail, tệp lớn và cũ không bao giờ được dọn tự động.
 
 ## Test
 
