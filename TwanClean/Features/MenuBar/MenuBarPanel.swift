@@ -51,7 +51,7 @@ struct MenuBarPanel: View {
                 }
             }
             if schedule.isEnabled {
-                Text("Next: \(schedule.nextRun(now: Date()), format: .dateTime.weekday().hour().minute())")
+                nextRunLabel
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -74,7 +74,7 @@ struct MenuBarPanel: View {
             Button {
                 dismiss()
                 NSApp.activate(ignoringOtherApps: true)
-                NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+                SettingsOpener.open()
             } label: {
                 Label("Settings…", systemImage: "gearshape")
             }
@@ -88,6 +88,17 @@ struct MenuBarPanel: View {
             disk = DiskSpace.current()
             schedule = ScheduleStore().loadSettings()
             summary = ScheduleStore().loadSummary()
+        }
+    }
+
+    /// A day, not just a weekday: a monthly run is weeks away. A run that is
+    /// already due starts at the next hourly check, never at a time in the past.
+    @ViewBuilder
+    private var nextRunLabel: some View {
+        if let next = schedule.upcomingRun(now: Date()) {
+            Text("Next: \(next, format: .dateTime.weekday().day().month().hour().minute())")
+        } else {
+            Text("Next: within the hour")
         }
     }
 }
