@@ -14,7 +14,7 @@ struct ProcessIdentity: Equatable, Sendable {
         var info = proc_bsdinfo()
         let size = Int32(MemoryLayout<proc_bsdinfo>.size)
         guard proc_pidinfo(pid, PROC_PIDTBSDINFO, 0, &info, size) == size else { return nil }
-        return ProcessIdentity(path: String(cString: path), startSeconds: Int64(info.pbi_start_tvsec),
+        return ProcessIdentity(path: String(nulTerminated: path), startSeconds: Int64(info.pbi_start_tvsec),
                                startMicroseconds: Int64(info.pbi_start_tvusec))
     }
 }

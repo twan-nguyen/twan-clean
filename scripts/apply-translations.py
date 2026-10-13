@@ -3,7 +3,9 @@
 
 Usage: scripts/apply-translations.py <translations.json>
 
-The input maps each English source key to its Vietnamese text. Keys that are
+The input maps each English source key to its Vietnamese text. A key may
+instead map to {"en": {"one": ..., "other": ...}, "vi": ...} to give the
+English source singular and plural forms. Keys that are
 not in the catalog are reported and skipped, so run scripts/sync-strings.sh
 first. Removes keys that are no longer used in source, then prints the keys
 that still lack a Vietnamese translation.
@@ -30,9 +32,18 @@ def main() -> int:
         if entry is None:
             print(f"skipped (not in catalog): {key!r}", file=sys.stderr)
             continue
-        entry.setdefault("localizations", {})[LANGUAGE] = {
-            "stringUnit": {"state": "translated", "value": value}
-        }
+        localizations = entry.setdefault("localizations", {})
+        if isinstance(value, dict):
+            localizations["en"] = {
+                "variations": {
+                    "plural": {
+                        form: {"stringUnit": {"state": "translated", "value": text}}
+                        for form, text in value["en"].items()
+                    }
+                }
+            }
+            value = value["vi"]
+        localizations[LANGUAGE] = {"stringUnit": {"state": "translated", "value": value}}
 
     # Keys no longer used in source are dropped rather than left stale.
     for key in [key for key, entry in strings.items() if entry.get("extractionState") == "stale"]:

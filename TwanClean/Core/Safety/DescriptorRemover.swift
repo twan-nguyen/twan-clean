@@ -101,7 +101,7 @@ enum DescriptorRemover {
             afterListing(path)
             var firstError: Error?
             for child in children {
-                let childPath = path + "/" + String(cString: child.name)
+                let childPath = path + "/" + String(nulTerminated: child.name)
                 do {
                     try removeChild(child, in: fd, path: childPath)
                 } catch {

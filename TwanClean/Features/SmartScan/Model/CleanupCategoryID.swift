@@ -61,7 +61,7 @@ enum CleanupCategoryID: String, CaseIterable, Identifiable, Codable, Sendable {
         case .aiApps: "Chat history is never selected for you."
         case .mail: "The originals stay on the mail server, so Mail can download them again."
         case .largeOld: "Nothing here is selected for you, and removed files go to the Trash. Set the size and age in Settings."
-        case .userCache: "Apps recreate these, so they are deleted rather than moved to the Trash."
+        case .userCache: "Apps recreate most of these, so they are deleted. Folders that may hold your data are not selected and go to the Trash."
         case .systemJunk: "Items macOS or a running app uses, or that need your password, are marked and not selected."
         default: summary
         }

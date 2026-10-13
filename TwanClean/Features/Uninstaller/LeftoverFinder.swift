@@ -201,7 +201,7 @@ struct LeftoverFinder: Sendable {
     private func item(_ url: URL, purpose: RemovalPurpose, match: AppMatcher.Match?, shared: Bool,
                       usedByAnotherCopy: Bool) throws -> LeftoverItem? {
         guard let identity = FileIdentity.of(url) else { return nil }
-        let bytes = try AllocatedSizeCalculator().measure(url).bytes
+        let bytes = try AllocatedSizeCalculator().measure(url).reclaimableBytes
         let needsAdministrator = RemovalService.needsAdministrator(url)
         // Selected for the user: the app itself, and files named exactly after
         // it, containing its whole bundle identifier, or found through its

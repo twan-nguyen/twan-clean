@@ -109,7 +109,7 @@ struct OrphanFinder: Sendable {
                       let identity = FileIdentity.of(canonical) else { continue }
                 let size = try AllocatedSizeCalculator().measure(canonical)
                 guard size.bytes > 0 else { continue }
-                items.append(OrphanItem(url: canonical, identity: identity, bytes: size.bytes,
+                items.append(OrphanItem(url: canonical, identity: identity, bytes: size.reclaimableBytes,
                                         isDirectory: CategoryResultBuilder.isDirectory(canonical),
                                         lastModified: size.latestModification,
                                         requiresAdministrator: RemovalService.needsAdministrator(canonical)))

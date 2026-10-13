@@ -153,7 +153,7 @@ struct CategoryResultBuilder {
 
         result.items.append(CleanableItem(
             url: canonical, category: result.category, identity: identity,
-            isDirectory: Self.isDirectory(canonical), bytes: size.bytes,
+            isDirectory: Self.isDirectory(canonical), bytes: size.reclaimableBytes,
             purpose: purpose, requiresAdministrator: needsAdministrator, selectedByDefault: preselect,
             lastModified: size.latestModification, notes: notes))
     }

@@ -27,6 +27,26 @@
         }
       }
     },
+    "%@ is a link to another app. Uninstall the original app instead." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ là liên kết tới một app khác. Hãy gỡ app gốc thay vào đó."
+          }
+        }
+      }
+    },
+    "%@ is part of macOS or protected, so Twan Clean cannot uninstall it." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ là một phần của macOS hoặc được bảo vệ, nên Twan Clean không thể gỡ."
+          }
+        }
+      }
+    },
     "%@ is running" : {
       "localizations" : {
         "vi" : {
@@ -55,6 +75,24 @@
     },
     "%lld apps" : {
       "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld app"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld apps"
+                }
+              }
+            }
+          }
+        },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
@@ -75,6 +113,24 @@
     },
     "%lld items" : {
       "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld item"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld items"
+                }
+              }
+            }
+          }
+        },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
@@ -85,6 +141,24 @@
     },
     "%lld items failed" : {
       "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld item failed"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld items failed"
+                }
+              }
+            }
+          }
+        },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
@@ -95,6 +169,24 @@
     },
     "%lld items from removed apps" : {
       "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld item from removed apps"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld items from removed apps"
+                }
+              }
+            }
+          }
+        },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
@@ -105,6 +197,24 @@
     },
     "%lld items need more access" : {
       "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld item needs more access"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld items need more access"
+                }
+              }
+            }
+          }
+        },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
@@ -115,6 +225,24 @@
     },
     "%lld items need your password" : {
       "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld item needs your password"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld items need your password"
+                }
+              }
+            }
+          }
+        },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
@@ -125,6 +253,24 @@
     },
     "%lld items removed" : {
       "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld item removed"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld items removed"
+                }
+              }
+            }
+          }
+        },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
@@ -135,6 +281,24 @@
     },
     "%lld items selected" : {
       "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld item selected"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld items selected"
+                }
+              }
+            }
+          }
+        },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
@@ -171,6 +335,24 @@
     },
     "%lld locations skipped" : {
       "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld location skipped"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld locations skipped"
+                }
+              }
+            }
+          }
+        },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
@@ -207,6 +389,24 @@
     },
     "%lld smaller items" : {
       "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld smaller item"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld smaller items"
+                }
+              }
+            }
+          }
+        },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
@@ -325,6 +525,16 @@
         }
       }
     },
+    "Another copy is installed" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Còn một bản khác đang cài"
+          }
+        }
+      }
+    },
     "App Uninstaller" : {
       "localizations" : {
         "vi" : {
@@ -385,12 +595,12 @@
         }
       }
     },
-    "Apps recreate these, so they are deleted rather than moved to the Trash." : {
+    "Apps recreate most of these, so they are deleted. Folders that may hold your data are not selected and go to the Trash." : {
       "localizations" : {
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ứng dụng tự tạo lại các mục này nên chúng bị xoá hẳn thay vì vào Thùng rác."
+            "value" : "Phần lớn mục này được app tự tạo lại nên sẽ bị xoá hẳn. Thư mục có thể chứa dữ liệu của bạn thì không được chọn sẵn và sẽ vào Thùng rác."
           }
         }
       }
@@ -725,6 +935,16 @@
         }
       }
     },
+    "Dismiss" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đóng"
+          }
+        }
+      }
+    },
     "Docker Cache" : {
       "localizations" : {
         "vi" : {
@@ -795,12 +1015,12 @@
         }
       }
     },
-    "Enhanced (recommended): also files whose names contain the app's name or identifier." : {
+    "Enhanced (recommended): also files whose names contain the app's name or identifier, and containers starting with its developer team ID. Only exact matches are selected for you." : {
       "localizations" : {
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nâng cao (nên dùng): thêm cả tệp có tên chứa tên hoặc mã định danh của app."
+            "value" : "Nâng cao (nên dùng): thêm cả tệp có tên chứa tên hoặc mã định danh của app, và các container bắt đầu bằng mã nhóm nhà phát triển. Chỉ những tệp khớp chính xác mới được chọn sẵn."
           }
         }
       }
@@ -1383,6 +1603,24 @@
     },
     "Move %lld Items to Trash" : {
       "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Move %lld Item to Trash"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Move %lld Items to Trash"
+                }
+              }
+            }
+          }
+        },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1393,6 +1631,24 @@
     },
     "Move %lld items to the Trash?" : {
       "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Move %lld item to the Trash?"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "Move %lld items to the Trash?"
+                }
+              }
+            }
+          }
+        },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1487,6 +1743,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Lần tới: %@"
+          }
+        }
+      }
+    },
+    "Next: within the hour" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lần tới: trong vòng một giờ"
           }
         }
       }
@@ -2421,6 +2687,36 @@
         }
       }
     },
+    "The ignore list could not be read, so it was reset." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Không đọc được danh sách bỏ qua nên đã đặt lại."
+          }
+        }
+      }
+    },
+    "The ignore list could not be read, so it was reset. The old file was kept as %@." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Không đọc được danh sách bỏ qua nên đã đặt lại. Tệp cũ được giữ lại với tên %@."
+          }
+        }
+      }
+    },
+    "The ignore list could not be saved: %@" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Không lưu được danh sách bỏ qua: %@"
+          }
+        }
+      }
+    },
     "The item changed after the scan. Scan again to review it." : {
       "localizations" : {
         "vi" : {
@@ -2487,6 +2783,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Bản gốc vẫn ở máy chủ thư, Mail có thể tải lại."
+          }
+        }
+      }
+    },
+    "The scan did not finish" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lượt quét chưa hoàn tất"
           }
         }
       }
@@ -2561,12 +2867,42 @@
         }
       }
     },
+    "Twan Clean can't write to its own data folder, so it can't scan or clean." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Twan Clean không ghi được vào thư mục dữ liệu của chính nó nên không thể quét hay dọn."
+          }
+        }
+      }
+    },
     "Twan Clean compares Library folders with the apps installed now. Nothing is selected for you, and removed files go to the Trash." : {
       "localizations" : {
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Twan Clean so các thư mục Library với app đang cài. Không mục nào được chọn sẵn, và tệp bị xoá sẽ vào Thùng rác."
+          }
+        }
+      }
+    },
+    "Twan Clean could not read the list of installed apps, so it cannot tell which files are left over." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Twan Clean không đọc được danh sách app đã cài, nên không thể xác định tệp nào là tệp còn sót."
+          }
+        }
+      }
+    },
+    "Twan Clean is busy uninstalling another app. Try again in a moment." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Twan Clean đang bận gỡ một app khác. Hãy thử lại sau giây lát."
           }
         }
       }

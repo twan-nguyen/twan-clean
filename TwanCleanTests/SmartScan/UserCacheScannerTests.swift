@@ -52,6 +52,13 @@ final class UserCacheScannerTests: XCTestCase {
         XCTAssertGreaterThanOrEqual(items["com.example.editor"]?.bytes ?? 0, 8_192)
     }
 
+    func testFilesHardLinkedOutsideTheCacheAreNotCountedAsFreed() async throws {
+        let shared = try tree.makeFile("home/Library/Caches/com.example.store/blob", bytes: 65_536)
+        try FileManager.default.linkItem(at: shared, to: tree.url("home/project-copy"))
+        let items = try await scan()
+        XCTAssertEqual(items["com.example.store"]?.bytes, 0)
+    }
+
     // MARK: - ~/.cache
 
     func testOnlyKnownRegenerableDotCacheFoldersArePreselected() async throws {

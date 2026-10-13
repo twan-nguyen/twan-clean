@@ -14,7 +14,7 @@ enum ProcessList {
         var path = [CChar](repeating: 0, count: 4 * Int(MAXPATHLEN))
         return pids.prefix(Int(count)).compactMap { pid in
             guard pid > 0, proc_pidpath(pid, &path, UInt32(path.count)) > 0 else { return nil }
-            return (pid, String(cString: path))
+            return (pid, String(nulTerminated: path))
         }
     }
 
