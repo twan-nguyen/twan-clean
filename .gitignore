@@ -19,3 +19,6 @@ dist/
 
 # Local agent notes
 .claude/agent-memory/
+
+# Plans, review reports and journals stay local
+plans/
