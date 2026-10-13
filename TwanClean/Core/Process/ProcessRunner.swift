@@ -24,9 +24,11 @@ struct ProcessResult: Sendable {
 /// when a program writes a lot before it is read, and a child process the
 /// program leaves behind can hold a pipe open forever; files avoid both.
 enum ProcessRunner {
-    /// Nil when the program could not be started.
+    /// Nil when the program could not be started. A program still running at
+    /// the timeout, or when the calling task is cancelled, is asked to stop
+    /// and killed if it has not after `terminationGrace` seconds.
     static func run(_ executable: URL, _ arguments: [String], environment: [String: String]? = nil,
-                    timeout: TimeInterval? = nil) async -> ProcessResult? {
+                    timeout: TimeInterval? = nil, terminationGrace: TimeInterval = 2) async -> ProcessResult? {
         let folder = FileManager.default.temporaryDirectory
             .appendingPathComponent("TwanClean-process-\(UUID().uuidString)", isDirectory: true)
         guard (try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: false,
@@ -53,23 +55,30 @@ enum ProcessRunner {
         process.standardOutput = outputHandle
         process.standardError = errorHandle
 
-        let outcome = await withCheckedContinuation { (continuation: CheckedContinuation<Outcome, Never>) in
-            let resumer = ResumeOnce(continuation)
-            process.terminationHandler = { process in
-                resumer.resume(.finished(normally: process.terminationReason == .exit, status: process.terminationStatus))
-            }
-            do {
-                try process.run()
-            } catch {
-                resumer.resume(.notStarted)
-                return
-            }
-            if let timeout {
-                DispatchQueue.global().asyncAfter(deadline: .now() + timeout) {
-                    if process.isRunning { process.terminate() }
-                    resumer.resume(.timedOut)
+        let stopper = Stopper(process, grace: terminationGrace)
+        let outcome = await withTaskCancellationHandler {
+            await withCheckedContinuation { (continuation: CheckedContinuation<Outcome, Never>) in
+                let resumer = ResumeOnce(continuation)
+                process.terminationHandler = { process in
+                    resumer.resume(.finished(normally: process.terminationReason == .exit, status: process.terminationStatus))
+                }
+                do {
+                    try process.run()
+                } catch {
+                    resumer.resume(.notStarted)
+                    return
+                }
+                // A cancellation that arrived before the program started.
+                stopper.startedRunning()
+                if let timeout {
+                    DispatchQueue.global().asyncAfter(deadline: .now() + timeout) {
+                        stopper.stop()
+                        resumer.resume(.timedOut)
+                    }
                 }
             }
+        } onCancel: {
+            stopper.stop()
         }
 
         let output = (try? Data(contentsOf: outputURL)) ?? Data()
@@ -89,6 +98,48 @@ enum ProcessRunner {
         case notStarted
         case timedOut
         case finished(normally: Bool, status: Int32)
+    }
+
+    /// Stops a program politely with SIGTERM, then with SIGKILL if it ignores
+    /// that. Safe to call from any thread and any number of times.
+    private final class Stopper: @unchecked Sendable {
+        private let process: Process
+        private let grace: TimeInterval
+        private let lock = NSLock()
+        private var stopRequested = false
+        private var running = false
+
+        init(_ process: Process, grace: TimeInterval) {
+            self.process = process
+            self.grace = grace
+        }
+
+        func startedRunning() {
+            lock.lock()
+            running = true
+            let pending = stopRequested
+            lock.unlock()
+            if pending { terminate() }
+        }
+
+        func stop() {
+            lock.lock()
+            let first = !stopRequested
+            stopRequested = true
+            let started = running
+            lock.unlock()
+            if first, started { terminate() }
+        }
+
+        private func terminate() {
+            guard process.isRunning else { return }
+            process.terminate()
+            DispatchQueue.global().asyncAfter(deadline: .now() + grace) {
+                // `isRunning` is checked again so a pid that was reused after
+                // a normal exit is never signalled.
+                if self.process.isRunning { kill(self.process.processIdentifier, SIGKILL) }
+            }
+        }
     }
 
     /// Resumes a continuation exactly once, whichever of exit or timeout
