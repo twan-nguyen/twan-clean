@@ -281,7 +281,8 @@ final class UninstallerViewModel: ObservableObject {
         defer { phase = .idle }
 
         await unloadLaunchAgents(in: items)
-        await stopBundledAgents(of: app)
+        // The app's own agents go with the app; kept, they keep running.
+        if items.contains(where: { $0.purpose == .appBundle }) { await stopBundledAgents(of: app) }
         let stillRunning = await quit(app, force: forceQuit)
         guard stillRunning.isEmpty else {
             var outcome = CleanupOutcome(RemovalReport())

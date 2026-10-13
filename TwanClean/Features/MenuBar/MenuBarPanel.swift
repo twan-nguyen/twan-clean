@@ -50,7 +50,8 @@ struct MenuBarPanel: View {
                     }
                 }
             }
-            if schedule.isEnabled {
+            // A task still waiting for approval in Login Items never runs.
+            if schedule.isEnabled && SchedulerAgent.status == .enabled {
                 nextRunLabel
                     .font(.caption)
                     .foregroundStyle(.secondary)

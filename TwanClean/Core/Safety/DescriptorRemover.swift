@@ -152,8 +152,10 @@ enum DescriptorRemover {
             defer { closedir(directory) }
 
             var children: [Child] = []
-            errno = 0
-            while let entry = readdir(directory) {
+            while true {
+                // readdir reports an error only through errno.
+                errno = 0
+                guard let entry = readdir(directory) else { break }
                 let length = Int(entry.pointee.d_namlen)
                 let name: [CChar] = withUnsafePointer(to: &entry.pointee.d_name) { tuple in
                     tuple.withMemoryRebound(to: CChar.self, capacity: length + 1) {

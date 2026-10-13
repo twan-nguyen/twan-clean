@@ -184,7 +184,7 @@ struct CategoryResultBuilder {
         return lstat(url.path, &status) == 0 && (status.st_mode & S_IFMT) == S_IFDIR
     }
 
-    private static let xcodeCachePrefix = "com.apple.dt."
+    private static let xcodeCachePrefix = "com.apple.dt.xcode"
 
     static let ignoredNames: Set<String> = [".DS_Store", ".localized", ".com.apple.timemachine.supported"]
 }

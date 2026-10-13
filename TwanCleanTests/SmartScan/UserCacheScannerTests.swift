@@ -52,6 +52,12 @@ final class UserCacheScannerTests: XCTestCase {
         XCTAssertGreaterThanOrEqual(items["com.example.editor"]?.bytes ?? 0, 8_192)
     }
 
+    func testOtherDeveloperToolCachesOfAppleAreNotPreselected() async throws {
+        try tree.makeFile("home/Library/Caches/com.apple.dt.instruments/cache.db", bytes: 8_192)
+        let items = try await scan()
+        XCTAssertEqual(items["com.apple.dt.instruments"]?.selectedByDefault, false)
+    }
+
     func testFilesHardLinkedOutsideTheCacheAreNotCountedAsFreed() async throws {
         let shared = try tree.makeFile("home/Library/Caches/com.example.store/blob", bytes: 65_536)
         try FileManager.default.linkItem(at: shared, to: tree.url("home/project-copy"))

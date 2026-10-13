@@ -35,7 +35,7 @@ Tính năng ──RemovalRequest(url, purpose, identity)──▶ RemovalService
 ```
 
 - Chỉ `Core/Safety` được xoá dữ liệu người dùng (`DescriptorRemover`, `trashItem`, `recycle`, lệnh xoá với quyền root). Các tính năng chỉ gửi `RemovalRequest`. Ngoại lệ duy nhất là `ProcessRunner` dọn thư mục tạm của chính nó.
-- Xoá hẳn đi theo descriptor (`openat` với `O_NOFOLLOW`, `unlinkat`), kiểm tra identity của thư mục cha và của mục, không đi qua ổ khác, nên không bị symlink chèn vào giữa chừng dẫn sang chỗ khác.
+- Xoá hẳn đi theo descriptor (`openat` với `O_NOFOLLOW`, `unlinkat`), kiểm tra identity của mục ngay trước khi xoá và của từng thư mục con sau khi mở, không đi qua ổ khác, nên không bị symlink chèn vào giữa chừng dẫn sang chỗ khác.
 - Lệnh root chạy dưới `env -i` với `PATH` hệ thống, kiểm tra danh sách bằng `openssl dgst -sha256`, rồi `cd -P` vào thư mục cha đã xác minh identity và xoá theo tên tương đối.
 - `RemovalPurpose` quyết định cả vùng được phép xoá lẫn cách xoá. Chỉ `.regenerableCache` và `.trashContents` bị xoá hẳn; mọi purpose khác đều vào Thùng rác.
 - `PathPolicy`:

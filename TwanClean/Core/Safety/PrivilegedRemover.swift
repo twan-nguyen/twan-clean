@@ -265,7 +265,10 @@ struct PrivilegedRemover: Sendable {
     static let osascriptTimeout: TimeInterval = 600
 
     static let runWithOsascript: ScriptRunner = { script in
-        await ProcessRunner.run(URL(fileURLWithPath: "/usr/bin/osascript"), ["-e", script], timeout: osascriptTimeout)
+        // The shell `do shell script` starts as root inherits this environment
+        // before the command's own `env -i` runs, so it gets a clean one too.
+        await ProcessRunner.run(URL(fileURLWithPath: "/usr/bin/osascript"), ["-e", script],
+                                environment: ["PATH": "/usr/bin:/bin:/usr/sbin:/sbin"], timeout: osascriptTimeout)
     }
 
     /// Gone, or replaced by a new object such as a cache folder an app
