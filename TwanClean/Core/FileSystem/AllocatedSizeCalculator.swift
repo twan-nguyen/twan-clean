@@ -15,13 +15,22 @@ final class SizingSession: @unchecked Sendable {
 }
 
 struct SizeMeasurement: Equatable, Sendable {
+    /// Space the items occupy, a hard-linked file counted once.
     var bytes: Int64 = 0
+    /// The part of `bytes` held by files that have other hard links outside
+    /// the measured items (a pnpm store shares its files with project
+    /// folders, say). Removing the items leaves those files on disk.
+    var sharedBytes: Int64 = 0
     var fileCount = 0
     /// Folders that could not be listed and items that could not be examined,
     /// so `bytes` is a lower bound when > 0.
     var unreadableEntries = 0
     /// Newest modification date of any file inside.
     var latestModification: Date?
+
+    /// What removing the items frees: `bytes` without the shared files. Use
+    /// this, not `bytes`, for any "space to reclaim" figure.
+    var reclaimableBytes: Int64 { bytes - sharedBytes }
 }
 
 /// Measures the space items really occupy on disk: allocated blocks rather
@@ -36,11 +45,19 @@ struct AllocatedSizeCalculator: Sendable {
 
     func measure(_ url: URL) throws -> SizeMeasurement {
         var result = SizeMeasurement()
+        // Multi-link files: how many of their links were met inside this
+        // measurement, how many exist, and the bytes counted for them.
+        var linked: [FileIdentity: (met: Int, total: Int, bytes: Int64)] = [:]
         try FileTreeWalker.walk(url) { entry in
             switch entry.kind {
             case .file, .symlink:
-                if entry.linkCount > 1, let identity = entry.identity, !session.claim(identity) {
-                    return .continue
+                if entry.linkCount > 1, let identity = entry.identity {
+                    let firstClaim = session.claim(identity)
+                    var link = linked[identity] ?? (met: 0, total: entry.linkCount,
+                                                    bytes: firstClaim ? entry.allocatedBytes : 0)
+                    link.met += 1
+                    linked[identity] = link
+                    if !firstClaim { return .continue }
                 }
                 result.bytes += entry.allocatedBytes
                 result.fileCount += 1
@@ -54,6 +71,7 @@ struct AllocatedSizeCalculator: Sendable {
             }
             return .continue
         }
+        result.sharedBytes = linked.values.reduce(0) { $0 + ($1.met < $1.total ? $1.bytes : 0) }
         return result
     }
 }

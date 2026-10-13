@@ -18,6 +18,13 @@ final class AllocatedSizeCalculatorTests: XCTestCase {
         return Int64(status.st_blocks) * 512
     }
 
+    /// A path in the tree whose folder exists, for a file about to be created.
+    private func newPath(_ relative: String) throws -> URL {
+        let url = tree.url(relative)
+        try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+        return url
+    }
+
     func testCountsAllocatedBlocksIncludingHiddenFiles() throws {
         let visible = try tree.makeFile("data/visible.bin", bytes: 10_000)
         let hidden = try tree.makeFile("data/.hidden.bin", bytes: 5_000)
@@ -36,6 +43,40 @@ final class AllocatedSizeCalculatorTests: XCTestCase {
         let size = try AllocatedSizeCalculator().measure(tree.url("data"))
 
         XCTAssertEqual(size.bytes, blocks(original))
+    }
+
+    func testHardLinksAllInsideTheTreeAreFullyReclaimable() throws {
+        let original = try tree.makeFile("data/original.bin", bytes: 20_000)
+        try FileManager.default.linkItem(at: original, to: try newPath("data/sub/link.bin"))
+
+        let size = try AllocatedSizeCalculator().measure(tree.url("data"))
+
+        XCTAssertEqual(size.bytes, blocks(original))
+        XCTAssertEqual(size.sharedBytes, 0)
+        XCTAssertEqual(size.reclaimableBytes, blocks(original))
+    }
+
+    func testFileLinkedFromOutsideTheTreeIsNotReclaimable() throws {
+        let store = try tree.makeFile("store/pkg.bin", bytes: 20_000)
+        let own = try tree.makeFile("store/own.bin", bytes: 8_000)
+        try FileManager.default.linkItem(at: store, to: try newPath("project/node_modules/pkg.bin"))
+
+        let size = try AllocatedSizeCalculator().measure(tree.url("store"))
+
+        XCTAssertEqual(size.bytes, blocks(store) + blocks(own))
+        XCTAssertEqual(size.sharedBytes, blocks(store))
+        XCTAssertEqual(size.reclaimableBytes, blocks(own))
+    }
+
+    func testPartlyLinkedInsideStillCountsAsSharedWhileAnyLinkIsOutside() throws {
+        let original = try tree.makeFile("data/a.bin", bytes: 20_000)
+        try FileManager.default.linkItem(at: original, to: tree.url("data/b.bin"))
+        try FileManager.default.linkItem(at: original, to: try newPath("elsewhere/c.bin"))
+
+        let size = try AllocatedSizeCalculator().measure(tree.url("data"))
+
+        XCTAssertEqual(size.bytes, blocks(original))
+        XCTAssertEqual(size.reclaimableBytes, 0)
     }
 
     func testSessionDeduplicatesHardLinksAcrossMeasurements() throws {
