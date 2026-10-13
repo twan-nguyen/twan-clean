@@ -46,6 +46,8 @@ struct SafetyRules: Sendable {
         [
             "/System", "/usr", "/bin", "/sbin", "/private/etc", "/Library/Apple",
             "/Library/Keychains", "/Library/SystemExtensions", "/Library/Preferences/SystemConfiguration",
+            "/Library/Preferences/OpenDirectory",
+            "/Library/Application Support/Apple", "/Library/Application Support/CrashReporter",
             "\(home)/Library/Keychains",
             "\(home)/Library/Mobile Documents",
             "\(home)/Library/CloudStorage",
@@ -57,6 +59,10 @@ struct SafetyRules: Sendable {
             "\(home)/Library/Application Support/AddressBook",
             "\(home)/Library/Application Support/MobileSync",
             "\(home)/Library/Application Support/com.apple.TCC",
+            // Private data macOS keeps under names without a com.apple. prefix.
+            "\(home)/Library/Application Support/CallHistoryDB",
+            "\(home)/Library/Application Support/Knowledge",
+            "\(home)/Library/Metadata",
         ] + highRiskHomeItems.map { "\(home)/\($0)" }
     }
 

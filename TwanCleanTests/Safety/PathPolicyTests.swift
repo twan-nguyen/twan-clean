@@ -175,6 +175,32 @@ final class PathPolicyTests: XCTestCase {
         assertRefused(home.url("Library/Caches/com.apple.Safari/sub"), .orphan, .appleItem)
     }
 
+    func testTeamPrefixedAppleGroupContainersAreRefused() throws {
+        let podcasts = try tree.makeDirectory("home/Library/Group Containers/243LU875E5.groups.com.apple.podcasts")
+        assertRefused(podcasts, .appLeftover, .appleItem)
+        assertAllowed(try tree.makeDirectory("home/Library/Group Containers/ABCDE12345.com.example.suite"), .appLeftover)
+    }
+
+    func testAppleDataWithoutAnAppleNameIsRefusedForEveryPurpose() throws {
+        for folder in ["Application Support/CallHistoryDB", "Application Support/Knowledge", "Metadata/CoreSpotlight"] {
+            let item = try tree.makeDirectory("home/Library/\(folder)")
+            for purpose in RemovalPurpose.allCases {
+                assertRefused(item, purpose, .systemLocation)
+            }
+        }
+        try tree.makeDirectory("home/Library/Metadata")
+        assertRefused(home.url("Library/Metadata"), .appLeftover, .systemLocation)
+        for path in ["/Library/Application Support/Apple", "/Library/Application Support/CrashReporter",
+                     "/Library/Preferences/OpenDirectory"] {
+            assertRefused(URL(fileURLWithPath: path), .appLeftover, .systemLocation)
+        }
+    }
+
+    func testUsersOwnCrashReportsRemainAnOrphanTarget() throws {
+        let reports = try tree.makeDirectory("home/Library/Application Support/CrashReporter/old.crash")
+        assertAllowed(reports, .orphan)
+    }
+
     func testNetworkSettingsAreNeverLeftovers() {
         assertRefused(URL(fileURLWithPath: "/Library/Preferences/SystemConfiguration"), .appLeftover, .systemLocation)
     }
@@ -213,6 +239,23 @@ final class PathPolicyTests: XCTestCase {
     func testCombiningMarkCannotSlipPastForbiddenTrees() throws {
         try tree.makeDirectory("home/.ssh")
         assertRefused(home.url(".ssh/\u{301}evil"), .userFile, .systemLocation)
+    }
+
+    func testNamesFoldTheWayAPFSDoes() throws {
+        try tree.makeDirectory("home/.ssh")
+        // The volume treats the long s as "s" and the ligature as "st".
+        assertRefused(home.url(".\u{17F}sh"), .userFile, .systemLocation)
+        assertRefused(home.url(".ru\u{FB06}up"), .userFile, .systemLocation)
+        XCTAssertTrue(PathPolicy.isSame("/a/Stra\u{DF}e", "/a/STRASSE"))
+        // It keeps accents apart, so "caf\u{E9}" is not "cafe".
+        XCTAssertFalse(PathPolicy.isSame("/a/caf\u{E9}", "/a/cafe"))
+    }
+
+    func testAppleNamesAreRecognisedAfterFolding() throws {
+        let item = try tree.makeDirectory("home/Library/Caches/COM.APPLE.Safari")
+        assertRefused(item, .orphan, .appleItem)
+        let folded = try tree.makeDirectory("home/Library/Caches/com.apple.\u{FB06}uff")
+        assertRefused(folded, .orphan, .appleItem)
     }
 
     func testDecomposedNamesMatchComposedRules() throws {

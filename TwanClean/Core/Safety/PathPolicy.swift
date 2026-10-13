@@ -92,9 +92,11 @@ struct PathPolicy: Sendable {
         return nil
     }
 
+    /// Apple's own identifiers, including team-prefixed group containers such
+    /// as "243LU875E5.groups.com.apple.podcasts".
     private static func isAppleName(_ name: String) -> Bool {
-        let lowered = name.lowercased()
-        return lowered.hasPrefix("com.apple.") || lowered.hasPrefix("group.com.apple.")
+        let folded = fold(name)
+        return folded.hasPrefix("com.apple.") || folded.contains(".com.apple.")
     }
 
     private static func isAppBundleName(_ name: String) -> Bool {
@@ -114,8 +116,18 @@ struct PathPolicy: Sendable {
     // starts with a combining mark merge with the "/" before it and slip past
     // a prefix check.
 
+    /// Folds a name the way APFS does. Full case folding is needed because
+    /// `lowercased()` leaves the long s (U+017F) and ligatures such as U+FB06
+    /// alone, yet the volume treats them as "s" and "st". Accents are kept,
+    /// because APFS does not fold them.
+    static func fold(_ text: String) -> String {
+        text.precomposedStringWithCanonicalMapping
+            .folding(options: [.caseInsensitive], locale: nil)
+            .precomposedStringWithCanonicalMapping
+    }
+
     private static func key(_ path: String) -> [Unicode.Scalar] {
-        Array(path.precomposedStringWithCanonicalMapping.lowercased().unicodeScalars)
+        Array(fold(path).unicodeScalars)
     }
 
     static func isSame(_ path: String, _ other: String) -> Bool {
