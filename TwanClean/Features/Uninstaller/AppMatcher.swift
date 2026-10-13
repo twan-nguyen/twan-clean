@@ -47,6 +47,11 @@ struct AppMatcher: Sendable {
         let isExact: Bool
         /// Length of the matched token; a longer token is a more specific claim.
         let length: Int
+
+        /// Certain enough to select without asking: the name equals a token,
+        /// or contains the whole bundle identifier. A name that merely
+        /// contains the app's name, or an override term, is only listed.
+        var isCertain: Bool { isExact || tier == .bundleIdentifier }
     }
 
     static let minimumTokenLength = 5
@@ -60,6 +65,10 @@ struct AppMatcher: Sendable {
     let sensitivity: SearchSensitivity
     let tokens: [Token]
     let override: AppOverride?
+    /// Home-relative folders that always belong to the app. Only the app with
+    /// the override's own identifier gets them: a beta or a canary build shares
+    /// the family but keeps its data in other folders.
+    let extraFolders: [String]
     private let teamPrefix: String?
     /// The bundle identifier as written, lowercased, for matching on
     /// identifier boundaries.
@@ -67,7 +76,9 @@ struct AppMatcher: Sendable {
 
     init(app: InstalledApp, sensitivity: SearchSensitivity) {
         self.sensitivity = sensitivity
-        override = AppOverride.matching(app.bundleIdentifier)
+        let override = AppOverride.matching(app.bundleIdentifier)
+        self.override = override
+        extraFolders = override.flatMap { $0.family == app.bundleIdentifier.lowercased() ? $0.extraFolders : nil } ?? []
         teamPrefix = app.teamIdentifier.map { $0.lowercased() }
         bundleIdentifier = app.bundleIdentifier.lowercased()
 
@@ -75,7 +86,7 @@ struct AppMatcher: Sendable {
             (.bundleIdentifier, app.bundleIdentifier),
             (.displayName, app.name),
             (.fileStem, app.fileStem),
-            (.lettersOnlyName, app.name.filter(\.isLetter)),
+            (.lettersOnlyName, app.name.filter { $0.isLetter || $0.isNumber }),
         ]
         if sensitivity != .strict {
             let parts = app.bundleIdentifier.split(separator: ".").map(String.init)
@@ -133,6 +144,11 @@ struct AppMatcher: Sendable {
             if contained { return Match(tier: token.tier, isExact: false, length: token.value.count) }
         }
         return nil
+    }
+
+    /// Whether the app owns the home-relative `folder` through its override.
+    func claims(homeRelativeFolder folder: String) -> Bool {
+        extraFolders.contains { $0.caseInsensitiveCompare(folder) == .orderedSame }
     }
 
     private static func containsOnBoundary(_ text: String, _ word: String) -> Bool {
@@ -201,7 +217,8 @@ struct AppOverride: Sendable {
         AppOverride("us.zoom.xos", include: ["zoom"]),
         AppOverride("com.microsoft.teams2", exclude: ["office"]),
         AppOverride("com.brave.browser", include: ["brave"]),
-        AppOverride("com.google.chrome", exclude: ["iterm", "chromefeaturestate", "monochrome"]),
+        AppOverride("com.google.chrome", exclude: ["iterm", "chromefeaturestate", "monochrome"],
+                    extraFolders: ["Library/Application Support/Google/Chrome", "Library/Caches/Google/Chrome"]),
         AppOverride("com.microsoft.edgemac", exclude: ["vscode", "rdc", "appcenter", "office", "oneauth"]),
         AppOverride("org.mozilla.firefox.nightly", include: ["firefox"], exclude: ["thunderbird"]),
         AppOverride("org.mozilla.firefox", include: ["firefox"], exclude: ["thunderbird"]),

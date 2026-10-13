@@ -59,6 +59,9 @@ struct LeftoverGroupList: View {
                     if item.mayBelongToAnotherApp {
                         StatusChip(label: String(localized: "May belong to another app"), tint: Tint.yellow)
                     }
+                    if item.usedByAnotherCopy {
+                        StatusChip(label: String(localized: "Another copy is installed"), tint: Tint.yellow)
+                    }
                 }
                 Text(item.url.deletingLastPathComponent().path)
                     .font(.caption)

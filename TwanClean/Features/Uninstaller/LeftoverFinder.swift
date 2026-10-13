@@ -25,6 +25,10 @@ struct LeftoverFinder: Sendable {
         "Library/PreferencePanes", "Library/Saved Application State", "Library/Services", "Library/WebKit",
     ]
 
+    /// Folders holding things the user made as much as things apps made:
+    /// only a name equal to the app's counts there.
+    static let exactOnlyFolders: Set<String> = ["Library/Services"]
+
     /// Folders where developers group their apps under a company name, e.g.
     /// Application Support/Google/Chrome; their grandchildren are compared too.
     static let vendorFolders: Set<String> = ["Application Support", "Caches", "Logs"]
@@ -45,14 +49,22 @@ struct LeftoverFinder: Sendable {
 
     /// - Parameter otherApps: every other installed app. A file that one of
     ///   them claims more specifically is left out, and one they claim just as
-    ///   strongly is listed but not selected.
+    ///   strongly is listed but not selected. A second copy of `app` itself,
+    ///   with the same bundle identifier, is not a rival: it keeps using the
+    ///   app's shared files, so none of them is selected.
     func find(for app: InstalledApp, sensitivity: SearchSensitivity, otherApps: [InstalledApp] = []) throws -> LeftoverScan {
         // Apple's own apps share support folders (GarageBand and Logic, for
         // instance), so only files named exactly after them are considered.
         let isAppleApp = app.bundleIdentifier.lowercased().hasPrefix("com.apple.")
         let matcher = AppMatcher(app: app, sensitivity: isAppleApp ? .strict : sensitivity)
-        let others = otherApps.filter { $0.bundleIdentifier.caseInsensitiveCompare(app.bundleIdentifier) != .orderedSame }
+        func isCopy(_ other: InstalledApp) -> Bool {
+            other.bundleIdentifier.caseInsensitiveCompare(app.bundleIdentifier) == .orderedSame
+        }
+        let anotherCopyRemains = otherApps.contains { isCopy($0) && $0.url.path != app.url.path }
+        // Helpers inside the app are part of it, not competitors for its files.
+        let others = otherApps.filter { !isCopy($0) && !PathPolicy.isInside($0.url.path, app.url.path) }
             .map { AppMatcher(app: $0, sensitivity: .enhanced) }
+        let vendorKey = Self.developerKey(of: app)
         var scan = LeftoverScan()
         var matches: [URL: AppMatcher.Match] = [:]
 
@@ -62,14 +74,25 @@ struct LeftoverFinder: Sendable {
             return true
         }
 
-        func consider(_ folder: URL, searchVendors: Bool) {
+        /// A company folder that holds apps' folders, not one app's own data:
+        /// named after the developer, and not the folder of an installed app.
+        func isVendorFolder(_ url: URL) -> Bool {
+            let name = url.lastPathComponent
+            guard let vendorKey, name.normalizedForMatching.contains(vendorKey),
+                  !Self.looksLikeBundleIdentifier(name), Self.isDirectory(url), protected?.contains(url) != true
+            else { return false }
+            return !claimedByAnyOf(others, url)
+        }
+
+        func consider(_ folder: URL, searchVendors: Bool, exactOnly: Bool) throws {
             guard !isLocked(folder),
                   let names = try? FileManager.default.contentsOfDirectory(atPath: folder.path) else { return }
             for name in names {
+                try Task.checkCancellation()
                 let url = folder.appendingPathComponent(name)
                 if let match = matcher.match(name) {
-                    if matches[url] == nil { matches[url] = match }
-                } else if searchVendors, Self.isDirectory(url), protected?.contains(url) != true,
+                    if matches[url] == nil, match.isExact || !exactOnly { matches[url] = match }
+                } else if searchVendors, isVendorFolder(url),
                           let children = try? FileManager.default.contentsOfDirectory(atPath: url.path) {
                     for child in children {
                         if let match = matcher.match(child) { matches[url.appendingPathComponent(child)] = match }
@@ -79,11 +102,13 @@ struct LeftoverFinder: Sendable {
         }
 
         for folder in Self.homeFolders {
-            consider(home.appendingPathComponent(folder),
-                     searchVendors: Self.vendorFolders.contains((folder as NSString).lastPathComponent))
+            try consider(home.appendingPathComponent(folder),
+                         searchVendors: Self.vendorFolders.contains((folder as NSString).lastPathComponent),
+                         exactOnly: Self.exactOnlyFolders.contains(folder))
         }
         for folder in systemFolders {
-            consider(URL(fileURLWithPath: folder), searchVendors: (folder as NSString).lastPathComponent == "Application Support")
+            try consider(URL(fileURLWithPath: folder),
+                         searchVendors: (folder as NSString).lastPathComponent == "Application Support", exactOnly: false)
         }
 
         // Sandboxed apps often keep their data in a container named by UUID;
@@ -94,23 +119,52 @@ struct LeftoverFinder: Sendable {
                 matches[container] = AppMatcher.Match(tier: .bundleIdentifier, isExact: true, length: .max)
             }
         }
-        for folder in matcher.override?.extraFolders ?? [] {
+        for folder in matcher.extraFolders {
             let url = home.appendingPathComponent(folder)
             if FileIdentity.of(url) != nil, protected?.contains(url) != true {
                 matches[url] = AppMatcher.Match(tier: .override, isExact: true, length: .max)
             }
         }
 
-        scan.items = try collect(matches, app: app, others: others)
+        scan.items = try collect(matches, app: app, others: others, anotherCopyRemains: anotherCopyRemains)
         return scan
+    }
+
+    /// Whether an app in `others` owns `folder`: by its name, or as one of
+    /// its override's folders.
+    private func claimedByAnyOf(_ others: [AppMatcher], _ folder: URL) -> Bool {
+        let name = folder.lastPathComponent
+        let prefix = home.path + "/"
+        let relative = folder.path.hasPrefix(prefix) ? String(folder.path.dropFirst(prefix.count)) : nil
+        return others.contains { $0.match(name) != nil || (relative.map($0.claims(homeRelativeFolder:)) ?? false) }
+    }
+
+    /// The part of the bundle identifier that names the company, normalized:
+    /// "google" for com.google.Chrome. Nil when it is too short to tell
+    /// companies apart.
+    static func developerKey(of app: InstalledApp) -> String? {
+        let parts = app.bundleIdentifier.split(separator: ".").map(String.init)
+        guard let part = parts.count >= 3 ? parts[1] : parts.first else { return nil }
+        let key = part.normalizedForMatching
+        return key.count >= 4 ? key : nil
+    }
+
+    /// Reverse-DNS names such as com.raycast.macos are one app's, never a
+    /// company's folder of apps.
+    static func looksLikeBundleIdentifier(_ name: String) -> Bool {
+        let parts = name.split(separator: ".", omittingEmptySubsequences: false)
+        return parts.count >= 3 && parts.allSatisfy { !$0.isEmpty && !$0.contains(" ") }
     }
 
     /// Measures the matches the policy allows, keeping only the outermost of
     /// nested paths and leaving out files another app claims, and decides
     /// what to preselect.
-    private func collect(_ matches: [URL: AppMatcher.Match], app: InstalledApp, others: [AppMatcher]) throws -> [LeftoverItem] {
+    private func collect(_ matches: [URL: AppMatcher.Match], app: InstalledApp, others: [AppMatcher],
+                         anotherCopyRemains: Bool) throws -> [LeftoverItem] {
         var items: [LeftoverItem] = []
-        if let bundle = try item(app.url, purpose: .appBundle, match: nil, shared: false) { items.append(bundle) }
+        if let bundle = try item(app.url, purpose: .appBundle, match: nil, shared: false, usedByAnotherCopy: false) {
+            items.append(bundle)
+        }
 
         let allowed = matches.compactMap { url, match -> (URL, AppMatcher.Match)? in
             guard case .allowed(let canonical) = policy.evaluate(url, purpose: .appLeftover) else { return nil }
@@ -125,8 +179,12 @@ struct LeftoverFinder: Sendable {
                 let rivals = others.compactMap { $0.match(url.lastPathComponent) }
                 if rivals.contains(where: { $0.length > match.length || ($0.isExact && !match.isExact) }) { continue }
                 shared = rivals.contains { $0.length == match.length }
+                // A company folder is only partly the app's when it also
+                // holds the folders of other installed apps.
+                if !shared, match.tier == .developerName, holdsFilesOfAnotherApp(url, others) { shared = true }
             }
-            if let leftover = try item(url, purpose: .appLeftover, match: match, shared: shared) {
+            if let leftover = try item(url, purpose: .appLeftover, match: match, shared: shared,
+                                       usedByAnotherCopy: anotherCopyRemains) {
                 kept.append(url)
                 items.append(leftover)
             }
@@ -134,24 +192,35 @@ struct LeftoverFinder: Sendable {
         return items.sorted { ($0.group.rawValue, -$0.bytes) < ($1.group.rawValue, -$1.bytes) }
     }
 
-    private func item(_ url: URL, purpose: RemovalPurpose, match: AppMatcher.Match?, shared: Bool) throws -> LeftoverItem? {
+    private func holdsFilesOfAnotherApp(_ folder: URL, _ others: [AppMatcher]) -> Bool {
+        guard Self.isDirectory(folder),
+              let children = try? FileManager.default.contentsOfDirectory(atPath: folder.path) else { return false }
+        return children.contains { claimedByAnyOf(others, folder.appendingPathComponent($0)) }
+    }
+
+    private func item(_ url: URL, purpose: RemovalPurpose, match: AppMatcher.Match?, shared: Bool,
+                      usedByAnotherCopy: Bool) throws -> LeftoverItem? {
         guard let identity = FileIdentity.of(url) else { return nil }
         let bytes = try AllocatedSizeCalculator().measure(url).bytes
         let needsAdministrator = RemovalService.needsAdministrator(url)
         // Selected for the user: the app itself, and files named exactly after
-        // it or found through its container metadata. A file that only
-        // contains the app's name is selected too, unless it needs a password,
-        // may belong to another app, or was tied to the app only through its
-        // developer.
-        let preselect: Bool = switch match {
-        case nil: true
-        case .some where shared: false
-        case .some(let match) where needsAdministrator: match.isExact
-        case .some(let match): match.tier != .developerName && match.tier != .teamIdentifier
+        // it, containing its whole bundle identifier, or found through its
+        // container metadata. A file that only contains the app's name is
+        // listed but left for the user to tick, as is one that needs a
+        // password without being named exactly after the app, may belong to
+        // another app, is still used by another copy of the app, or was tied
+        // to the app only through its developer.
+        let preselect: Bool
+        if let match {
+            preselect = !shared && !usedByAnotherCopy && match.isCertain
+                && match.tier != .developerName && match.tier != .teamIdentifier
+                && (!needsAdministrator || match.isExact)
+        } else {
+            preselect = true
         }
         return LeftoverItem(url: url, identity: identity, bytes: bytes, isDirectory: Self.isDirectory(url),
                             purpose: purpose, group: LeftoverItem.group(for: url), tier: match?.tier,
-                            mayBelongToAnotherApp: shared,
+                            mayBelongToAnotherApp: shared, usedByAnotherCopy: usedByAnotherCopy && match != nil,
                             requiresAdministrator: needsAdministrator, selectedByDefault: preselect)
     }
 

@@ -37,6 +37,9 @@ struct LeftoverItem: Identifiable, Hashable, Sendable {
     let tier: MatchTier?
     /// Another installed app matches the name just as well.
     let mayBelongToAnotherApp: Bool
+    /// Another copy of the app, with the same bundle identifier, stays
+    /// installed and keeps using this file.
+    let usedByAnotherCopy: Bool
     let requiresAdministrator: Bool
     let selectedByDefault: Bool
 

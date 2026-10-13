@@ -22,7 +22,7 @@ enum SearchSensitivity: String, CaseIterable, Identifiable, Codable, Sendable {
     var summary: LocalizedStringResource {
         switch self {
         case .strict: "Strict: only files named exactly after the app. Finds the least, never guesses."
-        case .enhanced: "Enhanced (recommended): also files whose names contain the app's name or identifier."
+        case .enhanced: "Enhanced (recommended): also files whose names contain the app's name or identifier, and containers starting with its developer team ID. Only exact matches are selected for you."
         case .deep: "Deep: also files named after the developer. Files that may belong to the developer's other apps are never selected for you."
         }
     }

@@ -93,4 +93,41 @@ final class AppMatcherTests: XCTestCase {
         XCTAssertNil(matcher(.strict, app: zoom).match("ZoomOpener"))
         XCTAssertEqual(matcher(.enhanced, app: zoom).match("ZoomOpener")?.tier, .override)
     }
+
+    func testNamesStartingWithADigitKeepIt() {
+        let app = makeApp(name: "1Password", bundleIdentifier: "com.agilebits.onepassword", team: nil)
+        let enhanced = matcher(.enhanced, app: app)
+        XCTAssertNil(enhanced.match("Passwords"))
+        XCTAssertNil(enhanced.match("PasswordStore"))
+        XCTAssertNil(enhanced.match("Apple Passwords Export"))
+        XCTAssertEqual(enhanced.match("1Password")?.isExact, true)
+        XCTAssertEqual(enhanced.match("1Password Data")?.isCertain, false)
+    }
+
+    func testNamesContainingTheAppNameAreNeverCertain() {
+        let enhanced = matcher(.enhanced)
+        XCTAssertEqual(enhanced.match("Photo Editor")?.isCertain, true)
+        XCTAssertEqual(enhanced.match("com.example.photoeditor.plist")?.isCertain, true)
+        XCTAssertEqual(enhanced.match("com.example.photoeditor.helper")?.isCertain, true, "contains the whole identifier")
+        XCTAssertEqual(enhanced.match("PhotoEditorHelper")?.isCertain, false)
+        XCTAssertEqual(enhanced.match("Photo Editor Projects Cache")?.isCertain, false)
+    }
+
+    func testOverrideTermsAreNeverCertainUnlessTheNameIsExact() {
+        let zoom = makeApp(name: "zoom.us", bundleIdentifier: "us.zoom.xos", team: nil)
+        let match = matcher(.enhanced, app: zoom).match("ZoomOpener")
+        XCTAssertEqual(match?.tier, .override)
+        XCTAssertEqual(match?.isCertain, false)
+        let jetbrains = makeApp(name: "IntelliJ IDEA", bundleIdentifier: "com.jetbrains.intellij", team: nil)
+        XCTAssertEqual(matcher(.enhanced, app: jetbrains).match("jcef_12345")?.isCertain, false)
+    }
+
+    func testOverrideFoldersBelongOnlyToTheAppWithTheExactIdentifier() {
+        let chrome = makeApp(name: "Google Chrome", bundleIdentifier: "com.google.Chrome", team: nil)
+        let beta = makeApp(name: "Google Chrome Beta", bundleIdentifier: "com.google.Chrome.beta", team: nil)
+        XCTAssertEqual(matcher(.enhanced, app: chrome).extraFolders,
+                       ["Library/Application Support/Google/Chrome", "Library/Caches/Google/Chrome"])
+        XCTAssertTrue(matcher(.enhanced, app: beta).extraFolders.isEmpty)
+        XCTAssertTrue(matcher(.enhanced, app: chrome).claims(homeRelativeFolder: "Library/Caches/Google/Chrome"))
+    }
 }
