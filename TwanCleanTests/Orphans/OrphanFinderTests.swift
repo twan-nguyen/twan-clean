@@ -13,7 +13,8 @@ final class OrphanFinderTests: XCTestCase {
         home = try FakeHome(tree: tree)
         try tree.makeDirectory("home/Library/Logs")
         finder = OrphanFinder(policy: home.policy, searchFolders: [home.url("Library/Caches"), home.url("Library/Logs"),
-                                                                   home.url("Library/Preferences")])
+                                                                   home.url("Library/Preferences")],
+                              isRegistered: { _ in false })
         try tree.makeFile("home/Library/Caches/com.example.photoeditor/cache.db", bytes: 8_192)
         try tree.makeFile("home/Library/Caches/Google/blob", bytes: 8_192)
         try tree.makeFile("home/Library/Caches/com.apple.Safari/cache.db", bytes: 8_192)

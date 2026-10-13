@@ -24,6 +24,9 @@ enum OrphanSkipList {
         "ptpcamerad", "studentd", "talagent", "watchlistd", "apptranslocation", "xcrun",
         // Generic infrastructure
         "dsstore", "caches", "crashreporter", "trash",
+        // macOS's own logs in /Library/Logs
+        "windowserver", "xsan", "diagnosticreports", "diagnosticmessages", "hidfwcrashlogs", "mcxtools",
+        "lkdcsetup", "softwareupdate", "managedclient", "dockaccessibility",
         // Shared SDKs and command line tools
         "amsdatamigratortool", "arfilecache", "assistant", "chromium", "cloudkit", "webkit", "databases",
         "diagnostic", "cache", "gamekit", "homebrew", "microsoft", "mozilla", "sync", "google", "sentinel",
@@ -38,8 +41,25 @@ enum OrphanSkipList {
         "jetbrains", "vscode", "electron", "twanclean", "comtwan",
     ]
 
+    /// Entries shorter than this are only compared with a name as written: "go"
+    /// would otherwise hide every reverse-DNS name whose app part starts
+    /// with it.
+    private static let shortestDerivedPrefix = 4
+
     static func contains(_ name: String) -> Bool {
-        let normalized = name.normalizedForMatching
-        return prefixes.contains(where: normalized.hasPrefix)
+        if prefixes.contains(where: name.normalizedForMatching.hasPrefix) { return true }
+        // "org.swift.swiftpm" is the "swiftpm" of the list, and
+        // "com.google.Keystone" is "google"'s.
+        return reverseDNSRemainders(of: name).contains { rest in
+            prefixes.contains { $0.count >= shortestDerivedPrefix && rest.hasPrefix($0) }
+        }
+    }
+
+    /// For a reverse-DNS name, the name without its top-level domain and
+    /// without its company part, normalized.
+    private static func reverseDNSRemainders(of name: String) -> [String] {
+        let parts = name.split(separator: ".").map(String.init)
+        guard parts.count >= 3, parts[0].count <= 3, parts[0].allSatisfy(\.isLetter) else { return [] }
+        return [parts.dropFirst().joined(), parts.dropFirst(2).joined()].map(\.normalizedForMatching)
     }
 }

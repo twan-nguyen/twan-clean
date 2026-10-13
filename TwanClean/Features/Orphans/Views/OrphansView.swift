@@ -22,7 +22,11 @@ struct OrphansView: View {
                     .frame(maxWidth: .infinity)
                 }
             case .ready, .removing:
-                if model.items.isEmpty {
+                if let error = model.scanError {
+                    EmptyStateCard(systemImage: "exclamationmark.triangle.fill", tint: Tint.orange,
+                                   title: "The scan did not finish", message: LocalizedStringKey(error))
+                        .overlay(alignment: .topTrailing) { toolbarButtons.padding(16) }
+                } else if model.items.isEmpty {
                     EmptyStateCard(systemImage: "checkmark.seal.fill", title: "No orphaned files found")
                         .overlay(alignment: .topTrailing) { toolbarButtons.padding(16) }
                 } else {
@@ -31,6 +35,20 @@ struct OrphansView: View {
             }
         }
         .navigationTitle("Orphaned Files")
+        .safeAreaInset(edge: .top, spacing: 0) {
+            if let notice = model.notice {
+                HStack(spacing: 8) {
+                    Label(notice, systemImage: "exclamationmark.triangle.fill")
+                        .foregroundStyle(Tint.orange)
+                        .font(.callout)
+                    Spacer()
+                    Button("Dismiss") { model.dismissNotice() }
+                        .buttonStyle(PillButtonStyle())
+                }
+                .padding(.horizontal, 20)
+                .padding(.vertical, 8)
+            }
+        }
         .confirmationDialog(Text("Move \(model.selectedItems.count) items to the Trash?"), isPresented: $confirming) {
             Button("Move to Trash (\(model.selectedBytes.formattedBytes))", role: .destructive) {
                 Task { await model.trashSelection() }
