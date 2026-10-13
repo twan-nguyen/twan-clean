@@ -15,11 +15,8 @@ struct FolderContentsList: View {
                     }
                     .toggleStyle(.tintedCheckbox(Tint.cyan))
                     .accessibilityLabel(Text(node.name))
-                    IconTile(systemName: icon(for: node), tint: node.isAccessDenied ? Tint.orange : Tint.cyan,
-                             size: 22, corner: 6)
-                    Text(node.name)
-                        .lineLimit(1)
-                        .truncationMode(.middle)
+                    .disabled(node.isLocked)
+                    nameLabel(for: node)
                     Spacer()
                     Text(node.bytes.formattedBytes)
                         .font(.system(size: 12, weight: .semibold))
@@ -28,7 +25,6 @@ struct FolderContentsList: View {
                 }
                 .padding(.vertical, 1)
                 .contentShape(Rectangle())
-                .onTapGesture(count: 2) { model.open(node) }
                 .contextMenu {
                     if node.isFolder, !node.children.isEmpty {
                         Button("Open") { model.open(node) }
@@ -48,6 +44,25 @@ struct FolderContentsList: View {
             }
         }
         .listStyle(.inset)
+    }
+
+    /// A folder with contents is a button, so it can be reached with Tab and
+    /// opened with Space or Return; anything else is plain text.
+    @ViewBuilder
+    private func nameLabel(for node: SizeNode) -> some View {
+        let label = HStack(spacing: 8) {
+            IconTile(systemName: icon(for: node), tint: node.isAccessDenied ? Tint.orange : Tint.cyan,
+                     size: 22, corner: 6)
+            Text(node.name)
+                .lineLimit(1)
+                .truncationMode(.middle)
+        }
+        if node.isFolder, !node.children.isEmpty {
+            Button { model.open(node) } label: { label.contentShape(Rectangle()) }
+                .buttonStyle(.plain)
+        } else {
+            label
+        }
     }
 
     private func icon(for node: SizeNode) -> String {

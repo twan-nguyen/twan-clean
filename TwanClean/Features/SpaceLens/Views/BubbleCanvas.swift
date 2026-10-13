@@ -53,11 +53,17 @@ struct BubbleCanvas: View {
             .gesture(SpatialTapGesture().onEnded { value in
                 guard let bubble = bubbles.first(where: { $0.contains(value.location) }),
                       case .node(let node) = bubble.content else { return }
-                if node.isFolder, !node.children.isEmpty { onOpen(node) } else { onToggle(node) }
+                if node.isFolder, !node.children.isEmpty {
+                    onOpen(node)
+                } else if !node.isLocked {
+                    onToggle(node)
+                }
             })
             .contextMenu {
                 if let id = hovered, let bubble = bubbles.first(where: { $0.id == id }), case .node(let node) = bubble.content {
-                    Button(isSelected(node) ? "Deselect" : "Select") { onToggle(node) }
+                    if !node.isLocked {
+                        Button(isSelected(node) ? "Deselect" : "Select") { onToggle(node) }
+                    }
                     Button("Show in Finder") { Finder.reveal([node.url]) }
                 }
             }
