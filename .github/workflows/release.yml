@@ -49,9 +49,11 @@ jobs:
             echo "APP_PATH=$RUNNER_TEMP/DerivedData/Build/Products/Release/$APP_NAME.app"
           } >> "$GITHUB_ENV"
 
+      - name: Install XcodeGen
+        run: echo "$(scripts/fetch-xcodegen.sh "$RUNNER_TEMP/xcodegen-tool")" >> "$GITHUB_PATH"
+
       - name: Build
         run: |
-          brew install xcodegen
           xcodegen generate --quiet
           xcodebuild \
             -project TwanClean.xcodeproj \
@@ -99,12 +101,18 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "$GITHUB_REF_NAME" \
-            "$DIST/$ZIP_NAME" \
-            --repo "$GITHUB_REPOSITORY" \
-            --title "$DISPLAY_NAME $VERSION" \
-            --generate-notes \
-            --verify-tag
+          # A re-run after the release exists replaces the zip instead of failing;
+          # the cask step below then uses the checksum of the zip that is live.
+          if gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" "$DIST/$ZIP_NAME" --repo "$GITHUB_REPOSITORY" --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" \
+              "$DIST/$ZIP_NAME" \
+              --repo "$GITHUB_REPOSITORY" \
+              --title "$DISPLAY_NAME $VERSION" \
+              --generate-notes \
+              --verify-tag
+          fi
 
       - name: Update Homebrew cask
         env:
@@ -144,16 +152,21 @@ jobs:
               run "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "{{appdir}}/$APP_NAME.app"]
             end
 
+            # Homebrew runs launchctl on upgrade too, which unloads the scheduler;
+            # Twan Clean registers it again the next time it opens.
             uninstall launchctl: "com.twan.twanclean.scheduler",
                       quit:      "com.twan.twanclean"
 
-            zap trash: [
-              "~/Library/Application Support/TwanClean",
-              "~/Library/Caches/com.twan.twanclean",
-              "~/Library/HTTPStorages/com.twan.twanclean",
-              "~/Library/Preferences/com.twan.twanclean.plist",
-              "~/Library/Saved Application State/com.twan.twanclean.savedState",
-            ]
+            # Only zap removes the login item: on upgrade it would also drop the
+            # user's choice to open Twan Clean at login.
+            zap login_item: "Twan Clean",
+                trash:      [
+                  "~/Library/Application Support/TwanClean",
+                  "~/Library/Caches/com.twan.twanclean",
+                  "~/Library/HTTPStorages/com.twan.twanclean",
+                  "~/Library/Preferences/com.twan.twanclean.plist",
+                  "~/Library/Saved Application State/com.twan.twanclean.savedState",
+                ]
           end
           CASK
           cat "$TAP_DIR/Casks/twan-clean.rb"

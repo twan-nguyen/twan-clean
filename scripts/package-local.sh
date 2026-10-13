@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Builds and signs Twan Clean in Release, then zips it into dist/ for copying to
-# another Mac. The app is not notarized, so on another Mac open it the first time
-# with Control-click › Open.
+# another Mac. The app is not notarized, so on another Mac macOS blocks the first
+# open: choose System Settings › Privacy & Security › Open Anyway (macOS 15 and
+# later; older versions also accept Control-click › Open).
 # Usage: scripts/package-local.sh
 set -euo pipefail
 
