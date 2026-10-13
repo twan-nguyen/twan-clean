@@ -3,6 +3,15 @@ import Foundation
 /// Builds the Space Lens tree of a folder: actual allocated bytes, hard links
 /// counted once, symlinks never followed, bundles treated as single files and
 /// unreadable folders marked. The top-level folders are walked in parallel.
+///
+/// Sizes are per-file `st_blocks`, so APFS clones (which share their blocks)
+/// are counted in full for each copy, and freeing one copy frees less than
+/// the tree shows. Detecting shared extents would need a per-file extent
+/// query, which costs more than a scan can afford.
+///
+/// Cancellation is checked for every entry, so a cancelled build stops within
+/// one entry's work however the folders are shaped, and throws instead of
+/// returning a partial tree.
 struct SizeTreeBuilder: Sendable {
     /// Items smaller than this are folded into their folder.
     let minimumNodeBytes: Int64
@@ -15,6 +24,7 @@ struct SizeTreeBuilder: Sendable {
     /// appear as locked items so macOS never prompts mid-scan.
     func build(_ root: URL, progress: ScanProgressReporter = ScanProgressReporter(),
                protected: ProtectedLocations? = nil) async throws -> SizeNode {
+        try Task.checkCancellation()
         let sizing = AllocatedSizeCalculator(session: SizingSession())
         let rootNode = SizeNode(name: root.lastPathComponent, kind: .folder, identity: FileIdentity.of(root),
                                 rootURL: root)
@@ -37,7 +47,7 @@ struct SizeTreeBuilder: Sendable {
         let children = try await withThrowingTaskGroup(of: SizeNode?.self) { group in
             var pending = entries.makeIterator()
             func startNext() -> Bool {
-                guard let name = pending.next() else { return false }
+                guard !Task.isCancelled, let name = pending.next() else { return false }
                 let url = root.appendingPathComponent(name)
                 group.addTask { try builder.node(for: url, sizing: sizing, progress: progress, protected: protected) }
                 return true
@@ -50,6 +60,7 @@ struct SizeTreeBuilder: Sendable {
             }
             return nodes
         }
+        try Task.checkCancellation()
 
         for child in children {
             attach(child, to: rootNode)
@@ -61,6 +72,7 @@ struct SizeTreeBuilder: Sendable {
     /// The node for one entry of the root folder.
     private func node(for url: URL, sizing: AllocatedSizeCalculator, progress: ScanProgressReporter,
                       protected: ProtectedLocations?) throws -> SizeNode? {
+        try Task.checkCancellation()
         var status = stat()
         guard lstat(url.path, &status) == 0 else { return nil }
         let identity = FileIdentity(status)
@@ -76,8 +88,11 @@ struct SizeTreeBuilder: Sendable {
         case S_IFLNK:
             return SizeNode(name: name, kind: .symlink, identity: identity, bytes: Int64(status.st_blocks) * 512)
         default:
-            if status.st_nlink > 1, !sizing.session.claim(identity) { return nil }
-            return SizeNode(name: name, kind: .file, identity: identity, bytes: Int64(status.st_blocks) * 512)
+            let allocated = Int64(status.st_blocks) * 512
+            if status.st_nlink > 1, !sizing.session.claim(identity) {
+                return sharedLinkNode(name: name, identity: identity, allocated: allocated)
+            }
+            return SizeNode(name: name, kind: .file, identity: identity, bytes: allocated)
         }
     }
 
@@ -96,6 +111,9 @@ struct SizeTreeBuilder: Sendable {
         }
 
         try FileTreeWalker.walk(url) { entry in
+            // The walker only checks every few hundred entries of one walk;
+            // a tree of many small folders needs the check on every entry.
+            try Task.checkCancellation()
             switch entry.kind {
             case .directory:
                 if entry.depth > 0, protected?.contains(URL(fileURLWithPath: entry.path)) == true {
@@ -118,6 +136,10 @@ struct SizeTreeBuilder: Sendable {
             case .file, .symlink:
                 guard let parent = stack.last else { break }
                 if entry.linkCount > 1, let identity = entry.identity, !sizing.session.claim(identity) {
+                    if let link = sharedLinkNode(name: entry.name, identity: identity, allocated: entry.allocatedBytes) {
+                        parent.addChild(link)
+                        parent.holdsSharedLink = true
+                    }
                     break
                 }
                 attach(SizeNode(name: entry.name, kind: entry.kind == .file ? .file : .symlink,
@@ -133,11 +155,22 @@ struct SizeTreeBuilder: Sendable {
     /// Keeps a finished node as a child when it is big enough or needs the
     /// user's attention; otherwise folds its space into the parent.
     private func attach(_ node: SizeNode, to parent: SizeNode) {
-        if node.bytes >= minimumNodeBytes || node.isAccessDenied {
+        if node.bytes >= minimumNodeBytes || node.isAccessDenied || node.holdsSharedLink {
             parent.addChild(node)
+            if node.holdsSharedLink { parent.holdsSharedLink = true }
         } else {
             parent.addPruned(bytes: node.bytes, count: 1)
         }
+    }
+
+    /// Another name of a big file already counted elsewhere. It stays in the
+    /// tree so it can be found and selected, but adds no bytes. Small ones
+    /// are dropped like any small item: their space is already counted.
+    private func sharedLinkNode(name: String, identity: FileIdentity, allocated: Int64) -> SizeNode? {
+        guard allocated >= minimumNodeBytes else { return nil }
+        let node = SizeNode(name: name, kind: .file, identity: identity)
+        node.holdsSharedLink = true
+        return node
     }
 
     /// A protected folder shown without being read.

@@ -15,7 +15,9 @@ final class SizeNode: Identifiable, @unchecked Sendable {
     let kind: Kind
     let identity: FileIdentity?
     private(set) weak var parent: SizeNode?
-    private let rootURL: URL?
+    /// Where the node lives when it cannot be derived from its parent: the
+    /// scanned folder, or a node cut out of the tree.
+    private var rootURL: URL?
     private(set) var children: [SizeNode] = []
     /// Space of items too small to keep as nodes.
     private(set) var prunedBytes: Int64 = 0
@@ -23,6 +25,9 @@ final class SizeNode: Identifiable, @unchecked Sendable {
     private(set) var bytes: Int64
     /// The folder, or part of it, could not be read.
     var isAccessDenied = false
+    /// This item, or something inside it, is another name of data counted
+    /// elsewhere in the tree. Kept even though it adds no bytes.
+    var holdsSharedLink = false
 
     var id: ObjectIdentifier { ObjectIdentifier(self) }
 
@@ -34,13 +39,21 @@ final class SizeNode: Identifiable, @unchecked Sendable {
         self.rootURL = rootURL
     }
 
+    /// The absolute location. Nodes cut out of the tree keep the location they
+    /// had, so their children still resolve to real paths.
     var url: URL {
         if let rootURL { return rootURL }
-        guard let parent else { return URL(fileURLWithPath: name) }
+        guard let parent else { return URL(fileURLWithPath: "/").appendingPathComponent(name) }
         return parent.url.appendingPathComponent(name, isDirectory: kind == .folder)
     }
 
     var isFolder: Bool { kind == .folder }
+
+    /// A folder that could not be read at all: nothing inside it is known, so
+    /// there is nothing meaningful to select.
+    var isLocked: Bool {
+        isAccessDenied && children.isEmpty && prunedCount == 0 && bytes == 0
+    }
 
     var ancestors: [SizeNode] {
         var chain: [SizeNode] = []
@@ -81,6 +94,17 @@ final class SizeNode: Identifiable, @unchecked Sendable {
             current.bytes -= child.bytes
             node = current.parent
         }
+        child.rootURL = child.url
         child.parent = nil
+    }
+
+    /// Whether following parents from this node ends at `root`.
+    func isInside(_ root: SizeNode) -> Bool {
+        var node: SizeNode? = self
+        while let current = node {
+            if current === root { return true }
+            node = current.parent
+        }
+        return false
     }
 }

@@ -61,6 +61,8 @@ final class SpaceLensViewModel: ObservableObject {
         scanTask = Task { [builder, progress] in
             do {
                 let tree = try await builder.build(folder, progress: progress, protected: protected)
+                // A cancelled scan keeps whatever map was on screen.
+                try Task.checkCancellation()
                 self.root = tree
                 self.path = [tree]
                 self.phase = .ready
@@ -115,6 +117,8 @@ final class SpaceLensViewModel: ObservableObject {
     }
 
     func toggle(_ node: SizeNode) {
+        // A locked folder shows 0 B, so trashing it would only prompt for access.
+        guard !node.isLocked else { return }
         if let index = selection.firstIndex(where: { $0 === node }) {
             selection.remove(at: index)
         } else {
@@ -162,10 +166,21 @@ final class SpaceLensViewModel: ObservableObject {
         for node in nodes where gone.contains(node.url.path) {
             node.parent?.remove(node)
         }
-        selection.removeAll { gone.contains($0.url.path) || $0.parent == nil }
+        dropRemovedFromView(gone)
         outcome = CleanupOutcome(report)
         revision += 1
         phase = .ready
+    }
+
+    /// After items left the tree: forgets them and anything inside them in the
+    /// selection, and moves a view that sat on a removed folder (or inside one)
+    /// to the nearest folder that is still in the tree.
+    private func dropRemovedFromView(_ gone: Set<String>) {
+        guard let root else { return }
+        selection.removeAll { gone.contains($0.url.path) || !$0.isInside(root) }
+        if let cut = path.indices.dropFirst().first(where: { path[$0].parent !== path[$0 - 1] }) {
+            path.removeSubrange(cut...)
+        }
     }
 
     /// Retries what permissions blocked, after the administrator prompt. The
@@ -182,7 +197,7 @@ final class SpaceLensViewModel: ObservableObject {
         for node in selection where gone.contains(node.url.path) {
             node.parent?.remove(node)
         }
-        selection.removeAll { gone.contains($0.url.path) }
+        dropRemovedFromView(gone)
         current.add(report)
         self.outcome = current
         revision += 1

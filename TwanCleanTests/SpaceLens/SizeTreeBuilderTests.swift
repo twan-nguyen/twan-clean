@@ -93,6 +93,79 @@ final class SizeTreeBuilderTests: XCTestCase {
         XCTAssertEqual(root.bytes, blocks("root/a/original.bin"))
     }
 
+    private func flatten(_ node: SizeNode) -> [SizeNode] {
+        [node] + node.children.flatMap(flatten)
+    }
+
+    func testSecondNameOfAHardLinkStaysVisibleWithoutBytes() async throws {
+        let original = try tree.makeFile("root/a/original.bin", bytes: 200_000)
+        try tree.makeDirectory("root/b")
+        try FileManager.default.linkItem(at: original, to: tree.url("root/b/link.bin"))
+
+        let root = try await builder.build(tree.url("root"))
+
+        let files = flatten(root).filter { $0.kind == .file }
+        XCTAssertEqual(Set(files.map(\.name)), ["original.bin", "link.bin"])
+        XCTAssertEqual(files.map(\.bytes).sorted(), [0, blocks("root/a/original.bin")])
+        XCTAssertEqual(root.children.count, 2, "both folders stay so the second name can be found")
+    }
+
+    func testSmallHardLinksAreStillFolded() async throws {
+        let original = try tree.makeFile("root/a/original.bin", bytes: 1_000)
+        try tree.makeDirectory("root/b")
+        try FileManager.default.linkItem(at: original, to: tree.url("root/b/link.bin"))
+
+        let root = try await builder.build(tree.url("root"))
+
+        XCTAssertTrue(root.children.isEmpty)
+    }
+
+    func testCancelledBuildThrowsEvenWhenEveryFolderIsSmall() async throws {
+        for index in 0..<400 {
+            try tree.makeFile("root/folder-\(index)/file", bytes: 16)
+        }
+        let builder = self.builder
+        let url = tree.url("root")
+        let task = Task { () -> SizeNode in
+            // Start the build already cancelled: no folder here has the 512
+            // entries the walker needs before it looks.
+            while !Task.isCancelled { await Task.yield() }
+            return try await builder.build(url)
+        }
+        task.cancel()
+
+        do {
+            _ = try await task.value
+            XCTFail("a cancelled build must not return a tree")
+        } catch is CancellationError {
+        }
+    }
+
+    func testNodeCutOutOfTheTreeKeepsAbsolutePaths() async throws {
+        try tree.makeFile("root/a/b/big.bin", bytes: 200_000)
+        let root = try await builder.build(tree.url("root"))
+        let a = try XCTUnwrap(child(root, "a"))
+        let b = try XCTUnwrap(child(a, "b"))
+        let file = try XCTUnwrap(child(b, "big.bin"))
+
+        root.remove(a)
+
+        XCTAssertEqual(a.url.path, tree.url("root/a").path)
+        XCTAssertEqual(file.url.path, tree.url("root/a/b/big.bin").path)
+    }
+
+    func testLockedFolderIsNotSelectable() async throws {
+        try tree.makeFile("root/locked/inner.bin", bytes: 1_000)
+        try tree.makeFile("root/open/file.bin", bytes: 60_000)
+        XCTAssertEqual(chmod(tree.url("root/locked").path, 0o000), 0)
+        defer { chmod(tree.url("root/locked").path, 0o755) }
+
+        let root = try await builder.build(tree.url("root"))
+
+        XCTAssertEqual(child(root, "locked")?.isLocked, true)
+        XCTAssertEqual(child(root, "open")?.isLocked, false)
+    }
+
     func testUnreadableFolderIsMarked() async throws {
         try tree.makeFile("root/locked/inner.bin", bytes: 1_000)
         try tree.makeFile("root/open/file.bin", bytes: 60_000)

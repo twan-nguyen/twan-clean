@@ -73,6 +73,76 @@ final class SpaceLensViewModelTests: XCTestCase {
         XCTAssertTrue(model.selection.isEmpty)
     }
 
+    func testCancelledScanKeepsTheMapOnScreen() async throws {
+        await model.scanHome()?.value
+        let before = try XCTUnwrap(model.root)
+
+        let rescan = model.rescan()
+        model.cancelScan()
+        await rescan?.value
+
+        XCTAssertTrue(model.root === before)
+        XCTAssertEqual(model.phase, .ready)
+        XCTAssertEqual(model.path.map(\.name), [before.name])
+    }
+
+    func testCancelledFirstScanReturnsToTheStartScreen() async throws {
+        let scan = model.scanHome()
+        model.cancelScan()
+        await scan?.value
+
+        XCTAssertNil(model.root)
+        XCTAssertEqual(model.phase, .idle)
+    }
+
+    func testLockedFolderCannotBeSelected() async throws {
+        try tree.makeFile("home/Locked/inner.bin", bytes: 1_000)
+        XCTAssertEqual(chmod(home.url("Locked").path, 0o000), 0)
+        defer { chmod(home.url("Locked").path, 0o755) }
+        await model.scanHome()?.value
+        let locked = try node("Locked", in: model.root)
+
+        model.toggle(locked)
+
+        XCTAssertTrue(locked.isLocked)
+        XCTAssertTrue(model.selection.isEmpty)
+    }
+
+    func testTrashingTheOpenFolderMovesToTheNearestSurvivor() async throws {
+        try tree.makeFile("home/Documents/Projects/big.bin", bytes: 100_000)
+        try tree.makeFile("home/Documents/Projects/sub/deep.bin", bytes: 100_000)
+        await model.scanHome()?.value
+        let documents = try node("Documents", in: model.root)
+        let projects = try node("Projects", in: documents)
+        let sub = try node("sub", in: projects)
+        let deepPath = home.url("Documents/Projects/sub/deep.bin").path
+        model.toggle(projects)
+        model.open(documents)
+        model.open(projects)
+        model.open(sub)
+        XCTAssertEqual(model.path.map(\.name), ["home", "Documents", "Projects", "sub"])
+
+        await model.trashSelection()
+
+        XCTAssertFalse(tree.exists(home.url("Documents/Projects")))
+        XCTAssertEqual(model.path.map(\.name), ["home", "Documents"])
+        XCTAssertTrue(model.current === documents)
+        XCTAssertTrue(model.selection.isEmpty)
+        XCTAssertEqual(try node("deep.bin", in: sub).url.path, deepPath)
+        XCTAssertEqual(documents.bytes, documents.children.reduce(documents.prunedBytes) { $0 + $1.bytes })
+    }
+
+    func testTrashingAnItemInsideTheOpenFolderKeepsTheView() async throws {
+        await model.scanHome()?.value
+        let downloads = try node("Downloads", in: model.root)
+        model.open(downloads)
+        model.toggle(try node(movieName, in: downloads))
+
+        await model.trashSelection()
+
+        XCTAssertTrue(model.current === downloads)
+    }
+
     func testPurposeFollowsLocation() {
         XCTAssertEqual(model.purpose(for: home.url("Downloads/a.zip")), .userFile)
         XCTAssertEqual(model.purpose(for: home.url("Library/Application Support/App/data")), .appLeftover)
