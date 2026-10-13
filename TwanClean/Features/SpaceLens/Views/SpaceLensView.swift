@@ -8,17 +8,18 @@ struct SpaceLensView: View {
         Group {
             switch model.phase {
             case .idle:
-                start
+                start.phaseTransition()
             case .scanning:
-                scanning
+                scanning.phaseTransition()
             case .ready, .removing:
                 if let folder = model.current {
-                    browser(folder)
+                    browser(folder).phaseTransition()
                 } else {
-                    start
+                    start.phaseTransition()
                 }
             }
         }
+        .animatesPhase(model.phase)
         .navigationTitle("Space Lens")
         .confirmationDialog(Text("Move \(model.selection.count) items to the Trash?"), isPresented: $confirming) {
             Button("Move to Trash (\(model.selectedBytes.formattedBytes))", role: .destructive) {
@@ -56,14 +57,7 @@ struct SpaceLensView: View {
         ScrollView {
             WorkingCard(tint: Tint.cyan, gaugeLabel: "MEASURING", systemImage: "circle.hexagongrid.fill",
                         title: "Measuring…", onCancel: { model.cancelScan() }) {
-                TimelineView(.periodic(from: .now, by: 0.5)) { _ in
-                    if let started = model.scanStarted {
-                        Text(Duration.seconds(Date().timeIntervalSince(started)), format: .time(pattern: .minuteSecond))
-                            .font(.system(size: 13))
-                            .monospacedDigit()
-                            .foregroundStyle(.secondary)
-                    }
-                }
+                ElapsedTimeText(since: model.scanStarted)
                 LivePathTicker { model.progress.currentPath }
             }
             .padding(.horizontal, 28)
@@ -90,6 +84,7 @@ struct SpaceLensView: View {
                 Text(folder.bytes.formattedBytes)
                     .font(.system(size: 17, weight: .semibold))
                     .monospacedDigit()
+                    .animatedNumber(folder.bytes)
                     .fixedSize()
                 Button { chooseFolder() } label: { Label("Choose Folder…", systemImage: "folder") }
                     .buttonStyle(PillButtonStyle())
@@ -142,6 +137,7 @@ struct SpaceLensView: View {
                 .disabled(model.selection.isEmpty || model.phase != .ready)
             }
         }
+        .removalOverlay(model.removalProgress, tint: Tint.cyan)
     }
 
     private func chooseFolder() {

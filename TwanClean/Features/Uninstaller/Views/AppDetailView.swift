@@ -16,29 +16,36 @@ struct AppDetailView: View {
             if model.isFindingLeftovers {
                 WorkingCard(tint: Tint.purple, gaugeLabel: "SEARCHING", systemImage: "square.grid.2x2.fill",
                             title: "Looking for the app's files…") {
-                    EmptyView()
+                    ElapsedTimeText(since: model.leftoverSearchStarted)
+                    LivePathTicker { model.leftoverProgress.currentPath }
                 }
                 .padding(.horizontal, 16)
+                .phaseTransition()
                 Spacer()
             } else if let scan = model.leftovers {
-                Group {
-                    if !scan.lockedLocations.isEmpty {
-                        FullDiskAccessBanner(unreadableCount: scan.lockedLocations.count)
+                VStack(alignment: .leading, spacing: 12) {
+                    Group {
+                        if !scan.lockedLocations.isEmpty {
+                            FullDiskAccessBanner(unreadableCount: scan.lockedLocations.count)
+                        }
+                        if let error = model.leftoverError {
+                            Label(error, systemImage: "exclamationmark.triangle.fill")
+                                .foregroundStyle(Tint.orange)
+                        }
+                        LeftoverGroupList(items: scan.items, model: model)
+                            .cardList()
+                            .disabled(model.phase == .uninstalling)
                     }
-                    if let error = model.leftoverError {
-                        Label(error, systemImage: "exclamationmark.triangle.fill")
-                            .foregroundStyle(Tint.orange)
-                    }
-                    LeftoverGroupList(items: scan.items, model: model)
-                        .cardList()
-                        .disabled(model.phase == .uninstalling)
+                    .padding(.horizontal, 16)
+                    footer
                 }
-                .padding(.horizontal, 16)
-                footer
+                .removalOverlay(model.removalProgress, tint: Tint.purple)
+                .phaseTransition()
             } else {
                 Spacer()
             }
         }
+        .animatesPhase(model.isFindingLeftovers)
         .confirmationDialog(Text("Uninstall \(app.name)?"), isPresented: $confirming) {
             Button("Move \(model.selectedItems.count) Items to Trash", role: .destructive) { start() }
         } message: {
@@ -76,6 +83,7 @@ struct AppDetailView: View {
                             Text(scan.items.reduce(0) { $0 + $1.bytes }.formattedBytes)
                                 .font(.system(size: 22, weight: .semibold))
                                 .monospacedDigit()
+                                .animatedNumber(scan.items.reduce(0) { $0 + $1.bytes })
                             Text("\(scan.items.count) items")
                                 .font(.system(size: 11.5))
                                 .foregroundStyle(.secondary)

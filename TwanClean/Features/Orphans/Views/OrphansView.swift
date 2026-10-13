@@ -9,18 +9,20 @@ struct OrphansView: View {
         Group {
             switch model.phase {
             case .idle:
-                start
+                start.phaseTransition()
             case .scanning:
                 ScrollView {
                     WorkingCard(tint: Tint.pink, systemImage: "questionmark.folder.fill",
                                 title: "Looking for leftovers…") {
-                        EmptyView()
+                        ElapsedTimeText(since: model.scanStarted)
+                        LivePathTicker { model.scanProgress.currentPath }
                     }
                     .padding(.horizontal, 28)
                     .padding(.vertical, 24)
                     .frame(maxWidth: 920)
                     .frame(maxWidth: .infinity)
                 }
+                .phaseTransition()
             case .ready, .removing:
                 if let error = model.scanError {
                     EmptyStateCard(systemImage: "exclamationmark.triangle.fill", tint: Tint.orange,
@@ -34,6 +36,7 @@ struct OrphansView: View {
                 }
             }
         }
+        .animatesPhase(model.phase)
         .navigationTitle("Orphaned Files")
         .safeAreaInset(edge: .top, spacing: 0) {
             if let notice = model.notice {
@@ -118,6 +121,7 @@ struct OrphansView: View {
                         Text(model.items.reduce(0) { $0 + $1.bytes }.formattedBytes)
                             .font(.system(size: 24, weight: .semibold))
                             .monospacedDigit()
+                            .animatedNumber(model.items.reduce(0) { $0 + $1.bytes })
                         Text("\(model.items.count) items from removed apps")
                             .font(.system(size: 12))
                             .foregroundStyle(.secondary)
@@ -164,6 +168,7 @@ struct OrphansView: View {
                 .disabled(model.selectedItems.isEmpty || model.phase != .ready)
             }
         }
+        .removalOverlay(model.removalProgress, tint: Tint.pink)
     }
 
     private func row(_ item: OrphanItem) -> some View {

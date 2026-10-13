@@ -2,7 +2,7 @@ import AppKit
 import Combine
 
 @MainActor
-final class OrphansViewModel: ObservableObject {
+final class OrphansViewModel: ObservableObject, RemovalProgressPublishing {
     enum Phase: Equatable {
         case idle
         case scanning
@@ -15,12 +15,17 @@ final class OrphansViewModel: ObservableObject {
     @Published var selection: Set<String> = []
     @Published private(set) var ignored: Set<String>
     @Published var outcome: CleanupOutcome?
+    /// Set while the selection is moved to the Trash.
+    @Published var removalProgress: RemovalProgress?
+    @Published private(set) var scanStarted: Date?
     /// Why the last scan could not tell what is left over. Shown instead of
     /// an empty result, which would claim there is nothing.
     @Published private(set) var scanError: String?
     /// A problem with the ignore list that the user should know about.
     @Published private(set) var notice: String?
 
+    /// The folder or file the scan is reading.
+    let scanProgress = ScanProgressReporter()
     private let index: InstalledAppIndex
     private let makeFinder: @MainActor () -> OrphanFinder
     private let ignoreStore: OrphanIgnoreStore
@@ -53,7 +58,10 @@ final class OrphansViewModel: ObservableObject {
         guard phase != .scanning, phase != .removing else { return nil }
         phase = .scanning
         scanError = nil
+        scanStarted = Date()
+        scanProgress.reset()
         let finder = makeFinder()
+        let reporter = scanProgress
         let index = index
         let ignored = ignored
         let running = runningBundleIDs()
@@ -65,7 +73,7 @@ final class OrphansViewModel: ObservableObject {
                     let catalog = index.catalog()
                     guard catalog.isComplete else { throw OrphanFinder.ScanError.incompleteAppList }
                     return try finder.find(installed: catalog.everyApp, runningBundleIDs: running, ignored: ignored,
-                                           extraIdentifiers: catalog.extraIdentifiers)
+                                           extraIdentifiers: catalog.extraIdentifiers, progress: reporter)
                 }
             }
             self.selection = []
@@ -100,8 +108,10 @@ final class OrphansViewModel: ObservableObject {
 
     func ignore(_ item: OrphanItem) {
         ignored.insert(item.id)
-        items.removeAll { $0.id == item.id }
-        selection.remove(item.id)
+        withMotion {
+            items.removeAll { $0.id == item.id }
+            selection.remove(item.id)
+        }
         saveIgnored()
     }
 
@@ -128,7 +138,9 @@ final class OrphansViewModel: ObservableObject {
         let requests = selectedItems.map(\.removalRequest)
         guard !requests.isEmpty, phase == .ready else { return }
         phase = .removing
-        let report = await removal.remove(requests)
+        let onStep = beginRemoval(.movingToTrash, total: requests.count)
+        defer { endRemoval() }
+        let report = await removal.remove(requests, progress: onStep)
         finish(report, into: CleanupOutcome(report))
     }
 
@@ -138,18 +150,22 @@ final class OrphansViewModel: ObservableObject {
         guard !outcome.needsAdministrator.isEmpty, phase == .ready else { return }
         var current = outcome
         phase = .removing
+        let onStep = beginRemoval(.waitingForPassword, total: current.needsAdministrator.count)
+        defer { endRemoval() }
         let remover = PrivilegedRemover(
             service: removal,
             prompt: String(localized: "Twan Clean needs your password to remove the selected items."))
-        let report = await remover.remove(current.needsAdministrator)
+        let report = await remover.remove(current.needsAdministrator, progress: onStep)
         current.add(report)
         finish(report, into: current)
     }
 
     private func finish(_ report: RemovalReport, into outcome: CleanupOutcome) {
         let gone = Set((report.removed + report.alreadyGone).map(\.url.path))
-        items.removeAll { gone.contains($0.id) }
-        selection.subtract(gone)
+        withMotion {
+            items.removeAll { gone.contains($0.id) }
+            selection.subtract(gone)
+        }
         self.outcome = outcome
         phase = .ready
     }

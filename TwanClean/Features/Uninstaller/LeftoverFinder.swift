@@ -52,7 +52,10 @@ struct LeftoverFinder: Sendable {
     ///   strongly is listed but not selected. A second copy of `app` itself,
     ///   with the same bundle identifier, is not a rival: it keeps using the
     ///   app's shared files, so none of them is selected.
-    func find(for app: InstalledApp, sensitivity: SearchSensitivity, otherApps: [InstalledApp] = []) throws -> LeftoverScan {
+    /// - Parameter progress: told which folder, and later which match, the
+    ///   search is reading, for the interface to show.
+    func find(for app: InstalledApp, sensitivity: SearchSensitivity, otherApps: [InstalledApp] = [],
+              progress: ScanProgressReporter? = nil) throws -> LeftoverScan {
         // Apple's own apps share support folders (GarageBand and Logic, for
         // instance), so only files named exactly after them are considered.
         let isAppleApp = app.bundleIdentifier.lowercased().hasPrefix("com.apple.")
@@ -87,6 +90,7 @@ struct LeftoverFinder: Sendable {
         func consider(_ folder: URL, searchVendors: Bool, exactOnly: Bool) throws {
             guard !isLocked(folder),
                   let names = try? FileManager.default.contentsOfDirectory(atPath: folder.path) else { return }
+            progress?.report(folder)
             for name in names {
                 try Task.checkCancellation()
                 let url = folder.appendingPathComponent(name)
@@ -115,6 +119,7 @@ struct LeftoverFinder: Sendable {
         // its metadata names the owner exactly.
         let containers = home.appendingPathComponent("Library/Containers")
         if !isLocked(containers) {
+            progress?.report(containers)
             for container in ContainerResolver.containers(in: containers, ownedBy: app.bundleIdentifier) {
                 matches[container] = AppMatcher.Match(tier: .bundleIdentifier, isExact: true, length: .max)
             }
@@ -126,7 +131,8 @@ struct LeftoverFinder: Sendable {
             }
         }
 
-        scan.items = try collect(matches, app: app, others: others, anotherCopyRemains: anotherCopyRemains)
+        scan.items = try collect(matches, app: app, others: others, anotherCopyRemains: anotherCopyRemains,
+                                 progress: progress)
         return scan
     }
 
@@ -160,8 +166,9 @@ struct LeftoverFinder: Sendable {
     /// nested paths and leaving out files another app claims, and decides
     /// what to preselect.
     private func collect(_ matches: [URL: AppMatcher.Match], app: InstalledApp, others: [AppMatcher],
-                         anotherCopyRemains: Bool) throws -> [LeftoverItem] {
+                         anotherCopyRemains: Bool, progress: ScanProgressReporter?) throws -> [LeftoverItem] {
         var items: [LeftoverItem] = []
+        progress?.report(app.url)
         if let bundle = try item(app.url, purpose: .appBundle, match: nil, shared: false, usedByAnotherCopy: false) {
             items.append(bundle)
         }
@@ -174,6 +181,7 @@ struct LeftoverFinder: Sendable {
         var kept: [URL] = []
         for (url, match) in allowed where !kept.contains(where: { PathPolicy.isSame(url.path, $0.path) || PathPolicy.isInside(url.path, $0.path) }) {
             try Task.checkCancellation()
+            progress?.report(url)
             var shared = false
             if match.length != .max {
                 let rivals = others.compactMap { $0.match(url.lastPathComponent) }

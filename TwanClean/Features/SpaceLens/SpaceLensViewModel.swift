@@ -2,7 +2,7 @@ import AppKit
 import Combine
 
 @MainActor
-final class SpaceLensViewModel: ObservableObject {
+final class SpaceLensViewModel: ObservableObject, RemovalProgressPublishing {
     enum Phase: Equatable {
         case idle
         case scanning
@@ -17,6 +17,8 @@ final class SpaceLensViewModel: ObservableObject {
     @Published private(set) var selection: [SizeNode] = []
     @Published private(set) var scanStarted: Date?
     @Published var outcome: CleanupOutcome?
+    /// Set while the selection is moved to the Trash.
+    @Published var removalProgress: RemovalProgress?
     /// Bumped when the tree changes in place, so views redraw.
     @Published private(set) var revision = 0
 
@@ -161,14 +163,18 @@ final class SpaceLensViewModel: ObservableObject {
         let requests = nodes.map { node in
             RemovalRequest(url: node.url, purpose: purpose(for: node.url), identity: node.identity!, bytes: node.bytes)
         }
-        let report = await removal.remove(requests)
+        let onStep = beginRemoval(.movingToTrash, total: requests.count)
+        defer { endRemoval() }
+        let report = await removal.remove(requests, progress: onStep)
         let gone = Set((report.removed + report.alreadyGone).map(\.url.path))
-        for node in nodes where gone.contains(node.url.path) {
-            node.parent?.remove(node)
+        withMotion {
+            for node in nodes where gone.contains(node.url.path) {
+                node.parent?.remove(node)
+            }
+            dropRemovedFromView(gone)
+            revision += 1
         }
-        dropRemovedFromView(gone)
         outcome = CleanupOutcome(report)
-        revision += 1
         phase = .ready
     }
 
@@ -189,18 +195,22 @@ final class SpaceLensViewModel: ObservableObject {
         guard !outcome.needsAdministrator.isEmpty, phase == .ready else { return }
         var current = outcome
         phase = .removing
+        let onStep = beginRemoval(.waitingForPassword, total: current.needsAdministrator.count)
+        defer { endRemoval() }
         let remover = PrivilegedRemover(
             service: removal,
             prompt: String(localized: "Twan Clean needs your password to remove the selected items."))
-        let report = await remover.remove(current.needsAdministrator)
+        let report = await remover.remove(current.needsAdministrator, progress: onStep)
         let gone = Set(report.removed.map(\.url.path))
-        for node in selection where gone.contains(node.url.path) {
-            node.parent?.remove(node)
+        withMotion {
+            for node in selection where gone.contains(node.url.path) {
+                node.parent?.remove(node)
+            }
+            dropRemovedFromView(gone)
+            revision += 1
         }
-        dropRemovedFromView(gone)
         current.add(report)
         self.outcome = current
-        revision += 1
         phase = .ready
     }
 }

@@ -371,6 +371,22 @@
         }
       }
     },
+    "%lld of %lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld of %2$lld"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld/%lld"
+          }
+        }
+      }
+    },
     "%lld of %lld categories done" : {
       "localizations" : {
         "en" : {
@@ -671,6 +687,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Theo hạng mục"
+          }
+        }
+      }
+    },
+    "CLEANING" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ĐANG DỌN"
           }
         }
       }
@@ -1021,6 +1047,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Nâng cao (nên dùng): thêm cả tệp có tên chứa tên hoặc mã định danh của app, và các container bắt đầu bằng mã nhóm nhà phát triển. Chỉ những tệp khớp chính xác mới được chọn sẵn."
+          }
+        }
+      }
+    },
+    "Enter your password in the macOS prompt to continue." : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nhập mật khẩu của bạn vào hộp thoại của macOS để tiếp tục."
           }
         }
       }
@@ -1471,6 +1507,16 @@
         }
       }
     },
+    "Loading apps…" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đang tải danh sách app…"
+          }
+        }
+      }
+    },
     "Locked" : {
       "localizations" : {
         "vi" : {
@@ -1581,6 +1627,16 @@
         }
       }
     },
+    "Measuring sizes…" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đang đo dung lượng…"
+          }
+        }
+      }
+    },
     "Measuring…" : {
       "localizations" : {
         "vi" : {
@@ -1683,6 +1739,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Chuyển vào Thùng rác…"
+          }
+        }
+      }
+    },
+    "Moving to the Trash…" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đang chuyển vào Thùng rác…"
           }
         }
       }
@@ -2097,6 +2163,16 @@
         }
       }
     },
+    "QUITTING" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ĐANG THOÁT"
+          }
+        }
+      }
+    },
     "Quit Twan Clean" : {
       "localizations" : {
         "vi" : {
@@ -2113,6 +2189,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Thoát và gỡ"
+          }
+        }
+      }
+    },
+    "Quitting %@…" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đang thoát %@…"
+          }
+        }
+      }
+    },
+    "REMOVING" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ĐANG XOÁ"
           }
         }
       }
@@ -2253,6 +2349,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "ĐANG TÌM"
+          }
+        }
+      }
+    },
+    "STOPPING" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ĐANG DỪNG"
           }
         }
       }
@@ -2613,6 +2719,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Thôi bỏ qua thư mục này"
+          }
+        }
+      }
+    },
+    "Stopping background services…" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đang dừng các dịch vụ chạy nền…"
           }
         }
       }
@@ -3003,6 +3119,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Phiên bản"
+          }
+        }
+      }
+    },
+    "WAITING" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ĐANG CHỜ"
+          }
+        }
+      }
+    },
+    "Waiting for your password…" : {
+      "localizations" : {
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Đang chờ mật khẩu của bạn…"
           }
         }
       }

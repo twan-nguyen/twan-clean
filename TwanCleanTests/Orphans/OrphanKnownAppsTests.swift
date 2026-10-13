@@ -187,6 +187,52 @@ final class OrphansViewModelTests: XCTestCase {
         XCTAssertEqual(model.items.map(\.name), ["com.oldvendor.removedapp"])
     }
 
+    private func scannedAndSelected() async throws -> OrphansViewModel {
+        try tree.makeAppBundle("Applications/Editor.app", bundleIdentifier: "com.example.editor")
+        let model = try makeModel()
+        await model.scan()?.value
+        model.selection = Set(model.items.map(\.id))
+        return model
+    }
+
+    func testScanningRecordsWhenItStartedAndWhereItIsReading() async throws {
+        try tree.makeAppBundle("Applications/Editor.app", bundleIdentifier: "com.example.editor")
+        let model = try makeModel()
+        XCTAssertNil(model.scanStarted)
+
+        await model.scan()?.value
+
+        XCTAssertNotNil(model.scanStarted)
+        XCTAssertNotNil(model.scanProgress.currentPath)
+    }
+
+    func testRemovingPublishesItsProgressAndClearsItWhenDone() async throws {
+        let model = try await scannedAndSelected()
+        let log = RemovalProgressLog(model.$removalProgress)
+
+        await model.trashSelection()
+
+        XCTAssertEqual(log.shown.first?.stage, .movingToTrash)
+        XCTAssertEqual(log.shown.first?.total, 1)
+        XCTAssertNil(model.removalProgress)
+        XCTAssertTrue(log.endedEmpty)
+        XCTAssertEqual(model.phase, .ready)
+        XCTAssertTrue(model.items.isEmpty)
+    }
+
+    func testACancelledRemovalStillClearsItsProgress() async throws {
+        let model = try await scannedAndSelected()
+
+        let removing = Task { await model.trashSelection() }
+        removing.cancel()
+        await removing.value
+
+        XCTAssertNil(model.removalProgress)
+        XCTAssertEqual(model.phase, .ready)
+        XCTAssertEqual(model.items.count, 1, "nothing was removed")
+        XCTAssertTrue(tree.exists(home.url("Library/Caches/com.oldvendor.removedapp")))
+    }
+
     func testFailingToSaveTheIgnoreListIsReported() async throws {
         try tree.makeAppBundle("Applications/Editor.app", bundleIdentifier: "com.example.editor")
         // The store's folder cannot be created: a file is in its way.

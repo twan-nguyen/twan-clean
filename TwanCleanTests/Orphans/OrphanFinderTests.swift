@@ -34,6 +34,17 @@ final class OrphanFinderTests: XCTestCase {
         Set(try finder.find(installed: installed, runningBundleIDs: running, ignored: ignored).map(\.name))
     }
 
+    func testTheScanReportsWhereItIsReading() throws {
+        let reporter = ScanProgressReporter()
+
+        let found = try finder.find(installed: installed, runningBundleIDs: [], ignored: [], progress: reporter)
+
+        // The last thing read is an item measured, and every orphan was measured.
+        let path = try XCTUnwrap(reporter.currentPath)
+        XCTAssertTrue(path.hasPrefix(tree.root.path), path)
+        XCTAssertFalse(found.isEmpty)
+    }
+
     func testReportsOnlyFilesOfAppsThatAreGone() throws {
         XCTAssertEqual(try names(), ["com.oldvendor.removedapp", "OldTool"])
     }

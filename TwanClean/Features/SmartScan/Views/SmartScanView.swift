@@ -14,20 +14,22 @@ struct SmartScanView: View {
             VStack(alignment: .leading, spacing: 20) {
                 switch model.phase {
                 case .idle:
-                    start
+                    start.phaseTransition()
                 case .scanning:
                     ScanProgressView(finished: model.finishedCount, total: model.scanningCategories.count,
                                      reporter: model.progress) { model.cancelScan() }
+                        .phaseTransition()
                 case .ready, .cleaning:
-                    results
+                    results.phaseTransition()
                 }
             }
             .padding(.horizontal, 28)
             .padding(.vertical, 24)
             .frame(maxWidth: 920, alignment: .leading)
             .frame(maxWidth: .infinity)
-            .animation(.spring(response: 0.5, dampingFraction: 0.85), value: model.phase)
+            .animatesPhase(model.phase)
         }
+        .removalOverlay(model.removalProgress)
         .navigationTitle("Smart Scan")
         .sheet(isPresented: $confirming) {
             CleanConfirmView(items: model.selectedItems()) {
@@ -126,6 +128,7 @@ struct SmartScanView: View {
                         Text(model.totalFoundBytes.formattedBytes)
                             .font(.system(size: 40, weight: .semibold))
                             .monospacedDigit()
+                            .animatedNumber(model.totalFoundBytes)
                         Text("found")
                             .font(.system(size: 16))
                             .foregroundStyle(.secondary)

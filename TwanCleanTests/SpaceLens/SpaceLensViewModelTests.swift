@@ -42,6 +42,35 @@ final class SpaceLensViewModelTests: XCTestCase {
         XCTAssertEqual(model.selection.map(\.name), [movieName])
     }
 
+    func testTrashingPublishesItsProgressAndClearsItWhenDone() async throws {
+        await model.scanHome()?.value
+        let downloads = try node("Downloads", in: model.root)
+        model.toggle(try node(movieName, in: downloads))
+        model.toggle(try node("setup.dmg", in: downloads))
+        let log = RemovalProgressLog(model.$removalProgress)
+
+        await model.trashSelection()
+
+        XCTAssertEqual(log.shown.first?.stage, .movingToTrash)
+        XCTAssertEqual(log.shown.first?.total, 2)
+        XCTAssertNil(model.removalProgress)
+        XCTAssertTrue(log.endedEmpty)
+        XCTAssertEqual(model.phase, .ready)
+    }
+
+    func testACancelledTrashingStillClearsItsProgress() async throws {
+        await model.scanHome()?.value
+        model.toggle(try node(movieName, in: try node("Downloads", in: model.root)))
+
+        let trashing = Task { await model.trashSelection() }
+        trashing.cancel()
+        await trashing.value
+
+        XCTAssertNil(model.removalProgress)
+        XCTAssertEqual(model.phase, .ready)
+        XCTAssertTrue(tree.exists(home.url("Downloads/\(movieName)")))
+    }
+
     func testStartingOverReturnsToTheStartScreen() async throws {
         await model.scanHome()?.value
         model.open(try node("Downloads", in: model.root))

@@ -54,7 +54,7 @@ extension RefusalReason {
 }
 
 @MainActor
-final class SmartScanViewModel: ObservableObject {
+final class SmartScanViewModel: ObservableObject, RemovalProgressPublishing {
     enum Phase: Equatable {
         case idle
         case scanning
@@ -69,6 +69,8 @@ final class SmartScanViewModel: ObservableObject {
     @Published private(set) var lastScanDate: Date?
     @Published var selection: Set<String> = []
     @Published var outcome: CleanupOutcome?
+    /// Set while a cleaning runs.
+    @Published var removalProgress: RemovalProgress?
     /// Shown when a scheduled run is busy and the request must wait.
     @Published var notice: String?
 
@@ -208,7 +210,10 @@ final class SmartScanViewModel: ObservableObject {
         let runLock = takeRunLock()
         guard runLock.granted else { return }
         phase = .cleaning
-        let report = await removal.remove(items.map(\.removalRequest))
+        let requests = items.map(\.removalRequest)
+        let onStep = beginRemoval(.cleaning, total: requests.count)
+        defer { endRemoval() }
+        let report = await removal.remove(requests, progress: onStep)
         finishCleaning(report, into: CleanupOutcome(report))
         withExtendedLifetime(runLock.lock) {}
     }
@@ -219,20 +224,24 @@ final class SmartScanViewModel: ObservableObject {
         guard !outcome.needsAdministrator.isEmpty, phase == .ready else { return }
         var current = outcome
         phase = .cleaning
+        let onStep = beginRemoval(.waitingForPassword, total: current.needsAdministrator.count)
+        defer { endRemoval() }
         let remover = PrivilegedRemover(
             service: removal,
             prompt: String(localized: "Twan Clean needs your password to remove the selected items."))
-        let report = await remover.remove(current.needsAdministrator)
+        let report = await remover.remove(current.needsAdministrator, progress: onStep)
         current.add(report)
         finishCleaning(report, into: current)
     }
 
     private func finishCleaning(_ report: RemovalReport, into outcome: CleanupOutcome) {
         let gone = Set((report.removed + report.alreadyGone).map(\.url.path))
-        for category in results.keys {
-            results[category]?.items.removeAll { gone.contains($0.id) }
+        withMotion {
+            for category in results.keys {
+                results[category]?.items.removeAll { gone.contains($0.id) }
+            }
+            selection.subtract(gone)
         }
-        selection.subtract(gone)
         self.outcome = outcome
         phase = .ready
     }

@@ -45,6 +45,18 @@ struct RemovalReport: Sendable {
     }
 }
 
+/// How far a removal has got: `completed` of `total` requests are settled, and
+/// `url` is the one being worked on, or the last one settled.
+struct RemovalStep: Sendable, Equatable {
+    let completed: Int
+    let total: Int
+    let url: URL
+}
+
+/// Called from whichever thread does the removal, so it must be cheap and
+/// must not touch interface state directly.
+typealias RemovalProgressHandler = @Sendable (RemovalStep) -> Void
+
 /// The only place that removes files. Every request is checked against
 /// `PathPolicy` and against its scanned identity immediately before removal,
 /// and its purpose decides whether it is deleted or moved to the Trash.
@@ -68,11 +80,18 @@ struct RemovalService: Sendable {
         return location as URL?
     }
 
-    func remove(_ requests: [RemovalRequest]) async -> RemovalReport {
+    /// - Parameter progress: told before each request is handled, and once more
+    ///   when the last one is settled. Every request counts, whether it is
+    ///   removed, refused or already gone.
+    func remove(_ requests: [RemovalRequest], progress: RemovalProgressHandler? = nil) async -> RemovalReport {
         var report = RemovalReport()
-        for request in requests {
-            if Task.isCancelled { break }
+        for (index, request) in requests.enumerated() {
+            if Task.isCancelled { return report }
+            progress?(RemovalStep(completed: index, total: requests.count, url: request.url))
             remove(request, into: &report)
+        }
+        if let last = requests.last {
+            progress?(RemovalStep(completed: requests.count, total: requests.count, url: last.url))
         }
         return report
     }

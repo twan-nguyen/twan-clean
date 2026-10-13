@@ -55,6 +55,37 @@ final class SmartScanViewModelTests: XCTestCase {
         XCTAssertTrue(tree.exists(home.url("Downloads/huge.iso")))
     }
 
+    func testCleaningPublishesItsProgressAndClearsItWhenDone() async {
+        let model = makeModel()
+        await model.startScan([.userCache, .largeOld])?.value
+        let selected = model.selectedItems().count
+        let log = RemovalProgressLog(model.$removalProgress)
+
+        await model.clean()
+
+        XCTAssertEqual(log.shown.first?.stage, .cleaning)
+        XCTAssertEqual(log.shown.first?.total, selected)
+        XCTAssertEqual(log.shown.first?.completed, 0)
+        XCTAssertNil(model.removalProgress)
+        XCTAssertTrue(log.endedEmpty)
+        XCTAssertEqual(model.phase, .ready)
+    }
+
+    func testACancelledCleaningStillClearsItsProgress() async {
+        let model = makeModel()
+        await model.startScan([.userCache, .largeOld])?.value
+        let log = RemovalProgressLog(model.$removalProgress)
+
+        let cleaning = Task { await model.clean() }
+        cleaning.cancel()
+        await cleaning.value
+
+        XCTAssertFalse(log.shown.isEmpty, "the cleaning did start")
+        XCTAssertNil(model.removalProgress)
+        XCTAssertEqual(model.phase, .ready)
+        XCTAssertTrue(tree.exists(home.url("Library/Caches/com.example.editor")), "nothing was removed")
+    }
+
     func testScanWaitsWhileAScheduledRunHoldsTheLock() async throws {
         let model = makeModel()
         let held = try XCTUnwrap(RunLock.acquire(at: tree.url("scan.lock")))

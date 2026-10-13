@@ -25,19 +25,30 @@ struct AppListView: View {
                 Button {
                     model.reloadApps()
                 } label: {
-                    Label("Reload", systemImage: "arrow.clockwise").labelStyle(.iconOnly)
+                    SpinningSymbol(systemName: "arrow.clockwise", isSpinning: isBusy)
                 }
                 .buttonStyle(.borderless)
                 .disabled(model.isLoadingApps)
+                .accessibilityLabel(Text("Reload"))
                 .help(Text("Reload"))
             }
-            HStack {
+            HStack(spacing: 8) {
                 Eyebrow("\(model.visibleApps.count) apps")
+                    .animatedNumber(model.visibleApps.count)
                 Spacer()
+                // Words as well as the turning arrow, which stands still
+                // under Reduce Motion.
+                if model.isLoadingApps {
+                    Text("Loading apps…").font(.caption).foregroundStyle(.secondary)
+                } else if model.isMeasuringSizes {
+                    Text("Measuring sizes…").font(.caption).foregroundStyle(.secondary)
+                }
             }
-            if model.isLoadingApps && model.apps.isEmpty {
-                ProgressView()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .animatesPhase(isBusy)
+            if showsSkeleton {
+                AppListSkeleton()
+                    .cardList()
+                    .transition(.opacity)
             } else {
                 List(model.visibleApps, selection: Binding(
                     get: { model.selectedApp?.id },
@@ -60,6 +71,8 @@ struct AppListView: View {
                                 .font(.system(size: 11.5, weight: .semibold))
                                 .monospacedDigit()
                                 .foregroundStyle(.secondary)
+                        } else if model.isMeasuringSizes {
+                            ShimmerPlaceholder(width: 44, height: 9)
                         }
                     }
                     .padding(.vertical, 3)
@@ -72,5 +85,37 @@ struct AppListView: View {
         .padding(.leading, 16)
         .padding(.trailing, 8)
         .padding(.vertical, 14)
+        .animatesPhase(showsSkeleton)
+    }
+
+    private var showsSkeleton: Bool { model.isLoadingApps && model.apps.isEmpty }
+    private var isBusy: Bool { model.isLoadingApps || model.isMeasuringSizes }
+}
+
+/// Rows with grey stand-ins for the icon, name and size, shown while the
+/// first list of apps loads.
+private struct AppListSkeleton: View {
+    private static let rows = 9
+
+    var body: some View {
+        VStack(spacing: 0) {
+            ForEach(0..<Self.rows, id: \.self) { row in
+                HStack(spacing: 10) {
+                    ShimmerPlaceholder(width: 30, height: 30)
+                    VStack(alignment: .leading, spacing: 5) {
+                        ShimmerPlaceholder(width: CGFloat(90 + (row * 37) % 60), height: 10)
+                        ShimmerPlaceholder(width: 40, height: 8)
+                    }
+                    Spacer()
+                    ShimmerPlaceholder(width: 44, height: 9)
+                }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 8)
+            }
+            Spacer(minLength: 0)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text("Loading apps…"))
     }
 }

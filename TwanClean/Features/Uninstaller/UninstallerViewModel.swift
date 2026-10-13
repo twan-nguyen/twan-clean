@@ -2,7 +2,7 @@ import AppKit
 import Combine
 
 @MainActor
-final class UninstallerViewModel: ObservableObject {
+final class UninstallerViewModel: ObservableObject, RemovalProgressPublishing {
     enum Phase: Equatable {
         case idle
         case uninstalling
@@ -30,16 +30,21 @@ final class UninstallerViewModel: ObservableObject {
 
     @Published private(set) var apps: [InstalledApp] = []
     @Published private(set) var isLoadingApps = false
+    /// Whether app sizes are still being measured after the list loaded.
+    @Published private(set) var isMeasuringSizes = false
     @Published private(set) var sizes: [String: Int64] = [:]
     @Published var searchText = ""
     @Published var sortBySize = false
     @Published private(set) var selectedApp: InstalledApp?
     @Published private(set) var leftovers: LeftoverScan?
     @Published private(set) var isFindingLeftovers = false
+    @Published private(set) var leftoverSearchStarted: Date?
     @Published private(set) var leftoverError: String?
     @Published var selection: Set<String> = []
     @Published private(set) var phase: Phase = .idle
     @Published var outcome: CleanupOutcome?
+    /// Set while an uninstall, or its administrator retry, runs.
+    @Published var removalProgress: RemovalProgress?
     @Published var sensitivity: SearchSensitivity {
         didSet {
             defaults.set(sensitivity.rawValue, forKey: SearchSensitivity.defaultsKey)
@@ -47,6 +52,8 @@ final class UninstallerViewModel: ObservableObject {
         }
     }
 
+    /// The folder the leftover search is reading.
+    let leftoverProgress = ScanProgressReporter()
     private let index: InstalledAppIndex
     private let makeFinder: @MainActor () -> LeftoverFinder
     private let removal: RemovalService
@@ -61,6 +68,7 @@ final class UninstallerViewModel: ObservableObject {
     private(set) var findTask: Task<Void, Never>?
     private var loadTask: Task<Void, Never>?
     private var hasLoaded = false
+    private var sizeRun = 0
 
     init(index: InstalledAppIndex = .standard,
          makeFinder: @escaping @MainActor () -> LeftoverFinder = { LeftoverFinder(protected: ProtectedLocations.current()) },
@@ -115,7 +123,12 @@ final class UninstallerViewModel: ObservableObject {
         loadTask = load
         return Task {
             await load.value
+            sizeRun += 1
+            let run = sizeRun
+            isMeasuringSizes = true
             await self.measureSizes(of: self.apps)
+            // A newer reload is measuring now and owns the flag.
+            if run == sizeRun { isMeasuringSizes = false }
         }
     }
 
@@ -207,8 +220,11 @@ final class UninstallerViewModel: ObservableObject {
         findTask?.cancel()
         guard let app = selectedApp else { return nil }
         isFindingLeftovers = true
+        leftoverSearchStarted = Date()
+        leftoverProgress.reset()
         let finder = makeFinder()
         let sensitivity = sensitivity
+        let reporter = leftoverProgress
         let task = Task {
             await self.waitForAppList()
             guard !Task.isCancelled, self.selectedApp == app else { return }
@@ -219,7 +235,7 @@ final class UninstallerViewModel: ObservableObject {
                 $0.bundleIdentifier.caseInsensitiveCompare(app.bundleIdentifier) != .orderedSame
             }
             let result = await runDetached { () -> Result<LeftoverScan, Error> in
-                Result { try finder.find(for: app, sensitivity: sensitivity, otherApps: others) }
+                Result { try finder.find(for: app, sensitivity: sensitivity, otherApps: others, progress: reporter) }
             }
             guard !Task.isCancelled, self.selectedApp == app else { return }
             switch result {
@@ -278,7 +294,12 @@ final class UninstallerViewModel: ObservableObject {
     func uninstall(_ items: [LeftoverItem], of app: InstalledApp, forceQuit: Bool = false) async {
         guard !items.isEmpty, phase == .idle, app == selectedApp else { return }
         phase = .uninstalling
-        defer { phase = .idle }
+        let requests = items.map(\.removalRequest)
+        let onStep = beginRemoval(.stoppingServices, total: requests.count)
+        defer {
+            endRemoval()
+            phase = .idle
+        }
 
         await unloadLaunchAgents(in: items)
         // The app's own agents go with the app; kept, they keep running.
@@ -292,7 +313,8 @@ final class UninstallerViewModel: ObservableObject {
             self.outcome = outcome
             return
         }
-        let report = await removal.remove(items.map(\.removalRequest))
+        setRemovalStage(.movingToTrash)
+        let report = await removal.remove(requests, progress: onStep)
         finish(report, into: CleanupOutcome(report))
     }
 
@@ -300,22 +322,28 @@ final class UninstallerViewModel: ObservableObject {
         guard !outcome.needsAdministrator.isEmpty, phase == .idle else { return }
         var current = outcome
         phase = .uninstalling
-        defer { phase = .idle }
+        let onStep = beginRemoval(.waitingForPassword, total: current.needsAdministrator.count)
+        defer {
+            endRemoval()
+            phase = .idle
+        }
         let remover = PrivilegedRemover(
             service: removal,
             prompt: String(localized: "Twan Clean needs your password to remove the selected items."))
-        let report = await remover.remove(current.needsAdministrator)
+        let report = await remover.remove(current.needsAdministrator, progress: onStep)
         current.add(report)
         finish(report, into: current)
     }
 
     private func finish(_ report: RemovalReport, into outcome: CleanupOutcome) {
         let gone = Set((report.removed + report.alreadyGone).map(\.url.path))
-        leftovers?.items.removeAll { gone.contains($0.id) }
-        selection.subtract(gone)
-        if let app = selectedApp, gone.contains(app.url.path) {
-            apps.removeAll { $0 == app }
-            sizes[app.id] = nil
+        withMotion {
+            leftovers?.items.removeAll { gone.contains($0.id) }
+            selection.subtract(gone)
+            if let app = selectedApp, gone.contains(app.url.path) {
+                apps.removeAll { $0 == app }
+                sizes[app.id] = nil
+            }
         }
         self.outcome = outcome
     }
@@ -331,6 +359,7 @@ final class UninstallerViewModel: ObservableObject {
             if running.isEmpty { return [] }
             // Out of patience: something keeps coming back.
             if round == timing.respawnRounds { return running.map(\.name) }
+            setRemovalStage(.quittingApp(app.name))
 
             for process in running { processes.terminate(process, force: force) }
             for _ in 0..<timing.polls {

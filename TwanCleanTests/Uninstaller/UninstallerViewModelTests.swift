@@ -192,6 +192,59 @@ final class UninstallerViewModelTests: XCTestCase {
         XCTAssertNil(model.outcome?.failures.first)
     }
 
+    func testUninstallingShowsEachStageInOrderAndClearsItWhenDone() async throws {
+        let editor = try install("Editor", id: "com.example.editor", name: "Editor")
+        try writeAgent(label: "com.example.editor.agent", in: editor)
+        var looks = 0
+        processes.next = {
+            looks += 1
+            return looks == 1 ? [RunningProcess(pid: 101, name: "Editor")] : []
+        }
+        let model = try makeModel()
+        model.selectApp(at: editor, policy: home.policy)
+        await model.findTask?.value
+        let app = try XCTUnwrap(model.selectedApp)
+        let items = model.selectedItems
+        let log = RemovalProgressLog(model.$removalProgress)
+
+        await model.uninstall(items, of: app)
+
+        XCTAssertEqual(log.stages, [.stoppingServices, .quittingApp("Editor"), .movingToTrash])
+        XCTAssertEqual(log.shown.first?.total, items.count)
+        XCTAssertNil(model.removalProgress)
+        XCTAssertTrue(log.endedEmpty)
+        XCTAssertEqual(model.phase, .idle)
+    }
+
+    func testProgressIsClearedWhenTheAppWillNotQuit() async throws {
+        try install("Editor", id: "com.example.editor", name: "Editor")
+        processes.stubborn = [301]
+        processes.next = { [RunningProcess(pid: 301, name: "Editor")] }
+        let model = try makeModel()
+        let log = RemovalProgressLog(model.$removalProgress)
+
+        _ = try await uninstallEditor(model)
+
+        XCTAssertEqual(log.stages, [.stoppingServices, .quittingApp("Editor")])
+        XCTAssertNil(model.removalProgress)
+        XCTAssertEqual(model.phase, .idle)
+    }
+
+    func testSearchingForLeftoversReportsWhereItIsLookingAndWhenItStarted() async throws {
+        let editor = try install("Editor", id: "com.example.editor", name: "Editor")
+        try tree.makeFile("home/Library/Application Support/Editor/state", bytes: 4_096)
+        let model = try makeModel()
+        XCTAssertNil(model.leftoverSearchStarted)
+
+        model.selectApp(at: editor, policy: home.policy)
+        XCTAssertNotNil(model.leftoverSearchStarted)
+        await model.findTask?.value
+
+        let path = try XCTUnwrap(model.leftoverProgress.currentPath)
+        XCTAssertTrue(path.hasPrefix(home.home.path), path)
+        XCTAssertFalse(model.isFindingLeftovers)
+    }
+
     func testOnlyAnAppsOwnAgentLabelsAreStopped() {
         XCTAssertTrue(UninstallerViewModel.isStoppable(label: "com.example.editor.agent"))
         XCTAssertFalse(UninstallerViewModel.isStoppable(label: "com.apple.Dock.agent"))

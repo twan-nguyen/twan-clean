@@ -17,6 +17,13 @@ final class ScanProgressReporter: @unchecked Sendable {
         defer { lock.unlock() }
         return path
     }
+
+    /// Forgets the last path, so a new run does not start with the old one.
+    func reset() {
+        lock.lock()
+        path = nil
+        lock.unlock()
+    }
 }
 
 /// Everything a category scanner needs, so scanners stay free of globals and

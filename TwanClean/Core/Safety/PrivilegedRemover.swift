@@ -67,12 +67,23 @@ struct PrivilegedRemover: Sendable {
         self.daemonFolder = daemonFolder
     }
 
-    func remove(_ requests: [RemovalRequest]) async -> RemovalReport {
+    /// - Parameter progress: told as each request is settled. The items that
+    ///   need the administrator command are settled together once it returns,
+    ///   so nothing is reported for them while the password prompt is open.
+    func remove(_ requests: [RemovalRequest], progress: RemovalProgressHandler? = nil) async -> RemovalReport {
         var report = RemovalReport()
         var deletions: [(request: RemovalRequest, url: URL)] = []
         var recycling: [(request: RemovalRequest, url: URL)] = []
+        var settled = 0
+        func settle(_ url: URL) {
+            settled += 1
+            progress?(RemovalStep(completed: settled, total: requests.count, url: url))
+        }
         for request in requests {
-            guard let url = service.validate(request, into: &report) else { continue }
+            guard let url = service.validate(request, into: &report) else {
+                settle(request.url)
+                continue
+            }
             switch request.purpose.mode {
             case .delete: deletions.append((request, url))
             case .trash: recycling.append((request, url))
@@ -80,6 +91,7 @@ struct PrivilegedRemover: Sendable {
         }
         if !deletions.isEmpty {
             await deleteAsAdministrator(deletions, into: &report)
+            for item in deletions { settle(item.url) }
         }
         let daemons = recycling.filter { Self.isSystemDaemon($0.url, in: daemonFolder) }
         if !daemons.isEmpty {
@@ -91,6 +103,7 @@ struct PrivilegedRemover: Sendable {
         }
         if !recycling.isEmpty {
             await recycleAsAdministrator(recycling, into: &report)
+            for item in recycling { settle(item.url) }
         }
         return report
     }

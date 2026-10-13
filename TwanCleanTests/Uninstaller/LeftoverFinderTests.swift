@@ -33,6 +33,20 @@ final class LeftoverFinderTests: XCTestCase {
         tree = nil
     }
 
+    func testTheSearchReportsWhereItIsReading() throws {
+        let reporter = ScanProgressReporter()
+        XCTAssertNil(reporter.currentPath)
+
+        let scan = try LeftoverFinder(home: home.home, policy: home.policy, systemFolders: [])
+            .find(for: app, sensitivity: .enhanced, progress: reporter)
+
+        // The last thing read is one of the items being measured.
+        let path = try XCTUnwrap(reporter.currentPath)
+        XCTAssertTrue(scan.items.contains { $0.url.path == path || $0.url.path.hasPrefix(path) }, path)
+        reporter.reset()
+        XCTAssertNil(reporter.currentPath)
+    }
+
     private func find(_ sensitivity: SearchSensitivity = .enhanced, protected: ProtectedLocations? = nil,
                       for target: InstalledApp? = nil, others: [InstalledApp] = []) throws -> LeftoverScan {
         try LeftoverFinder(home: home.home, policy: home.policy, protected: protected, systemFolders: [])

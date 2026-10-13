@@ -89,14 +89,17 @@ struct OrphanFinder: Sendable {
     ///   - runningBundleIDs: apps running now, which count as installed.
     ///   - extraIdentifiers: other identifiers apps bring along, such as
     ///     launchd labels.
+    ///   - progress: told which folder is being read and which item is being
+    ///     measured, for the interface to show.
     func find(installed: [InstalledApp], runningBundleIDs: Set<String>, ignored: Set<String>,
-              extraIdentifiers: Set<String> = []) throws -> [OrphanItem] {
+              extraIdentifiers: Set<String> = [], progress: ScanProgressReporter? = nil) throws -> [OrphanItem] {
         guard !installed.isEmpty else { throw ScanError.incompleteAppList }
         let known = KnownApps(installed: installed, runningBundleIDs: runningBundleIDs, extraIdentifiers: extraIdentifiers)
 
         var items: [OrphanItem] = []
         for folder in searchFolders where protected?.contains(folder) != true {
             guard let names = try? FileManager.default.contentsOfDirectory(atPath: folder.path) else { continue }
+            progress?.report(folder)
             let identifiersOnly = bundleIdentifierOnlyFolders.contains { PathPolicy.isSame(folder.path, $0) }
             for name in names {
                 try Task.checkCancellation()
@@ -107,6 +110,7 @@ struct OrphanFinder: Sendable {
                       !isRegisteredApp(named: name),
                       case .allowed(let canonical) = policy.evaluate(url, purpose: .orphan),
                       let identity = FileIdentity.of(canonical) else { continue }
+                progress?.report(canonical)
                 let size = try AllocatedSizeCalculator().measure(canonical)
                 guard size.bytes > 0 else { continue }
                 items.append(OrphanItem(url: canonical, identity: identity, bytes: size.reclaimableBytes,

@@ -370,12 +370,15 @@ struct ScanningGauge: View {
     var systemImage = "magnifyingglass"
 
     @State private var rotate = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         ZStack {
-            TimelineView(.animation) { timeline in
+            // The sweep and the turning arc are motion only; the percentage
+            // and the arc's length carry the progress.
+            TimelineView(.animation(paused: reduceMotion)) { timeline in
                 let t = timeline.date.timeIntervalSinceReferenceDate
-                let angle = t.truncatingRemainder(dividingBy: 3) / 3 * 360
+                let angle = reduceMotion ? 0 : t.truncatingRemainder(dividingBy: 3) / 3 * 360
                 Circle()
                     .fill(AngularGradient(colors: [tint.opacity(0), tint.opacity(0), tint.opacity(0.22)], center: .center))
                     .rotationEffect(.degrees(angle))
@@ -386,8 +389,9 @@ struct ScanningGauge: View {
             Circle()
                 .trim(from: 0, to: CGFloat(max(0.05, min(0.95, progress ?? 0.3))))
                 .stroke(tint, style: StrokeStyle(lineWidth: 10, lineCap: .round))
-                .rotationEffect(.degrees(rotate ? 360 : 0))
-                .animation(.linear(duration: progress == nil ? 1.6 : 4).repeatForever(autoreverses: false), value: rotate)
+                .rotationEffect(.degrees(reduceMotion ? -90 : (rotate ? 360 : 0)))
+                .animation(reduceMotion ? nil : .linear(duration: progress == nil ? 1.6 : 4).repeatForever(autoreverses: false),
+                           value: rotate)
             VStack(spacing: 2) {
                 if let progress {
                     Text(progress, format: .percent.precision(.fractionLength(0)))
@@ -501,6 +505,7 @@ struct PulsingDot: View {
     let tint: Color
     var isPulsing = false
     @State private var pulse = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         ZStack {
@@ -520,10 +525,11 @@ struct PulsingDot: View {
         .frame(width: 18, height: 18)
         .onAppear { syncPulse() }
         .onChange(of: isPulsing) { _ in syncPulse() }
+        .onChange(of: reduceMotion) { _ in syncPulse() }
     }
 
     private func syncPulse() {
-        guard isPulsing else {
+        guard isPulsing, !reduceMotion else {
             pulse = false
             return
         }
@@ -602,6 +608,7 @@ struct SelectionFooter<Leading: View, Action: View>: View {
                 Text(selectedBytes.formattedBytes)
                     .font(.system(size: 15, weight: .semibold))
                     .monospacedDigit()
+                    .animatedNumber(selectedBytes)
             }
             action
         }

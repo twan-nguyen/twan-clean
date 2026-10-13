@@ -12,12 +12,15 @@ struct UninstallerView: View {
                 if let app = model.selectedApp {
                     AppDetailView(app: app, model: model)
                         .id(app.id)
+                        .phaseTransition()
                 } else {
                     EmptyStateCard(systemImage: "square.grid.2x2.fill", tint: Tint.purple,
                                    title: "Choose an app",
                                    message: "Or in Finder: Services › Uninstall with Twan Clean.")
+                        .phaseTransition()
                 }
             }
+            .animatesPhase(model.selectedApp?.id)
             .frame(minWidth: 400)
         }
         .navigationTitle("App Uninstaller")

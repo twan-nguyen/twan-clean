@@ -10,12 +10,23 @@ struct CategoryDetailView: View {
     private var showsFooter: Bool { !isScanningThis && !(result?.items.isEmpty ?? true) }
     private var isScanningThis: Bool { model.isScanning && model.scanningCategories.contains(category) }
 
+    private enum ContentState {
+        case scanning, notScanned, empty, items
+    }
+
+    private var contentState: ContentState {
+        if isScanningThis { return .scanning }
+        guard let result else { return .notScanned }
+        return result.items.isEmpty ? .empty : .items
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             VStack(alignment: .leading, spacing: 14) {
                 header
-                content
+                content.phaseTransition()
             }
+            .animatesPhase(contentState)
             .padding(.horizontal, 24)
             .padding(.top, 20)
             .padding(.bottom, showsFooter ? 12 : 20)
@@ -23,6 +34,7 @@ struct CategoryDetailView: View {
                 footer
             }
         }
+        .removalOverlay(model.removalProgress, tint: category.tint)
         .navigationTitle(Text(category.title))
         .sheet(isPresented: $confirming) {
             CleanConfirmView(items: model.selectedItems(in: [category])) {
@@ -61,6 +73,7 @@ struct CategoryDetailView: View {
                         Text(result.totalBytes.formattedBytes)
                             .font(.system(size: 22, weight: .semibold))
                             .monospacedDigit()
+                            .animatedNumber(result.totalBytes)
                         Text("\(result.items.count) items")
                             .font(.system(size: 11.5))
                             .foregroundStyle(.secondary)
