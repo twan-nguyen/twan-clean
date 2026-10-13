@@ -110,11 +110,16 @@ struct RemovalService: Sendable {
         do {
             switch request.purpose.mode {
             case .delete:
-                try FileManager.default.removeItem(at: url)
+                try DescriptorRemover.remove(url, expecting: request.identity)
             case .trash:
                 if let location = try trash(url) { report.trashedLocations.append(location) }
             }
             report.removed.append(request)
+        } catch DescriptorRemover.Failure.mountPoint {
+            // Administrator rights would not get past the mount either.
+            report.refused.append((request, .mountPoint))
+        } catch DescriptorRemover.Failure.changed {
+            report.refused.append((request, .changedSinceScan))
         } catch where Self.isPermissionError(error) {
             report.needsAdministrator.append(request)
         } catch where FileIdentity.lookup(url) == .missing {

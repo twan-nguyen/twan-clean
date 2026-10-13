@@ -100,6 +100,37 @@ final class RemovalServiceTests: XCTestCase {
         XCTAssertFalse(report.trashedLocations.contains { $0.lastPathComponent.hasSuffix("blob") })
     }
 
+    func testUnreadableFolderDeepInsideAnItemAsksForAdministrator() async throws {
+        let folder = try tree.makeDirectory("home/Library/Caches/app")
+        try tree.makeFile("home/Library/Caches/app/a/locked/inner")
+        let locked = home.url("Library/Caches/app/a/locked")
+        let request = try home.request(folder, .regenerableCache)
+        XCTAssertEqual(chmod(locked.path, 0o000), 0)
+        defer { chmod(locked.path, 0o755) }
+
+        let report = await service.remove([request])
+
+        XCTAssertEqual(report.needsAdministrator.count, 1)
+        XCTAssertTrue(report.failed.isEmpty)
+    }
+
+    func testMountPointDeepInsideAnItemIsRefusedNotSentToAdministrator() async throws {
+        let item = try tree.makeDirectory("home/Library/Caches/app")
+        try tree.makeFile("home/Library/Caches/app/blob")
+        let image = try MountedImage(at: home.url("Library/Caches/app/sub/volume"), imageFolder: tree.root)
+        defer { image.detach() }
+        let precious = try tree.makeFile("home/Library/Caches/app/sub/volume/precious.txt")
+        let request = try home.request(item, .regenerableCache)
+
+        let report = await service.remove([request])
+
+        XCTAssertEqual(report.refused.map(\.reason), [.mountPoint])
+        XCTAssertTrue(report.needsAdministrator.isEmpty)
+        XCTAssertTrue(report.failed.isEmpty)
+        XCTAssertTrue(report.removed.isEmpty)
+        XCTAssertTrue(tree.exists(precious))
+    }
+
     func testPermissionFailureAsksForAdministrator() async throws {
         let item = try tree.makeFile("home/Library/Caches/locked/file")
         let folder = item.deletingLastPathComponent()
