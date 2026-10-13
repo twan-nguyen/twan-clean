@@ -8,6 +8,26 @@ final class UninstallerViewModel: ObservableObject {
         case uninstalling
     }
 
+    /// How an app handed over from Finder's Services menu was received.
+    enum ServiceResult: Equatable {
+        case selected
+        case rejected(FinderServiceRejection)
+    }
+
+    /// How long to wait for an app to quit, and for a helper that launchd
+    /// starts again to show up.
+    struct QuitTiming: Sendable {
+        var pollInterval: UInt64 = 250_000_000
+        var polls = 20
+        var settle: UInt64 = 1_000_000_000
+        var respawnRounds = 3
+
+        static let standard = QuitTiming()
+        static let immediate = QuitTiming(pollInterval: 0, polls: 1, settle: 0, respawnRounds: 3)
+    }
+
+    typealias LaunchControl = @Sendable ([String]) async -> ProcessResult?
+
     @Published private(set) var apps: [InstalledApp] = []
     @Published private(set) var isLoadingApps = false
     @Published private(set) var sizes: [String: Int64] = [:]
@@ -22,7 +42,7 @@ final class UninstallerViewModel: ObservableObject {
     @Published var outcome: CleanupOutcome?
     @Published var sensitivity: SearchSensitivity {
         didSet {
-            UserDefaults.standard.set(sensitivity.rawValue, forKey: SearchSensitivity.defaultsKey)
+            defaults.set(sensitivity.rawValue, forKey: SearchSensitivity.defaultsKey)
             if oldValue != sensitivity { findLeftovers() }
         }
     }
@@ -31,18 +51,36 @@ final class UninstallerViewModel: ObservableObject {
     private let makeFinder: @MainActor () -> LeftoverFinder
     private let removal: RemovalService
     private let sizeCache: AppSizeCache?
-    private var findTask: Task<Void, Never>?
+    private let processes: any AppProcessControl
+    private let launchctl: LaunchControl
+    private let timing: QuitTiming
+    private let defaults: UserDefaults
+    /// Installed apps that cannot be uninstalled from here, but whose files
+    /// are not another app's to take.
+    private var relatedApps: [InstalledApp] = []
+    private(set) var findTask: Task<Void, Never>?
+    private var loadTask: Task<Void, Never>?
     private var hasLoaded = false
 
-    init(index: InstalledAppIndex = InstalledAppIndex(),
+    init(index: InstalledAppIndex = .standard,
          makeFinder: @escaping @MainActor () -> LeftoverFinder = { LeftoverFinder(protected: ProtectedLocations.current()) },
          removal: RemovalService = RemovalService(),
-         sizeCache: AppSizeCache? = AppSizeCache()) {
+         sizeCache: AppSizeCache? = AppSizeCache(),
+         processes: any AppProcessControl = SystemAppProcessControl(),
+         launchctl: @escaping LaunchControl = { arguments in
+             await ProcessRunner.run(URL(fileURLWithPath: "/bin/launchctl"), arguments, timeout: 10)
+         },
+         timing: QuitTiming = .standard,
+         defaults: UserDefaults = .standard) {
         self.index = index
         self.makeFinder = makeFinder
         self.removal = removal
         self.sizeCache = sizeCache
-        sensitivity = UserDefaults.standard.string(forKey: SearchSensitivity.defaultsKey)
+        self.processes = processes
+        self.launchctl = launchctl
+        self.timing = timing
+        self.defaults = defaults
+        sensitivity = defaults.string(forKey: SearchSensitivity.defaultsKey)
             .flatMap(SearchSensitivity.init(rawValue:)) ?? .enhanced
     }
 
@@ -65,16 +103,42 @@ final class UninstallerViewModel: ObservableObject {
         reloadApps()
     }
 
+    /// The returned task also covers measuring the apps' sizes.
     @discardableResult
     func reloadApps() -> Task<Void, Never> {
         isLoadingApps = true
         let index = index
+        let load = Task {
+            let catalog = await runDetached { index.catalog() }
+            self.apply(catalog)
+        }
+        loadTask = load
         return Task {
-            let found = await Task.detached { index.apps() }.value
-            self.apps = found
-            self.isLoadingApps = false
-            if let selected = self.selectedApp, !found.contains(selected) { self.select(nil) }
-            await self.measureSizes(of: found)
+            await load.value
+            await self.measureSizes(of: self.apps)
+        }
+    }
+
+    /// Waits for the app list, loading it first if nothing has yet. A scan
+    /// for leftovers needs every installed app, or it could not tell whose
+    /// file is whose.
+    func waitForAppList() async {
+        loadAppsIfNeeded()
+        await loadTask?.value
+    }
+
+    private func apply(_ catalog: AppCatalog) {
+        apps = catalog.listed
+        relatedApps = catalog.related
+        isLoadingApps = false
+        guard let selected = selectedApp, !catalog.listed.contains(where: { $0.id == selected.id }) else { return }
+        // An app opened from Finder may sit deeper than the list looks; it
+        // stays unless it is gone.
+        if let current = InstalledAppIndex.app(at: selected.url) {
+            apps.append(current)
+            apps.sort { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+        } else {
+            select(nil)
         }
     }
 
@@ -100,19 +164,42 @@ final class UninstallerViewModel: ObservableObject {
         findLeftovers()
     }
 
-    /// Opens an app handed over from Finder's Services menu. Returns false
-    /// when it is not an app Twan Clean can uninstall.
+    /// Opens an app handed over from Finder's Services menu, or says why it
+    /// cannot be uninstalled.
     @discardableResult
-    func selectApp(at url: URL) -> Bool {
-        guard let app = InstalledAppIndex.app(at: url) else { return false }
+    func selectApp(at url: URL, policy: PathPolicy = PathPolicy()) -> ServiceResult {
+        switch FinderServiceRequest.validate(url, policy: policy) {
+        case .failure(let rejection):
+            return .rejected(rejection)
+        case .success(let app):
+            return open(app)
+        }
+    }
+
+    /// Opens the first of `urls` that can be uninstalled.
+    @discardableResult
+    func selectApp(from urls: [URL], policy: PathPolicy = PathPolicy()) -> ServiceResult {
+        switch FinderServiceRequest.app(from: urls, policy: policy) {
+        case .failure(let rejection):
+            return .rejected(rejection)
+        case .success(let app):
+            return open(app)
+        }
+    }
+
+    private func open(_ app: InstalledApp) -> ServiceResult {
+        // Switching apps while one is being removed would change what the
+        // confirmed removal covers.
+        guard phase == .idle else { return .rejected(.busy) }
         if !apps.contains(where: { $0.id == app.id }) {
             apps.append(app)
             apps.sort { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
         }
-        select(apps.first { $0.id == app.id })
-        // The rest of the list still loads, as when the screen opens normally.
+        // The rest of the list loads as when the screen opens normally; the
+        // scan below waits for it.
         loadAppsIfNeeded()
-        return true
+        select(apps.first { $0.id == app.id })
+        return .selected
     }
 
     @discardableResult
@@ -122,11 +209,18 @@ final class UninstallerViewModel: ObservableObject {
         isFindingLeftovers = true
         let finder = makeFinder()
         let sensitivity = sensitivity
-        let others = apps
-        findTask = Task {
-            let result = await Task.detached { () -> Result<LeftoverScan, Error> in
+        let task = Task {
+            await self.waitForAppList()
+            guard !Task.isCancelled, self.selectedApp == app else { return }
+            // Copies of the app with another identifier are not rivals of the
+            // app, but a related one with the same identifier is not a copy
+            // that stays either.
+            let others = self.apps + self.relatedApps.filter {
+                $0.bundleIdentifier.caseInsensitiveCompare(app.bundleIdentifier) != .orderedSame
+            }
+            let result = await runDetached { () -> Result<LeftoverScan, Error> in
                 Result { try finder.find(for: app, sensitivity: sensitivity, otherApps: others) }
-            }.value
+            }
             guard !Task.isCancelled, self.selectedApp == app else { return }
             switch result {
             case .success(let scan):
@@ -138,7 +232,8 @@ final class UninstallerViewModel: ObservableObject {
             }
             self.isFindingLeftovers = false
         }
-        return findTask
+        findTask = task
+        return task
     }
 
     var selectedItems: [LeftoverItem] {
@@ -156,16 +251,13 @@ final class UninstallerViewModel: ObservableObject {
     // MARK: - Uninstalling
 
     func isRunning(_ app: InstalledApp) -> Bool {
-        !runningProcesses(of: app).isEmpty
+        !processes.running(for: app, matchingIdentifier: !hasAnotherCopy(of: app)).isEmpty
     }
 
-    private struct RunningProcess {
-        let pid: pid_t
-        let name: String
-        /// Set for processes that are apps, which are asked to quit politely.
-        let application: NSRunningApplication?
-
-        var isTerminated: Bool { application?.isTerminated ?? !ProcessList.isRunning(pid) }
+    /// Whether the app is installed a second time, which the identifier alone
+    /// cannot tell apart from the first.
+    private func hasAnotherCopy(of app: InstalledApp) -> Bool {
+        apps.contains { $0.bundleIdentifier.caseInsensitiveCompare(app.bundleIdentifier) == .orderedSame && $0.url.path != app.url.path }
     }
 
     /// Whether a process is part of `app`: the app itself, wherever it runs
@@ -176,27 +268,6 @@ final class UninstallerViewModel: ObservableObject {
         if let bundleIdentifier, bundleIdentifier == appIdentifier { return true }
         guard let path else { return false }
         return PathPolicy.isSame(path, appPath) || PathPolicy.isInside(path, appPath)
-    }
-
-    private func runningProcesses(of app: InstalledApp) -> [RunningProcess] {
-        let ownPID = getpid()
-        var found: [pid_t: RunningProcess] = [:]
-        for process in NSWorkspace.shared.runningApplications where process.processIdentifier != ownPID {
-            let path = (process.bundleURL ?? process.executableURL)?.path
-            if Self.belongs(bundleIdentifier: process.bundleIdentifier, path: path,
-                            to: app.bundleIdentifier, at: app.url.path) {
-                found[process.processIdentifier] = RunningProcess(
-                    pid: process.processIdentifier, name: process.localizedName ?? app.name, application: process)
-            }
-        }
-        // Only processes this user may stop: a root helper inside the bundle
-        // would otherwise block the uninstall for good.
-        for (pid, path) in ProcessList.executablePaths()
-        where pid != ownPID && found[pid] == nil && ProcessList.canSignal(pid)
-            && Self.belongs(bundleIdentifier: nil, path: path, to: app.bundleIdentifier, at: app.url.path) {
-            found[pid] = RunningProcess(pid: pid, name: (path as NSString).lastPathComponent, application: nil)
-        }
-        return Array(found.values)
     }
 
     /// Unloads the app's launch agents, quits the app and its helpers, and
@@ -210,6 +281,7 @@ final class UninstallerViewModel: ObservableObject {
         defer { phase = .idle }
 
         await unloadLaunchAgents(in: items)
+        await stopBundledAgents(of: app)
         let stillRunning = await quit(app, force: forceQuit)
         guard stillRunning.isEmpty else {
             var outcome = CleanupOutcome(RemovalReport())
@@ -248,21 +320,27 @@ final class UninstallerViewModel: ObservableObject {
     }
 
     /// Asks the app and its helpers to quit, or forces them, and returns the
-    /// names of those still running after a few seconds.
+    /// names of those that did not. A helper that launchd starts again after
+    /// being quit is found by looking again once things have settled, and
+    /// quit in its turn.
     private func quit(_ app: InstalledApp, force: Bool) async -> [String] {
-        let running = runningProcesses(of: app)
-        for process in running {
-            if let application = process.application {
-                if force { application.forceTerminate() } else { application.terminate() }
-            } else {
-                kill(process.pid, force ? SIGKILL : SIGTERM)
+        let byIdentifier = !hasAnotherCopy(of: app)
+        for round in 0...timing.respawnRounds {
+            let running = processes.running(for: app, matchingIdentifier: byIdentifier)
+            if running.isEmpty { return [] }
+            // Out of patience: something keeps coming back.
+            if round == timing.respawnRounds { return running.map(\.name) }
+
+            for process in running { processes.terminate(process, force: force) }
+            for _ in 0..<timing.polls {
+                if running.allSatisfy(processes.hasExited) { break }
+                try? await Task.sleep(nanoseconds: timing.pollInterval)
             }
+            let stuck = running.filter { !processes.hasExited($0) }
+            if !stuck.isEmpty { return stuck.map(\.name) }
+            try? await Task.sleep(nanoseconds: timing.settle)
         }
-        for _ in 0..<20 {
-            if running.allSatisfy(\.isTerminated) { break }
-            try? await Task.sleep(nanoseconds: 250_000_000)
-        }
-        return running.filter { !$0.isTerminated }.map(\.name)
+        return []
     }
 
     /// Stops the launch agents being removed, so nothing keeps running from
@@ -276,8 +354,31 @@ final class UninstallerViewModel: ObservableObject {
             && removal.policy.evaluate(item.url, purpose: item.purpose) == .allowed(item.url)
             // Still the file the scan found, not one swapped in since.
             && FileIdentity.lookup(item.url) == .found(item.identity) {
-            _ = await ProcessRunner.run(URL(fileURLWithPath: "/bin/launchctl"),
-                                        ["bootout", "gui/\(getuid())", item.url.path], timeout: 10)
+            _ = await launchctl(["bootout", "gui/\(getuid())", item.url.path])
         }
+    }
+
+    /// Stops the login-item agents the app registers from inside its own
+    /// bundle (`Contents/Library/LaunchAgents`), which belong to the user's
+    /// session and are not in any Library folder. Daemons registered the same
+    /// way run as root; stopping those needs the administrator prompt, which
+    /// only `PrivilegedRemover` may show, and it knows daemons solely by their
+    /// plist in /Library/LaunchDaemons.
+    private func stopBundledAgents(of app: InstalledApp) async {
+        // Still the bundle the scan found, not one swapped in since.
+        guard FileIdentity.lookup(app.url) == .found(app.identity) else { return }
+        let folder = app.url.appendingPathComponent("Contents/Library/LaunchAgents")
+        let names = (try? FileManager.default.contentsOfDirectory(atPath: folder.path)) ?? []
+        for name in names.sorted() where name.hasSuffix(".plist") {
+            guard let label = NestedBundles.label(ofPlistAt: folder.appendingPathComponent(name)),
+                  Self.isStoppable(label: label) else { continue }
+            _ = await launchctl(["bootout", "gui/\(getuid())/\(label)"])
+        }
+    }
+
+    /// An app's own agent, not one of macOS's that its bundle merely names.
+    nonisolated static func isStoppable(label: String) -> Bool {
+        !label.isEmpty && !label.hasPrefix("com.apple.") && !label.contains("/")
+            && label.rangeOfCharacter(from: .whitespacesAndNewlines) == nil
     }
 }

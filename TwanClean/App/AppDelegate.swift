@@ -31,23 +31,31 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     /// Finder › Services › Uninstall with Twan Clean, declared in Info.plist.
+    /// The first app in the selection that can be uninstalled is opened; when
+    /// none can, the reason for the first is reported back to Finder.
     @objc func uninstallApp(_ pasteboard: NSPasteboard, userData: String?,
                             error: AutoreleasingUnsafeMutablePointer<NSString?>) {
         let urls = pasteboard.readObjects(forClasses: [NSURL.self],
                                           options: [.urlReadingFileURLsOnly: true]) as? [URL] ?? []
-        guard let app = urls.first(where: { $0.pathExtension.lowercased() == "app" }) else {
-            error.pointee = String(localized: "Choose an application to uninstall.") as NSString
+        if let model {
+            switch model.uninstaller.selectApp(from: urls) {
+            case .selected:
+                model.showMainWindow(.uninstaller)
+                NSApp.activate(ignoringOtherApps: true)
+            case .rejected(let rejection):
+                error.pointee = rejection.message as NSString
+            }
             return
         }
-        // Only installed apps: not one on a disk image, nor a helper inside
-        // another app.
-        guard case .allowed = PathPolicy().evaluate(app, purpose: .appBundle), InstalledAppIndex.app(at: app) != nil else {
-            error.pointee = String(localized: "Twan Clean can only uninstall apps in the Applications folder.") as NSString
-            return
+        // Launched by the service: the window does not exist yet, so the app
+        // waits until it does.
+        switch FinderServiceRequest.app(from: urls) {
+        case .success(let app):
+            pendingUninstall = app.url
+            NSApp.activate(ignoringOtherApps: true)
+        case .failure(let rejection):
+            error.pointee = rejection.message as NSString
         }
-        pendingUninstall = app
-        deliverPendingUninstall()
-        NSApp.activate(ignoringOtherApps: true)
     }
 
     private func deliverPendingUninstall() {
