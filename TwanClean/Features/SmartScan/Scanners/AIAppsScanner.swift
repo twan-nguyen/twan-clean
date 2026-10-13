@@ -5,15 +5,17 @@ struct AIAppsScanner: CategoryScanner {
 
     func scan(_ context: ScanContext) async throws -> CategoryResult {
         var builder = CategoryResultBuilder(category, context: context)
-        try builder.addChildren(of: context.homeURL(".ollama/logs"), purpose: .regenerableCache)
-        try builder.addChildren(of: context.homeURL(".lmstudio/server-logs"), purpose: .regenerableCache)
+        let ollama: Set<String> = ["ollama", "com.electron.ollama"]
+        try builder.addChildren(of: context.homeURL(".ollama/logs"), purpose: .regenerableCache, owners: ollama)
+        try builder.addChildren(of: context.homeURL(".lmstudio/server-logs"), purpose: .regenerableCache,
+                                owners: ["lm studio", "lmstudio"])
         for path in [
             "Library/Caches/ollama",
             "Library/Caches/com.electron.ollama",
             "Library/WebKit/com.electron.ollama",
             "Library/Saved Application State/com.electron.ollama.savedState",
         ] {
-            try builder.add(context.homeURL(path), purpose: .regenerableCache)
+            try builder.add(context.homeURL(path), purpose: .regenerableCache, owners: ollama)
         }
         // Chat history is the user's own data: offered, never preselected, and
         // only ever moved to the Trash.

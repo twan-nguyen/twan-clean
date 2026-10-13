@@ -27,8 +27,8 @@ struct ScanContext: Sendable {
     let sizing: AllocatedSizeCalculator
     let commands: CommandRunner
     let settings: ScanSettings
-    /// Bundle identifiers of running apps, lowercased.
-    let runningBundleIDs: Set<String>
+    /// The apps running now, matched against cache folder names.
+    let running: RunningAppIndex
     let progress: ScanProgressReporter
     let now: Date
     /// Locations to leave unread so macOS does not prompt; nil once Full
@@ -41,6 +41,7 @@ struct ScanContext: Sendable {
          commands: CommandRunner? = nil,
          settings: ScanSettings = ScanSettings(),
          runningBundleIDs: Set<String> = [],
+         runningApps: [RunningApp] = [],
          progress: ScanProgressReporter = ScanProgressReporter(),
          now: Date = Date(),
          protectedLocations: ProtectedLocations? = nil) {
@@ -49,7 +50,7 @@ struct ScanContext: Sendable {
         self.sizing = sizing
         self.commands = commands ?? CommandRunner(home: home)
         self.settings = settings
-        self.runningBundleIDs = Set(runningBundleIDs.map { $0.lowercased() })
+        self.running = RunningAppIndex(bundleIDs: runningBundleIDs, apps: runningApps)
         self.progress = progress
         self.now = now
         self.protectedLocations = protectedLocations
@@ -78,9 +79,11 @@ struct CategoryResultBuilder {
         result = CategoryResult(category: category, items: [])
     }
 
-    /// Adds every entry directly inside `folder`.
+    /// Adds every entry directly inside `folder`. `owners` names apps (bundle
+    /// identifier, app name or vendor) that use the entries without the
+    /// entries being named after them.
     mutating func addChildren(of folder: URL, purpose: RemovalPurpose, selected: Bool = true,
-                              notes: Set<CleanableItem.Note> = [],
+                              notes: Set<CleanableItem.Note> = [], owners: Set<String> = [],
                               where include: (URL) -> Bool = { _ in true }) throws {
         guard !context.isProtected(folder) else {
             noteLocked(folder)
@@ -100,14 +103,14 @@ struct CategoryResultBuilder {
         for entry in entries.sorted() where !Self.ignoredNames.contains(entry) {
             let url = folder.appendingPathComponent(entry)
             if include(url) {
-                try add(url, purpose: purpose, selected: selected, notes: notes)
+                try add(url, purpose: purpose, selected: selected, notes: notes, owners: owners)
             }
         }
     }
 
     /// Adds one item when the policy allows it and it takes up space.
     mutating func add(_ url: URL, purpose: RemovalPurpose, selected: Bool = true,
-                      notes: Set<CleanableItem.Note> = []) throws {
+                      notes: Set<CleanableItem.Note> = [], owners: Set<String> = []) throws {
         try Task.checkCancellation()
         guard !context.isProtected(url) else {
             noteLocked(url)
@@ -131,8 +134,14 @@ struct CategoryResultBuilder {
 
         var notes = notes
         if size.unreadableEntries > 0 { notes.insert(.partlyUnreadable) }
-        if belongsToRunningApp(canonical) { notes.insert(.appIsRunning) }
-        if canonical.lastPathComponent.lowercased().hasPrefix("com.apple.") { notes.insert(.usedByMacOS) }
+        let name = canonical.lastPathComponent.lowercased()
+        // Xcode's own caches are not macOS's: they are rebuilt by Xcode alone,
+        // and are in use only while Xcode runs.
+        let isXcodeCache = name.hasPrefix(Self.xcodeCachePrefix)
+        var owners = owners
+        if isXcodeCache { owners.insert("com.apple.dt.xcode") }
+        if context.running.owns(folderNamed: canonical.lastPathComponent, owners: owners) { notes.insert(.appIsRunning) }
+        if name.hasPrefix("com.apple.") && !isXcodeCache { notes.insert(.usedByMacOS) }
         let needsAdministrator = RemovalService.needsAdministrator(canonical)
         // Only the user's own regenerable junk is ever preselected: nothing
         // outside the home folder, nothing behind a password, nothing a
@@ -175,14 +184,7 @@ struct CategoryResultBuilder {
         return lstat(url.path, &status) == 0 && (status.st_mode & S_IFMT) == S_IFDIR
     }
 
-    /// Cache folders are usually named after the app's bundle identifier.
-    private func belongsToRunningApp(_ url: URL) -> Bool {
-        var name = url.lastPathComponent.lowercased()
-        for suffix in [".savedstate", ".binarycookies"] where name.hasSuffix(suffix) {
-            name.removeLast(suffix.count)
-        }
-        return context.runningBundleIDs.contains(name)
-    }
+    private static let xcodeCachePrefix = "com.apple.dt."
 
     static let ignoredNames: Set<String> = [".DS_Store", ".localized", ".com.apple.timemachine.supported"]
 }

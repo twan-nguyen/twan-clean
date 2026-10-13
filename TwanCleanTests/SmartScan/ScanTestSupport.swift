@@ -4,9 +4,9 @@ import Foundation
 extension FakeHome {
     /// A scan context bound to this fake home that never runs real tools.
     func scanContext(settings: ScanSettings = ScanSettings(), running: Set<String> = [],
-                     now: Date = Date()) -> ScanContext {
+                     runningApps: [RunningApp] = [], now: Date = Date()) -> ScanContext {
         ScanContext(home: home, policy: policy, commands: CommandRunner(searchPaths: [], timeout: 1),
-                    settings: settings, runningBundleIDs: running, now: now)
+                    settings: settings, runningBundleIDs: running, runningApps: runningApps, now: now)
     }
 }
 

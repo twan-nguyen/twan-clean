@@ -19,15 +19,34 @@ final class RunLock: @unchecked Sendable {
         ScheduleStore.defaultFolder.appendingPathComponent("scan.lock")
     }
 
-    /// The lock, or nil when someone else holds it.
-    static func acquire(at file: URL = RunLock.defaultFile) -> RunLock? {
-        try? FileManager.default.createDirectory(at: file.deletingLastPathComponent(), withIntermediateDirectories: true)
-        let descriptor = open(file.path, O_CREAT | O_RDWR, 0o600)
-        guard descriptor >= 0 else { return nil }
-        guard flock(descriptor, LOCK_EX | LOCK_NB) == 0 else {
-            close(descriptor)
-            return nil
+    enum Attempt {
+        case acquired(RunLock)
+        /// Someone else holds the lock.
+        case busy
+        /// The lock file cannot be created or locked, so nobody can say
+        /// whether a scan is running.
+        case unavailable(reason: String)
+    }
+
+    static func attempt(at file: URL = RunLock.defaultFile) -> Attempt {
+        do {
+            try FileManager.default.createDirectory(at: file.deletingLastPathComponent(), withIntermediateDirectories: true)
+        } catch {
+            return .unavailable(reason: error.localizedDescription)
         }
-        return RunLock(descriptor: descriptor)
+        let descriptor = open(file.path, O_CREAT | O_RDWR, 0o600)
+        guard descriptor >= 0 else { return .unavailable(reason: String(cString: strerror(errno))) }
+        guard flock(descriptor, LOCK_EX | LOCK_NB) == 0 else {
+            let code = errno
+            close(descriptor)
+            return code == EWOULDBLOCK ? .busy : .unavailable(reason: String(cString: strerror(code)))
+        }
+        return .acquired(RunLock(descriptor: descriptor))
+    }
+
+    /// The lock, or nil when someone else holds it or it cannot be taken.
+    static func acquire(at file: URL = RunLock.defaultFile) -> RunLock? {
+        if case .acquired(let lock) = attempt(at: file) { return lock }
+        return nil
     }
 }

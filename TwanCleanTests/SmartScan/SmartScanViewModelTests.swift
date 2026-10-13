@@ -65,6 +65,24 @@ final class SmartScanViewModelTests: XCTestCase {
         withExtendedLifetime(held) {}
     }
 
+    func testScanExplainsWhenTheLockFileCannotBeUsedInsteadOfClaimingAScanRuns() throws {
+        let blocked = try tree.makeDirectory("blocked.lock")
+        var settings = ScanSettings()
+        settings.largeFileMinimumBytes = 200_000
+        let home = home!
+        let model = SmartScanViewModel(
+            coordinator: SmartScanCoordinator(scanners: [UserCacheScanner()]),
+            removal: RemovalService(policy: home.policy),
+            makeContext: { _ in home.scanContext(settings: settings) },
+            runLockFile: blocked)
+
+        XCTAssertNil(model.startScan([.userCache]))
+
+        XCTAssertEqual(model.phase, .idle)
+        let notice = try XCTUnwrap(model.notice)
+        XCTAssertNotEqual(notice, String(localized: "A scheduled scan is running. Try again in a moment."))
+    }
+
     func testRescanningOneCategoryKeepsTheOthers() async {
         let model = makeModel()
         await model.startScan([.userCache, .largeOld])?.value

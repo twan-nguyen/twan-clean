@@ -11,7 +11,7 @@ struct DockerCacheScanner: CategoryScanner {
             "Library/Containers/com.docker.docker/Data/tmp",
             "Library/Group Containers/group.com.docker/Caches",
         ] {
-            try builder.addChildren(of: context.homeURL(path), purpose: .regenerableCache)
+            try builder.addChildren(of: context.homeURL(path), purpose: .regenerableCache, owners: ["com.docker.docker"])
         }
         // Images, containers and build cache live inside Docker's disk image
         // and only Docker can free them; show the amount so the user knows.

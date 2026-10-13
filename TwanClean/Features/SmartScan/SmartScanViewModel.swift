@@ -92,18 +92,22 @@ final class SmartScanViewModel: ObservableObject {
     /// Takes the lock shared with the scheduled run, or explains why not.
     private func takeRunLock() -> (granted: Bool, lock: RunLock?) {
         guard let runLockFile else { return (true, nil) }
-        guard let lock = RunLock.acquire(at: runLockFile) else {
+        switch RunLock.attempt(at: runLockFile) {
+        case .acquired(let lock):
+            return (true, lock)
+        case .busy:
             notice = String(localized: "A scheduled scan is running. Try again in a moment.")
-            return (false, nil)
+        case .unavailable:
+            notice = String(localized: "Twan Clean can't write to its own data folder, so it can't scan or clean.")
         }
-        return (true, lock)
+        return (false, nil)
     }
 
     /// The real home folder, the saved settings and the apps running now.
     static func liveContext(progress: ScanProgressReporter) -> ScanContext {
         ScanContext(
             settings: ScanSettings.load(),
-            runningBundleIDs: Set(NSWorkspace.shared.runningApplications.compactMap(\.bundleIdentifier)),
+            runningApps: RunningApp.current(),
             progress: progress,
             protectedLocations: ProtectedLocations.current())
     }
