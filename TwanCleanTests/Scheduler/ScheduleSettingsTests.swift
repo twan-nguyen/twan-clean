@@ -51,6 +51,23 @@ final class ScheduleSettingsTests: XCTestCase {
                        date(30, 10, month: 11))
     }
 
+    func testLastRunInTheFutureIsTreatedAsDue() {
+        let wrongClock = settings(.weekly, lastRun: date(30, 10))
+        XCTAssertTrue(wrongClock.isDue(now: date(13, 11), calendar: calendar))
+        XCTAssertEqual(wrongClock.nextRun(now: date(13, 11), calendar: calendar), date(13, 10))
+    }
+
+    func testUpcomingRunIsNeverInThePast() {
+        // Never run and today's hour has passed: a run is already due.
+        XCTAssertNil(settings(.weekly, lastRun: nil).upcomingRun(now: date(13, 15), calendar: calendar))
+        XCTAssertEqual(settings(.weekly, lastRun: nil).upcomingRun(now: date(13, 9), calendar: calendar), date(13, 10))
+        // Missed while the Mac slept.
+        XCTAssertNil(settings(.weekly, lastRun: date(1, 10)).upcomingRun(now: date(13, 7), calendar: calendar))
+        // A monthly run is a date away, not just a weekday.
+        XCTAssertEqual(settings(.monthly, lastRun: date(5, 10)).upcomingRun(now: date(13, 7), calendar: calendar),
+                       date(5, 10, month: 11))
+    }
+
     func testLargeFilesCanNeverBeScheduled() {
         XCTAssertFalse(ScheduleSettings.schedulableCategories.contains(.largeOld))
         XCTAssertFalse(ScheduleSettings.defaultCategories.contains(.largeOld))
@@ -64,5 +81,44 @@ final class ScheduleSettingsTests: XCTestCase {
         try store.save(saved)
         XCTAssertEqual(store.loadSettings(), saved)
         XCTAssertNil(store.loadSummary())
+    }
+
+    func testMissingFileIsTheDefaultScheduleButDamagedFileIsAnError() throws {
+        let tree = try TemporaryTree()
+        let store = ScheduleStore(folder: tree.url("store"))
+        XCTAssertEqual(try store.loadSettingsChecked(), ScheduleSettings())
+
+        try tree.makeDirectory("store")
+        try Data("{ not json".utf8).write(to: tree.url("store/schedule.json"))
+        XCTAssertThrowsError(try store.loadSettingsChecked())
+    }
+
+    func testQuarantineKeepsTheDamagedFileAndFreesTheName() throws {
+        let tree = try TemporaryTree()
+        let store = ScheduleStore(folder: tree.url("store"))
+        try tree.makeDirectory("store")
+        try Data("{ not json".utf8).write(to: tree.url("store/schedule.json"))
+
+        let moved = try XCTUnwrap(store.quarantineSettings())
+
+        XCTAssertEqual(try String(contentsOf: moved, encoding: .utf8), "{ not json")
+        XCTAssertFalse(tree.exists(tree.url("store/schedule.json")))
+        XCTAssertEqual(try store.loadSettingsChecked(), ScheduleSettings())
+    }
+
+    func testUnknownCategoryAndMissingFieldsDoNotTurnTheScheduleOff() throws {
+        let tree = try TemporaryTree()
+        try tree.makeDirectory("store")
+        let json = """
+        {"isEnabled": true, "frequency": "daily", "categories": ["xcode", "someFutureCategory", "node"]}
+        """
+        try Data(json.utf8).write(to: tree.url("store/schedule.json"))
+
+        let loaded = try ScheduleStore(folder: tree.url("store")).loadSettingsChecked()
+
+        XCTAssertTrue(loaded.isEnabled)
+        XCTAssertEqual(loaded.frequency, .daily)
+        XCTAssertEqual(loaded.categories, [.xcode, .node])
+        XCTAssertEqual(loaded.hour, ScheduleSettings().hour)
     }
 }

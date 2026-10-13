@@ -45,6 +45,29 @@ struct ScheduleSettings: Codable, Equatable, Sendable {
     var minimumBytesToClean: Int64 = 100 * 1_000_000
     var lastRun: Date?
 
+    init() {}
+
+    private enum CodingKeys: String, CodingKey {
+        case isEnabled, frequency, hour, action, categories, minimumBytesToClean, lastRun
+    }
+
+    /// Fields missing from an older file keep their default, and a category
+    /// a later version no longer has is dropped, so neither turns the whole
+    /// schedule off.
+    init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        let defaults = ScheduleSettings()
+        isEnabled = try values.decodeIfPresent(Bool.self, forKey: .isEnabled) ?? defaults.isEnabled
+        frequency = try values.decodeIfPresent(Frequency.self, forKey: .frequency) ?? defaults.frequency
+        hour = try values.decodeIfPresent(Int.self, forKey: .hour) ?? defaults.hour
+        action = try values.decodeIfPresent(Action.self, forKey: .action) ?? defaults.action
+        categories = try values.decodeIfPresent([String].self, forKey: .categories)?
+            .compactMap(CleanupCategoryID.init(rawValue:)) ?? defaults.categories
+        minimumBytesToClean = try values.decodeIfPresent(Int64.self, forKey: .minimumBytesToClean)
+            ?? defaults.minimumBytesToClean
+        lastRun = try values.decodeIfPresent(Date.self, forKey: .lastRun)
+    }
+
     /// Categories whose items are regenerable. Large files, Mail and the
     /// Trash hold the user's own data and are only scanned when chosen.
     static let defaultCategories: [CleanupCategoryID] = [.systemJunk, .userCache, .aiApps, .xcode, .brew, .node, .docker]
@@ -55,7 +78,9 @@ struct ScheduleSettings: Codable, Equatable, Sendable {
 
     /// The moment the next run becomes due.
     func nextRun(now: Date, calendar: Calendar = .current) -> Date {
-        guard let lastRun else {
+        // A last run in the future means the clock was wrong when it was
+        // recorded; trusting it would hold the schedule back until then.
+        guard let lastRun, lastRun <= now else {
             // Never run: due from today's hour on.
             return calendar.date(bySettingHour: hour, minute: 0, second: 0, of: now) ?? now
         }
@@ -67,6 +92,13 @@ struct ScheduleSettings: Codable, Equatable, Sendable {
         }
         let nextDay = calendar.date(byAdding: step, to: lastDay) ?? lastDay
         return calendar.date(bySettingHour: hour, minute: 0, second: 0, of: nextDay) ?? nextDay
+    }
+
+    /// When the next run will start, for display. Nil when a run is already
+    /// due: it starts at the next hourly check, so no time in the past is shown.
+    func upcomingRun(now: Date, calendar: Calendar = .current) -> Date? {
+        let next = nextRun(now: now, calendar: calendar)
+        return next > now ? next : nil
     }
 
     /// Whether a run should happen now. A run missed while the Mac slept
@@ -102,8 +134,32 @@ struct ScheduleStore: Sendable {
     private var settingsFile: URL { folder.appendingPathComponent("schedule.json") }
     private var summaryFile: URL { folder.appendingPathComponent("last-scheduled-run.json") }
 
+    /// The saved schedule, or the default one when none was saved yet. Throws
+    /// when a file exists but cannot be read, so a caller never mistakes a
+    /// damaged schedule for a new one.
+    func loadSettingsChecked() throws -> ScheduleSettings {
+        guard FileManager.default.fileExists(atPath: settingsFile.path) else { return ScheduleSettings() }
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        return try decoder.decode(ScheduleSettings.self, from: Data(contentsOf: settingsFile))
+    }
+
     func loadSettings() -> ScheduleSettings {
-        read(ScheduleSettings.self, from: settingsFile) ?? ScheduleSettings()
+        (try? loadSettingsChecked()) ?? ScheduleSettings()
+    }
+
+    /// Sets a damaged schedule file aside, keeping it for the user, so the
+    /// next save does not overwrite it. Returns where it went.
+    @discardableResult
+    func quarantineSettings() -> URL? {
+        let destination = folder.appendingPathComponent("schedule.json.damaged")
+        try? FileManager.default.removeItem(at: destination)
+        do {
+            try FileManager.default.moveItem(at: settingsFile, to: destination)
+            return destination
+        } catch {
+            return nil
+        }
     }
 
     func save(_ settings: ScheduleSettings) throws {
