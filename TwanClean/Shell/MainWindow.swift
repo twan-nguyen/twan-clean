@@ -3,8 +3,12 @@ import SwiftUI
 struct MainWindow: View {
     /// The widest screen needs 641 pt beside the sidebar (Uninstaller: app
     /// list 240 + details 400), and the sidebar can grow to 260. Below this
-    /// the window would clip its own content.
-    static let minimumSize = CGSize(width: 960, height: 640)
+    /// the window would clip its own content. The height leaves room for the
+    /// title bar and toolbar on a 1024x640 display, whose visible area is
+    /// about 580 pt after the menu bar and Dock, so the action footer never
+    /// ends up under the Dock; the lists and cards in every screen scroll
+    /// when the window is short.
+    static let minimumSize = CGSize(width: 960, height: 480)
     /// Opens with room for every screen, and still fits a 13-inch MacBook Air.
     static let recommendedSize = CGSize(width: 1200, height: 780)
     /// The narrowest the content beside the sidebar may become.

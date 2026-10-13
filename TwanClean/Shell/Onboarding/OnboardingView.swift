@@ -4,7 +4,9 @@ import SwiftUI
 struct OnboardingView: View {
     let onFinish: () -> Void
     @StateObject private var permissions = PermissionCoordinator()
-    @State private var page = 0
+    /// Kept across launches, so restarting for Full Disk Access resumes where
+    /// the user was instead of at the welcome page.
+    @AppStorage("onboarding.page") private var page = 0
     @State private var notificationsRequested = false
 
     var body: some View {
@@ -12,7 +14,11 @@ struct OnboardingView: View {
             Group {
                 switch page {
                 case 0: welcome
-                case 1: PermissionStepView(permissions: permissions)
+                case 1:
+                    PermissionStepView(permissions: permissions) {
+                        // The permission step is done once the app restarts.
+                        page = 2
+                    }
                 default: notifications
                 }
             }
@@ -108,6 +114,8 @@ struct OnboardingView: View {
 /// Explains Full Disk Access and follows the switch in System Settings.
 struct PermissionStepView: View {
     @ObservedObject var permissions: PermissionCoordinator
+    /// Runs just before the app relaunches.
+    var beforeRestart: () -> Void = {}
 
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
@@ -130,7 +138,10 @@ struct PermissionStepView: View {
                 Label("Access is on. Restart to use it.", systemImage: "arrow.clockwise.circle.fill")
                     .foregroundStyle(Tint.orange)
                     .font(.headline)
-                Button("Restart Twan Clean") { AppRelaunch.relaunch() }
+                Button("Restart Twan Clean") {
+                    beforeRestart()
+                    AppRelaunch.relaunch()
+                }
                     .buttonStyle(PillButtonStyle())
             case .notGranted:
                 VStack(alignment: .leading, spacing: 8) {

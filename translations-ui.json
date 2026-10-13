@@ -1,0 +1,86 @@
+{
+  "%lld locations skipped": {
+    "en": {
+      "one": "%lld location skipped",
+      "other": "%lld locations skipped"
+    },
+    "vi": "Bỏ qua %lld vị trí"
+  },
+  "%lld items selected": {
+    "en": {
+      "one": "%lld item selected",
+      "other": "%lld items selected"
+    },
+    "vi": "Đã chọn %lld mục"
+  },
+  "Move %lld items to the Trash?": {
+    "en": {
+      "one": "Move %lld item to the Trash?",
+      "other": "Move %lld items to the Trash?"
+    },
+    "vi": "Chuyển %lld mục vào Thùng rác?"
+  },
+  "%lld items": {
+    "en": {
+      "one": "%lld item",
+      "other": "%lld items"
+    },
+    "vi": "%lld mục"
+  },
+  "%lld smaller items": {
+    "en": {
+      "one": "%lld smaller item",
+      "other": "%lld smaller items"
+    },
+    "vi": "%lld mục nhỏ hơn"
+  },
+  "%lld items removed": {
+    "en": {
+      "one": "%lld item removed",
+      "other": "%lld items removed"
+    },
+    "vi": "Đã xoá %lld mục"
+  },
+  "%lld items failed": {
+    "en": {
+      "one": "%lld item failed",
+      "other": "%lld items failed"
+    },
+    "vi": "%lld mục thất bại"
+  },
+  "%lld items need more access": {
+    "en": {
+      "one": "%lld item needs more access",
+      "other": "%lld items need more access"
+    },
+    "vi": "%lld mục cần thêm quyền"
+  },
+  "%lld items need your password": {
+    "en": {
+      "one": "%lld item needs your password",
+      "other": "%lld items need your password"
+    },
+    "vi": "%lld mục cần mật khẩu của bạn"
+  },
+  "Move %lld Items to Trash": {
+    "en": {
+      "one": "Move %lld Item to Trash",
+      "other": "Move %lld Items to Trash"
+    },
+    "vi": "Chuyển %lld mục vào Thùng rác"
+  },
+  "%lld items from removed apps": {
+    "en": {
+      "one": "%lld item from removed apps",
+      "other": "%lld items from removed apps"
+    },
+    "vi": "%lld mục của app đã gỡ"
+  },
+  "%lld apps": {
+    "en": {
+      "one": "%lld app",
+      "other": "%lld apps"
+    },
+    "vi": "%lld ứng dụng"
+  }
+}

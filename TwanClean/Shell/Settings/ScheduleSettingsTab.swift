@@ -13,7 +13,7 @@ struct ScheduleSettingsTab: View {
         Form {
             Section {
                 Toggle("Run automatically", isOn: Binding(get: { settings.isEnabled }, set: { setEnabled($0) }))
-                if settings.isEnabled {
+                if settings.isEnabled || agentStatus == .requiresApproval {
                     statusRow
                 }
                 if let errorMessage {
@@ -88,6 +88,10 @@ struct ScheduleSettingsTab: View {
             notificationsAllowed = await NotificationService.isAuthorized()
             agentStatus = SchedulerAgent.status
         }
+        // The user may have approved the agent in Login Items meanwhile.
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+            agentStatus = SchedulerAgent.status
+        }
     }
 
     @ViewBuilder
@@ -138,8 +142,14 @@ struct ScheduleSettingsTab: View {
             try SchedulerAgent.setEnabled(enabled)
             settings.isEnabled = enabled
         } catch {
-            errorMessage = error.localizedDescription
-            settings.isEnabled = false
+            // Waiting for approval in Login Items is not a failure: the choice
+            // stays on and the approval hint shows.
+            if enabled, SchedulerAgent.status == .requiresApproval {
+                settings.isEnabled = true
+            } else {
+                errorMessage = error.localizedDescription
+                settings.isEnabled = false
+            }
         }
         agentStatus = SchedulerAgent.status
         if enabled {
